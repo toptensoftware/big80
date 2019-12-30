@@ -1,0 +1,28 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sat Dec 21 05:59:17 2019
+[*]
+[dumpfile] "/home/brad/Projects/MimasV2/10-vga-timing/build/out.vcd"
+[dumpfile_mtime] "Sat Dec 21 05:58:07 2019"
+[dumpfile_size] 138735
+[savefile] "/home/brad/Projects/MimasV2/10-vga-timing/gtkwave_config.gtkw"
+[timestart] 2413580000000
+[size] 1280 751
+[pos] -1 -1
+*-33.899662 2455000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[sst_width] 196
+[signals_width] 257
+[sst_expanded] 1
+[sst_vpaned_height] 208
+@28
+testbench.s_clock
+testbench.vgatiming.o_blank
+testbench.vgatiming.o_hsync
+testbench.vgatiming.o_vsync
+@421
+testbench.vgatiming.o_hpos
+@420
+testbench.vgatiming.o_vpos
+[pattern_trace] 1
+[pattern_trace] 0

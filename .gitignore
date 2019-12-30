@@ -1,0 +1,12 @@
+# Build directories
+build/
+
+# Only keep the coregen stuff required to regenerate the IP cores
+**/coregen/*
+!**/coregen/*.vhd
+!**/coregen/*.xco
+!**/coregen/*.cgp
+!**/coregen/*.cgc
+
+# Node Stuff
+node_modules

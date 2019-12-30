@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../shared"
+		}
+		{
+			"path": "../../../shared-trs80"
+		}
+	],
+	"settings": {}
+}

@@ -1,0 +1,39 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sun Dec 22 10:00:11 2019
+[*]
+[dumpfile] "/home/brad/Projects/MimasV2/13-sim-video-controller/build/out.vcd"
+[dumpfile_mtime] "Sun Dec 22 09:58:31 2019"
+[dumpfile_size] 265891
+[savefile] "/home/brad/Projects/MimasV2/13-sim-video-controller/gtkwave_config.gtkw"
+[timestart] 0
+[size] 1280 751
+[pos] -1 -1
+*-33.099724 27000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[sst_width] 196
+[signals_width] 182
+[sst_expanded] 1
+[sst_vpaned_height] 208
+@28
+testbench.videocontroller.i_reset
+testbench.videocontroller.i_clock
+@420
+testbench.videocontroller.i_hpos
+testbench.videocontroller.r_char_rep
+testbench.videocontroller.r_char_pix
+testbench.videocontroller.r_char_num
+@22
+testbench.videocontroller.o_videoramaddr[9:0]
+testbench.videocontroller.i_videoramdata[7:0]
+testbench.videocontroller.o_charromaddr[11:0]
+testbench.videocontroller.i_charromdata[5:0]
+@28
+testbench.videocontroller.o_pixel
+@420
+testbench.videocontroller.r_line_rep
+testbench.videocontroller.r_line_pix
+@421
+testbench.videocontroller.r_line_num
+[pattern_trace] 1
+[pattern_trace] 0

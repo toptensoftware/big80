@@ -1,0 +1,24 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Wed Dec 25 04:55:19 2019
+[*]
+[dumpfile] "/home/brad/Projects/MimasV2/15-sim-cassette-render/build/out.vcd"
+[dumpfile_mtime] "Wed Dec 25 04:48:54 2019"
+[dumpfile_size] 62467777
+[savefile] "/home/brad/Projects/MimasV2/15-sim-cassette-render/gtkwave_config.gtkw"
+[timestart] 0
+[size] 1280 751
+[pos] -1 -1
+*-43.866989 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[sst_width] 196
+[signals_width] 181
+[sst_expanded] 1
+[sst_vpaned_height] 208
+@23
+testbench.s_data[7:0]
+@28
+testbench.s_data_needed
+testbench.s_audio
+[pattern_trace] 1
+[pattern_trace] 0
