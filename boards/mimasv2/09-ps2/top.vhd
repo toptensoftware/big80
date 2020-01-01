@@ -85,7 +85,7 @@ begin
 						s_counter(6 downto 0) <= unsigned(s_scan_code);
 
 						if s_extended_key = '1' then
-							s_counter(11 downto 7) <= "11111";
+							s_counter(11 downto 7) <= "00010";
 						else
 							s_counter(11 downto 7) <= "00000";
 						end if;
