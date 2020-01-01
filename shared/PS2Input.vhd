@@ -41,7 +41,7 @@ architecture Behavioral of PS2Input is
     signal s_data : std_logic_vector(10 downto 0);
     signal s_data_valid : std_logic;
     signal s_data_parity : std_logic;
-    constant c_IdleTicks : integer := p_ClockFrequency * 55 / 1_000_000;    -- 55us
+    constant c_IdleTicks : integer := p_ClockFrequency * 100 / 1_000_000;    -- 100us
     signal s_idle_count : integer range 0 to c_IdleTicks;
 begin
 
