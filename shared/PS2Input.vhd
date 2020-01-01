@@ -37,9 +37,7 @@ end PS2Input;
 
 architecture Behavioral of PS2Input is
     signal s_ps2_clock_sync : std_logic;
-    signal s_ps2_data_sync : std_logic;
     signal s_ps2_clock_debounced : std_logic;
-    signal s_ps2_data_debounced : std_logic;
     signal s_data : std_logic_vector(10 downto 0);
     signal s_data_valid : std_logic;
     signal s_data_parity : std_logic;
@@ -52,12 +50,11 @@ begin
     o_DataAvailable <= '1' when s_idle_count = c_IdleTicks-1 else '0';
     o_Error <= not s_data_valid;
                 
-    -- Synchronize the PS2 async signals to our clock
+    -- Synchronize the async PS2 clock signals to our clock
     process (i_Clock)
     begin
         if rising_edge(i_Clock) then
             s_ps2_clock_sync <= io_PS2Clock;
-            s_ps2_data_sync <= io_PS2Data;
         end if;
     end process;
 
@@ -76,26 +73,11 @@ begin
 		o_Signal => s_ps2_clock_debounced
 	);
 
-    -- Debounce PS2 data 
-	debounce_data : entity work.DebounceFilter
-	GENERIC MAP
-	(
-		p_ClockFrequency => p_ClockFrequency,
-		p_DebounceTimeUS => 5
-	)
-	PORT MAP
-	(
-		i_Clock => i_Clock,
-		i_Reset => i_Reset,
-		i_Signal => s_ps2_data_sync,
-		o_Signal => s_ps2_data_debounced
-    );
-    
     -- Shift incoming bits into s_data register
     process(s_ps2_clock_debounced)
     begin
         if falling_edge(s_ps2_clock_debounced) then
-            s_data <= s_ps2_data_debounced & s_data(10 downto 1);
+            s_data <= io_PS2Data & s_data(10 downto 1);
         end if;
     end process;
 
