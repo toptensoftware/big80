@@ -22,7 +22,8 @@ port
 	Button_Left : in std_logic;
 
 	TurboSwitch : in std_logic;
-	TypingMode : in std_logic;
+	TypingModeSwitch : in std_logic;
+	RunSwitch : in std_logic;
 
 	sd_mosi : out std_logic;
 	sd_miso : in std_logic;
@@ -163,7 +164,10 @@ begin
 ---	);
 
 	s_CLK_CPU_turbo_en <= s_CLK_40Mhz_en;
-	s_CLK_CPU_en <= s_CLK_CPU_turbo_en when s_TurboMode = '1' else s_CLK_CPU_normal_en;
+	s_CLK_CPU_en <= 
+		'0' when RunSwitch = '0' else 
+		s_CLK_CPU_turbo_en when s_TurboMode = '1' else
+		s_CLK_CPU_normal_en;
 	s_TurboMode <= s_CasMotorRelay and TurboSwitch;
 
 	-- Generate VGA timing signals for 800x600 @ 60Hz
@@ -257,7 +261,7 @@ begin
 	);
 
 	-- Model 1 ROM (12K)
-	rom : entity work.Trs80Model1Rom
+	rom : entity work.Trs80Level2Rom
 	PORT MAP
 	(
 		clock => s_CLK_80Mhz,
@@ -293,7 +297,7 @@ begin
 		i_ExtendedKey => s_extended_key,
 		i_KeyRelease => s_key_release,
 		i_DataAvailable => s_key_available,
-		i_TypingMode => TypingMode,
+		i_TypingMode => TypingModeSwitch,
 		i_Addr => s_cpu_addr(7 downto 0),
 		o_Data => s_KeyboardMapDataOut_cpu
 	);

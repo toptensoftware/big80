@@ -32,14 +32,7 @@ CONFIG VCCAUX = "3.3" ;
 ###################################################################################################################################################
 #                                                 LPDDR MT46H32M16XXXX-5                                                                          #
 ################################################################################################################################################### 
-    #NET  "calib_done"                LOC = P15     | IOSTANDARD = LVCMOS33;
-    #NET  "error"                     LOC = P16     | IOSTANDARD = LVCMOS33;
-    #NET  "c3_sys_rst_n"              LOC = L15     | IOSTANDARD = LVCMOS33 | PULLDOWN;    # Pin 7 of Header P9
-   
     #NET  "mcb3_dram_a[0]"            LOC = J7      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_a[10]"           LOC = F4      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_a[11]"           LOC = D3      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_a[12]"           LOC = G6      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_a[1]"            LOC = J6      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_a[2]"            LOC = H5      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_a[3]"            LOC = L7      | IOSTANDARD = MOBILE_DDR;
@@ -49,6 +42,9 @@ CONFIG VCCAUX = "3.3" ;
     #NET  "mcb3_dram_a[7]"            LOC = H6      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_a[8]"            LOC = D2      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_a[9]"            LOC = D1      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_a[10]"           LOC = F4      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_a[11]"           LOC = D3      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_a[12]"           LOC = G6      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_ba[0]"           LOC = F2      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_ba[1]"           LOC = F1      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_cas_n"           LOC = K5      | IOSTANDARD = MOBILE_DDR;
@@ -57,12 +53,6 @@ CONFIG VCCAUX = "3.3" ;
     #NET  "mcb3_dram_cke"             LOC = H7      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dm"              LOC = K3      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dq[0]"           LOC = L2      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_dq[10]"          LOC = N2      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_dq[11]"          LOC = N1      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_dq[12]"          LOC = T2      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_dq[13]"          LOC = T1      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_dq[14]"          LOC = U2      | IOSTANDARD = MOBILE_DDR;
-    #NET  "mcb3_dram_dq[15]"          LOC = U1      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dq[1]"           LOC = L1      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dq[2]"           LOC = K2      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dq[3]"           LOC = K1      | IOSTANDARD = MOBILE_DDR;
@@ -72,6 +62,12 @@ CONFIG VCCAUX = "3.3" ;
     #NET  "mcb3_dram_dq[7]"           LOC = J1      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dq[8]"           LOC = M3      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dq[9]"           LOC = M1      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_dq[10]"          LOC = N2      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_dq[11]"          LOC = N1      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_dq[12]"          LOC = T2      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_dq[13]"          LOC = T1      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_dq[14]"          LOC = U2      | IOSTANDARD = MOBILE_DDR;
+    #NET  "mcb3_dram_dq[15]"          LOC = U1      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_dqs"             LOC = L4      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_ras_n"           LOC = L5      | IOSTANDARD = MOBILE_DDR;
     #NET  "mcb3_dram_udm"             LOC = K4      | IOSTANDARD = MOBILE_DDR;
