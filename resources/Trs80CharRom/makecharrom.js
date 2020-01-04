@@ -19,7 +19,7 @@ out += "entity Trs80CharRom is\n";
 out += "	port\n";
 out += "	(\n";
 out += "		clock : in std_logic;\n";
-out += "		addr : in std_logic_vector(11 downto 0);\n";
+out += "		addr : in std_logic_vector(10 downto 0);\n";
 out += "		dout : out std_logic_vector(5 downto 0)\n";
 out += "	);\n";
 out += "end Trs80CharRom;\n";
@@ -27,13 +27,13 @@ out += " \n";
 out += "--xilt:nowarn:Signal 'ram', unconnected in block 'Trs80CharRom', is tied to its initial value.\n";
 out += " \n";
 out += "architecture behavior of Trs80CharRom is \n";
-out += "	type mem_type is array(0 to 4095) of std_logic_vector(5 downto 0);\n";
+out += "	type mem_type is array(0 to 2047) of std_logic_vector(5 downto 0);\n";
 out += "	signal ram : mem_type := (\n";
 
 let comma = ",";
-for (let i=0; i<data.length; i++)
+for (let i=0; i<2048; i++)
 {
-    if (i == data.length -1)
+    if (i == 2048 -1)
         comma ="";
     if (i % 16 == 0)
         out += "\n\t\t-- char " + (i/16).toString(16).padStart(2, "0") + "\n";

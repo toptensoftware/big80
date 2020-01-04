@@ -27,6 +27,9 @@ port
     i_KeyRelease : in std_logic;                   -- 0 if press, 1 if release
 	i_DataAvailable : in std_logic;                -- Assert for one clock cycle on event
 	
+	-- Options
+	i_TypingMode : in std_logic;
+
 	-- CPU interface
 	i_Addr : in std_logic_vector(7 downto 0);		-- Lowest 8 bits of memory address being read
 	o_Data : out std_logic_vector(7 downto 0)	    -- Output byte
@@ -55,6 +58,7 @@ begin
 		i_ExtendedKey => i_ExtendedKey,
 		i_KeyRelease => i_KeyRelease,
 		i_DataAvailable => i_DataAvailable,
+		i_TypingMode => i_TypingMode,
 		o_KeySwitches => s_key_switches
 	);
 

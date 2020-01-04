@@ -43,7 +43,7 @@ port
     i_VideoRamData : in std_logic_vector(7 downto 0);
 
     -- Character ROM Access
-    o_CharRomAddr : out std_logic_vector(11 downto 0);
+    o_CharRomAddr : out std_logic_vector(10 downto 0);
     i_CharRomData : in std_logic_vector(5 downto 0);
 
     -- Output
@@ -58,6 +58,10 @@ architecture Behavioral of Trs80VideoController is
     signal s_line_rep : integer range 0 to 2;       -- pixel triple vertically
     signal s_line_pix : integer range 0 to 11;      -- pixel row within character cell
     signal s_line_num : integer range 0 to 127;     -- line number
+    signal s_pixel_bits : std_logic_vector(5 downto 0);
+    signal s_graphic_bits : std_logic_vector(1 downto 0);
+    signal s_use_graphic_bits : std_logic;
+    signal s_line_pix_std_logic : std_logic_vector(3 downto 0);
 begin
 
     -- Pixel cycle -2
@@ -68,9 +72,38 @@ begin
 
     -- Pixel cycle -1
     -- Calculate character rom address
-    o_CharRomAddr <= 
-        i_VideoRamData & 
-        std_logic_vector(to_unsigned(s_line_pix, 4));
+    s_line_pix_std_logic <= std_logic_vector(to_unsigned(s_line_pix, 4));
+    o_CharRomAddr <= i_VideoRamData(6 downto 0) & s_line_pix_std_logic;
+
+    -- Select pixels from character ROM or graphics generator?
+    s_pixel_bits <= i_CharRomData 
+                    when s_use_graphic_bits = '0' else
+                    s_graphic_bits(0) & s_graphic_bits(0) & s_graphic_bits(0) & 
+                    s_graphic_bits(1) & s_graphic_bits(1) & s_graphic_bits(1);
+
+    -- Generate graphic bits
+    graphics_generator : process(i_Clock)
+    begin
+        if rising_edge(i_Clock) then
+            if i_Reset = '1' then
+                s_use_graphic_bits <= '0';
+                s_graphic_bits <= "00";
+            elsif i_ClockEnable = '1' then
+
+                -- Remember if this character is graphic's character or not
+                -- for the next cycle
+                s_use_graphic_bits <= i_VideoRamData(7);
+
+                -- Generate graphics characters
+                case s_line_pix_std_logic(3 downto 2) is
+                    when "00" => s_graphic_bits <= i_VideoRamData(1 downto 0);
+                    when "01" => s_graphic_bits <= i_VideoRamData(3 downto 2);
+                    when "10" => s_graphic_bits <= i_VideoRamData(5 downto 4);
+                    when others => s_graphic_bits <= "00";
+                end case;
+            end if;
+        end if;
+    end process;
 
     -- Pixel Cycle 0
     -- Select the correct pixel (remember s_char_pix is two pixels ahead)
@@ -83,12 +116,12 @@ begin
             '0' when i_VPos < p_TopMarginPixels else
             '0' when i_HPos >= p_LeftMarginPixels + 768 else
             '0' when i_VPos >= p_TopMarginPixels + 576 else
-            i_CharRomData(5) when s_char_pix = 1 else
-            i_CharRomData(4) when s_char_pix = 2 else
-            i_CharRomData(3) when s_char_pix = 3 else
-            i_CharRomData(2) when s_char_pix = 4 else
-            i_CharRomData(1) when s_char_pix = 5 else
-            i_CharRomData(0) when s_char_pix = 0 else
+            s_pixel_bits(5) when s_char_pix = 1 else
+            s_pixel_bits(4) when s_char_pix = 2 else
+            s_pixel_bits(3) when s_char_pix = 3 else
+            s_pixel_bits(2) when s_char_pix = 4 else
+            s_pixel_bits(1) when s_char_pix = 5 else
+            s_pixel_bits(0) when s_char_pix = 0 else
             '0';
 
 

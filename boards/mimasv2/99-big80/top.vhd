@@ -20,6 +20,10 @@ port
 	Button_Up : in std_logic;
 	Button_Down : in std_logic;
 	Button_Left : in std_logic;
+
+	TurboSwitch : in std_logic;
+	TypingMode : in std_logic;
+
 	sd_mosi : out std_logic;
 	sd_miso : in std_logic;
 	sd_ss_n : out std_logic;
@@ -39,11 +43,15 @@ architecture Behavioral of top is
 	signal s_vpos : integer range -2048 to 2047;
 	signal s_CLK_80Mhz : std_logic;
 	signal s_CLK_40Mhz_en : std_logic;
+	signal s_CLK_CPU_normal_en : std_logic;
+	signal s_CLK_CPU_turbo_en : std_logic;
 	signal s_CLK_CPU_en : std_logic;
-    signal s_VideoRamAddr : std_logic_vector(9 downto 0);
-    signal s_VideoRamData : std_logic_vector(7 downto 0);
-    signal s_CharRomAddr : std_logic_vector(11 downto 0);
-    signal s_CharRomData : std_logic_vector(5 downto 0);
+	signal s_TurboMode : std_logic;
+	signal s_CasMotorRelay : std_logic;
+	signal s_VideoRamAddr : std_logic_vector(9 downto 0);
+	signal s_VideoRamData : std_logic_vector(7 downto 0);
+	signal s_CharRomAddr : std_logic_vector(10 downto 0);
+	signal s_CharRomData : std_logic_vector(5 downto 0);
 	signal s_VideoRamWrite_cpu : std_logic;
 	signal s_VideoRamAddr_cpu : std_logic_vector(9 downto 0);
 	signal s_VideoRamDataIn_cpu : std_logic_vector(7 downto 0);
@@ -87,7 +95,7 @@ architecture Behavioral of top is
 	signal s_sd_op_wr : std_logic;
 	signal s_sd_op_cmd : std_logic_vector(1 downto 0);
 	signal s_sd_op_block_number : std_logic_vector(31 downto 0);
-	signal s_sd_dcycle :  std_logic;
+	signal s_sd_dcycle : std_logic;
 	signal s_sd_data : std_logic_vector(7 downto 0);
 	signal s_sd_last_block_number : std_logic_vector(31 downto 0);
 	signal s_sd_status : std_logic_vector(7 downto 0);
@@ -128,7 +136,7 @@ begin
 
 	-- Generate CPU clock enable (1.774Mhz)
 	-- (80Mhz / 45 = 1.777Mhz)
-	clock_div_cpu774 : entity work.ClockDivider
+	clock_div_cpu_1774 : entity work.ClockDivider
 	generic map
 	(
 		p_DivideCycles => 45
@@ -137,8 +145,26 @@ begin
 	(
 		i_Clock => s_CLK_80Mhz,
 		i_Reset => s_reset,
-		o_ClockEnable => s_CLK_CPU_en
+		o_ClockEnable => s_CLK_CPU_normal_en
 	);
+
+	-- Generate CPU clock enable for turbo mode
+	-- (80Mhz / 4 = 20Mhz)
+---	clock_div_cpu_turbo : entity work.ClockDivider
+---	generic map
+---	(
+---		p_DivideCycles => 2
+---	)
+---	port map
+---	(
+---		i_Clock => s_CLK_80Mhz,
+---		i_Reset => s_reset,
+---		o_ClockEnable => s_CLK_CPU_turbo_en
+---	);
+
+	s_CLK_CPU_turbo_en <= s_CLK_40Mhz_en;
+	s_CLK_CPU_en <= s_CLK_CPU_turbo_en when s_TurboMode = '1' else s_CLK_CPU_normal_en;
+	s_TurboMode <= s_CasMotorRelay and TurboSwitch;
 
 	-- Generate VGA timing signals for 800x600 @ 60Hz
 	vga_timing : entity work.VGATiming800x600
@@ -200,7 +226,7 @@ begin
 		-- Read only port for video controller
 		i_Clock_A => s_CLK_80Mhz,
 		i_ClockEn_A => s_CLK_40Mhz_en,
-		i_Write_A  => '0',
+		i_Write_A => '0',
 		i_Addr_A => s_VideoRamAddr,
 		i_Data_A => (others => '0'),
 		o_Data_A => s_VideoRamData,
@@ -267,6 +293,7 @@ begin
 		i_ExtendedKey => s_extended_key,
 		i_KeyRelease => s_key_release,
 		i_DataAvailable => s_key_available,
+		i_TypingMode => TypingMode,
 		i_Addr => s_cpu_addr(7 downto 0),
 		o_Data => s_KeyboardMapDataOut_cpu
 	);
@@ -282,7 +309,7 @@ begin
 	PORT MAP
 	(
 		RESET_n => s_reset_n, 
-		CLK_n =>  s_CLK_80MHz,
+		CLK_n => s_CLK_80MHz,
 		CLKEN => s_CLK_CPU_en,
 		A => s_cpu_addr,
 		DI => s_cpu_din,
@@ -317,8 +344,8 @@ begin
 		s_is_ram_range <= '0';
 		s_is_keyboard_range <= '0';
 
-		if s_cpu_addr(15 downto 14) /= "00" then
-			-- RAM 0x4000 -> 0xFFFF
+		if s_cpu_addr(15 downto 14) = "01" then
+			-- RAM 0x4000 -> 0x7FFF
 			s_is_ram_range <= '1';
 		elsif s_cpu_addr(15 downto 10) = "001111" then
 			-- Video RAM 0x3C00 -> 0x3FFF
@@ -326,7 +353,7 @@ begin
 		elsif s_cpu_addr(15 downto 10) = "001110" then
 			-- Keyboard 0x3800 -> 0x3BFF (shadowed 4 times)
 			s_is_keyboard_range <= '1';
-		elsif s_cpu_addr(15 downto 14) = "00" or s_cpu_addr(15 downto 14) = "01" or s_cpu_addr(15 downto 14) = "01" then
+		elsif s_cpu_addr(15 downto 12) = "0000" or s_cpu_addr(15 downto 12) = "0001" or s_cpu_addr(15 downto 12) = "0010" then
 			-- ROM 0x0000 -> 0x2FFF
 			s_is_rom_range <= '1';
 		end if;
@@ -349,12 +376,12 @@ begin
 							s_is_ram_range, s_RamDataOut_cpu, 
 							s_is_vram_range, s_VideoRamDataOut_cpu,
 							s_is_keyboard_Range, s_KeyboardMapDataOut_cpu,
-						  s_port_rd,
-						  	s_is_cas_port, s_CasAudio, s_CasAudioEdge
+							s_port_rd,
+							s_is_cas_port, s_CasAudio, s_CasAudioEdge
 							)
 	begin
 
-		s_cpu_din <= x"00";
+		s_cpu_din <= x"FF";
 
 		if s_mem_rd = '1' then
 			if s_is_rom_range = '1' then
@@ -369,8 +396,6 @@ begin
 		elsif s_port_rd = '1' then
 			if s_is_cas_port = '1' then
 				s_cpu_din <= s_CasAudioEdge & "000000" & s_CasAudio;
-			else
-				s_cpu_din <= x"FF";
 			end if;
 		end if;
 
@@ -462,6 +487,7 @@ begin
 				s_CasAudioEdge <= '0';
 				s_PrevCasAudio <= '0';
 				s_Speaker <= "00";
+				s_CasMotorRelay <= '0';
 			else
 
 				-- Detect edge
@@ -474,6 +500,7 @@ begin
 				if s_port_wr = '1' and s_is_cas_port='1' and s_CLK_CPU_en='1' then
 					s_CasAudioEdge <= s_cpu_dout(7);
 					s_Speaker <= s_cpu_dout(1 downto 0);
+					s_CasMotorRelay <= s_cpu_dout(2);
 				end if;
 
 			end if;

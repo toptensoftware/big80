@@ -25,7 +25,7 @@ architecture Behavioral of top is
 	signal s_CLK_40Mhz_en : std_logic;
     signal s_VideoRamAddr : std_logic_vector(9 downto 0);
     signal s_VideoRamData : std_logic_vector(7 downto 0);
-    signal s_CharRomAddr : std_logic_vector(11 downto 0);
+    signal s_CharRomAddr : std_logic_vector(10 downto 0);
     signal s_CharRomData : std_logic_vector(5 downto 0);
 	signal s_pixel : std_logic;
 begin

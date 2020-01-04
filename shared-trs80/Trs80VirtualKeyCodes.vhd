@@ -79,7 +79,8 @@ package Trs80VirtualKeyCodes is
 	constant vk_space : integer := 55;
 
 	constant vk_backspace : integer := 56;
-	constant vk_none : integer := 57; 
+	constant vk_quote : integer := 57;
+	constant vk_none : integer := 58; 
 
 	end Trs80VirtualKeyCodes;
 
