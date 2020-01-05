@@ -47,7 +47,8 @@ port
     i_CharRomData : in std_logic_vector(5 downto 0);
 
     -- Output
-    o_Pixel : out std_logic
+    o_Pixel : out std_logic;
+    o_LineRep : out integer range 0 to 2
 );
 end Trs80VideoController;
 
@@ -63,6 +64,8 @@ architecture Behavioral of Trs80VideoController is
     signal s_use_graphic_bits : std_logic;
     signal s_line_pix_std_logic : std_logic_vector(3 downto 0);
 begin
+
+    o_LineRep <= s_line_rep;
 
     -- Pixel cycle -2
     -- Calculate the video ram address

@@ -23,6 +23,8 @@ port
 
 	TurboSwitch : in std_logic;
 	TypingModeSwitch : in std_logic;
+	GreenScreenSwitch : in std_logic;
+	ScanLinesSwitch : in std_logic;
 	RunSwitch : in std_logic;
 
 	sd_mosi : out std_logic;
@@ -58,12 +60,13 @@ architecture Behavioral of top is
 	signal s_VideoRamDataIn_cpu : std_logic_vector(7 downto 0);
 	signal s_VideORamDataOut_cpu : std_logic_vector(7 downto 0);
 	signal s_RamWrite_cpu : std_logic;
-	signal s_RamAddr_cpu : std_logic_vector(13 downto 0);
+	signal s_RamAddr_cpu : std_logic_vector(14 downto 0);
 	signal s_RamDataIn_cpu : std_logic_vector(7 downto 0);
 	signal s_RamDataOut_cpu : std_logic_vector(7 downto 0);
 	signal s_RomAddr_cpu : std_logic_vector(13 downto 0);
 	signal s_RomDataOut_cpu : std_logic_vector(7 downto 0);
 	signal s_pixel : std_logic;
+	signal s_line_rep : integer range 0 to 2;
 	signal s_cpu_addr : std_logic_vector(15 downto 0);
 	signal s_cpu_din : std_logic_vector(7 downto 0);
 	signal s_cpu_dout : std_logic_vector(7 downto 0);
@@ -202,13 +205,43 @@ begin
 		i_VideoRamData => s_VideoRamData,
 		o_CharRomAddr => s_CharRomAddr,
 		i_CharRomData => s_CharRomData,
-		o_Pixel => s_Pixel
+		o_Pixel => s_pixel,
+		o_LineRep => s_line_rep
 	);
 
 	-- Generate color
-	Red <= "000";
-	Green <= s_pixel & s_pixel & s_pixel;
-	Blue <= "00";
+	color_gen : process(s_pixel, GreenScreenSwitch, ScanLinesSwitch, s_line_rep)
+	begin
+		if GreenScreenSwitch = '1' then
+			Red <= "000";
+			if ScanLinesSwitch = '1' then
+				if s_line_rep = 1 then
+					Green <= s_pixel & s_pixel & s_pixel;
+				else
+					Green <= s_pixel & "0" & s_pixel;
+				end if;
+			else
+				Green <= s_pixel & s_pixel & s_pixel;
+			end if;
+			Blue <= "00";
+		else
+			Red <= "000";
+			if ScanLinesSwitch = '1' then
+				if s_line_rep = 1 then
+					Red <= s_pixel & s_pixel & s_pixel;
+					Green <= s_pixel & "00";
+				else
+					Red <= s_pixel & "0" & s_pixel;
+					Green <= "0" & s_pixel & "0";
+				end if;
+			else
+				Red <= s_pixel & s_pixel & s_pixel;
+				Green <= s_pixel & "00";
+			end if;
+			Blue <= "00";
+		end if;
+	end process;
+
 
 	-- TRS80 Character ROM
 	charrom : entity work.Trs80CharRom
@@ -244,11 +277,11 @@ begin
 		o_Data_B => s_VideORamDataOut_cpu
 	);
 
-	-- Main RAM (16K)
+	-- Main RAM (48K)
 	ram : entity work.RamInferred	
 	GENERIC MAP
 	(
-		p_AddrWidth => 14
+		p_AddrWidth => 15
 	)
 	PORT MAP
 	(
@@ -348,7 +381,7 @@ begin
 		s_is_ram_range <= '0';
 		s_is_keyboard_range <= '0';
 
-		if s_cpu_addr(15 downto 14) = "01" then
+		if s_cpu_addr(15 downto 14) /= "00" then
 			-- RAM 0x4000 -> 0x7FFF
 			s_is_ram_range <= '1';
 		elsif s_cpu_addr(15 downto 10) = "001111" then
@@ -368,7 +401,7 @@ begin
 	s_VideoRamWrite_cpu <= s_mem_wr and s_is_vram_range;
 	s_VideoRamDataIn_cpu <= s_cpu_dout;
 
-	s_RamAddr_cpu <= s_cpu_addr(13 downto 0);
+	s_RamAddr_cpu <= s_cpu_addr(14 downto 0);
 	s_RamWrite_cpu <= s_mem_wr and s_is_ram_range;
 	s_RamDataIn_cpu <= s_cpu_dout;
 	s_RomAddr_cpu <= s_cpu_addr(13 downto 0);

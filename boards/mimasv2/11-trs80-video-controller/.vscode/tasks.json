@@ -14,7 +14,8 @@
             "presentation": {
                 "clear": true,
                 "showReuseMessage": false
-            }
+            },
+            "problemMatcher": "$msCompile",
         },
         {
             "label": "Upload",
@@ -25,7 +26,7 @@
                 "clear": true,
                 "showReuseMessage": false
             },
-            "problemMatcher": []
+            "problemMatcher": "$msCompile",
         }
     ]
 }

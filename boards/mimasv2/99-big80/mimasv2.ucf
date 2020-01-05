@@ -13,6 +13,8 @@ CONFIG VCCAUX = "3.3" ;
 
     NET "TypingModeSwitch"           LOC = C17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 7
     NET "TurboSwitch"                LOC = C18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 8
+    NET "GreenScreenSwitch"          LOC = D17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 6
+    NET "ScanLinesSwitch"            LOC = D18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 5
     NET "RunSwitch"                  LOC = F17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 1
 
 ###################################################################################################################################################

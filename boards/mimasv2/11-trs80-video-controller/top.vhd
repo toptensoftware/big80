@@ -28,6 +28,7 @@ architecture Behavioral of top is
     signal s_CharRomAddr : std_logic_vector(10 downto 0);
     signal s_CharRomData : std_logic_vector(5 downto 0);
 	signal s_pixel : std_logic;
+	signal s_line_rep : integer range 0 to 2;
 begin
 
 	-- Reset signal
@@ -82,7 +83,8 @@ begin
 		i_VideoRamData => s_VideoRamData,
 		o_CharRomAddr => s_CharRomAddr,
 		i_CharRomData => s_CharRomData,
-		o_Pixel => s_Pixel
+		o_Pixel => s_pixel,
+		o_LineRep => s_line_rep
 	);
 
 	charrom : entity work.Trs80CharRom
@@ -110,7 +112,11 @@ begin
 	end process;
 	
 	Red <= "000";
-	Green <= s_pixel & s_pixel & s_pixel;
+--	Green <= (s_pixel & s_pixel & s_pixel) when s_line_rep = 1
+--				else (s_pixel & "00") when s_line_rep = 0
+--				else ("0" & s_pixel & "0");
+	Green <= (s_pixel & s_pixel & s_pixel) when s_line_rep = 1
+				else (s_pixel & '0' & s_pixel);
 	Blue <= "00";
 
 end Behavioral;
