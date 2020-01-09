@@ -95,6 +95,18 @@ architecture Behavioral of top is
 	signal s_is_keyboard_range : std_logic;
 	signal s_is_cas_port : std_logic;
 
+	-- Button debounce and edge detection
+	signal s_buttons_unbounced : std_logic_vector(2 downto 0);
+	signal s_buttons_debounced : std_logic_vector(2 downto 0);
+	signal s_buttons_edges : std_logic_vector(2 downto 0);
+	signal s_buttons_trigger : std_logic_vector(2 downto 0);
+
+	signal s_extended_key_press : std_logic;
+	signal s_media_key_play : std_logic;
+	signal s_media_key_next : std_logic;
+	signal s_media_key_prev : std_logic;
+	signal s_media_keys : std_logic_vector(2 downto 0);
+
 	-- Cassette
 	signal s_sd_op_wr : std_logic;
 	signal s_sd_op_cmd : std_logic_vector(1 downto 0);
@@ -111,11 +123,25 @@ architecture Behavioral of top is
 	signal s_Audio : std_logic;
 	signal s_Speaker : std_logic_vector(1 downto 0);
 
+	signal s_soft_reset : integer range 0 to 15 := 0;
 begin
 
 	-- Reset signal
-	s_reset_n <= Button_B;
-	s_reset <= not Button_B;
+	s_reset <= '1' when Button_B = '0' or s_soft_reset /= 0 else '0';
+	s_reset_n <= not s_reset;
+
+	-- Soft reset process
+	soft_reset : process(s_CLK_80Mhz)
+	begin		
+		if rising_edge(s_CLK_80Mhz) then
+			if s_extended_key_press = '1' and s_scan_code = "0110111" then
+				s_soft_reset <= 15;
+			end if;
+			if s_soft_reset /= 0 then
+				s_soft_reset <= s_soft_reset - 1;
+			end if;
+		end if;
+	end process;
 
 	-- Digital Clock Manager
 	dcm : entity work.ClockDCM
@@ -493,20 +519,49 @@ begin
 		dout => s_sd_data
 	);
 
+	debounce : entity work.DebounceFilterSet
+	generic map
+	(
+		p_ClockFrequency => 80_000_000,
+		p_DebounceTimeUS => 5000,
+		p_SignalCount => 3,
+		p_ResetState => '1'
+	)
+	port map
+	(
+		i_Clock => s_CLK_80Mhz,
+		i_Reset => s_Reset,
+		i_Signals => s_buttons_unbounced,
+		o_Signals => s_buttons_debounced,
+		o_SignalEdges => s_buttons_edges
+	);
+
+	-- Debounced all buttons
+	s_buttons_unbounced <= Button_Down & Button_Up & Button_Right;
+	s_buttons_trigger <= (s_buttons_edges and not s_buttons_debounced) or s_media_keys;
+
+	-- Also map, media keys
+	s_extended_key_press <= s_key_available and not s_key_release and s_extended_key;
+	s_media_key_play <= '1' when s_extended_key_press = '1' and s_scan_code = "0110100" else '0';
+	s_media_key_next <= '1' when s_extended_key_press = '1' and s_scan_code = "1001101" else '0';
+	s_media_key_prev <= '1' when s_extended_key_press = '1' and s_scan_code = "0010101" else '0';
+	s_media_keys <= s_media_key_prev & s_media_key_next & s_media_key_play;
+
+
+	-- Cassette Player
 	player : entity work.Trs80CassettePlayer
 	generic map
 	(
-		p_ClockEnableFrequency => 1_774_000,
-		p_ButtonActive => '0'
+		p_ClockEnableFrequency => 1_774_000
 	)
 	port map
 	(
 		i_Clock => s_CLK_80Mhz,
 		i_ClockEnable => s_CLK_CPU_en,
 		i_Reset => s_Reset,
-		i_ButtonStartStop => Button_Right,
-		i_ButtonNext => Button_Up,
-		i_ButtonPrev => Button_Down,
+		i_ButtonStartStop => s_buttons_trigger(0),
+		i_ButtonNext => s_buttons_trigger(1),
+		i_ButtonPrev => s_buttons_trigger(2),
 		o_sd_op_wr => s_sd_op_wr,
 		o_sd_op_cmd => s_sd_op_cmd,
 		o_sd_op_block_number => s_sd_op_block_number,

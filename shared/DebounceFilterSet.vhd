@@ -22,7 +22,7 @@ generic
     p_ClockFrequency : integer;         -- Hz.  eg: 100_000_000 for 100Mhz
     p_DebounceTimeUS : integer;         -- Time signal must be stable in us
     p_SignalCount : integer;            -- The number of signals to debounce
-    p_ResetState : std_logic_vector(p_SignalCount-1 downto 0) := (others => '0')
+    p_ResetState : std_logic            -- The default (reset) state of all buttons
 );
 port 
 ( 
@@ -48,8 +48,8 @@ begin
         generic map
         (
             p_ClockFrequency => p_ClockFrequency,
-            p_DebounceTimeUS => p_DebouncTimeUS,
-            p_ResetState => p_ResetState(ii),
+            p_DebounceTimeUS => p_DebounceTimeUS,
+            p_ResetState => p_ResetState
         )
         port map
         (

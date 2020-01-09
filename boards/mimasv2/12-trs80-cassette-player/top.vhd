@@ -39,6 +39,11 @@ architecture Behavioral of top is
 	signal s_sd_last_block_number : std_logic_vector(31 downto 0);
 	signal s_sd_status : std_logic_vector(7 downto 0);
 
+	signal s_buttons_unbounced : std_logic_vector(2 downto 0);
+	signal s_buttons_debounced : std_logic_vector(2 downto 0);
+	signal s_buttons_edges : std_logic_vector(2 downto 0);
+	signal s_buttons_trigger : std_logic_vector(2 downto 0);
+
 	signal s_seven_seg_value : std_logic_vector(11 downto 0);
 	signal s_selected_tape : std_logic_vector(11 downto 0);
 
@@ -93,11 +98,16 @@ begin
 	s_seven_seg_value <= s_selected_Tape when Button_Left = '1' else s_sd_last_block_number(11 downto 0);
 
 	sdcard : entity work.SDCardController
+	generic map
+	(
+		p_ClockDiv800Khz => 100,
+		p_ClockDiv50Mhz => 2
+	)
 	port map
 	(
 		-- Clocking
 		reset => s_reset,
-		clock_108_000 => s_CLK_80MHz,
+		clock => s_CLK_80MHz,
 
 		-- SD Card Signals
 		ss_n => sd_ss_n,
@@ -122,20 +132,39 @@ begin
 		dout => s_sd_data
 	);
 
+	debounce : entity work.DebounceFilterSet
+	generic map
+	(
+		p_ClockFrequency => 80_000_000,
+		p_DebounceTimeUS => 5000,
+		p_SignalCount => 3,
+		p_ResetState => '1'
+	)
+	port map
+	(
+		i_Clock => s_CLK_80Mhz,
+		i_Reset => s_Reset,
+		i_Signals => s_buttons_unbounced,
+		o_Signals => s_buttons_debounced,
+		o_SignalEdges => s_buttons_edges
+	);
+
+	s_buttons_unbounced <= Button_Down & Button_Up & Button_Right;
+	s_buttons_trigger <= s_buttons_edges and not s_buttons_debounced;
+
 	player : entity work.Trs80CassettePlayer
 	generic map
 	(
-		p_ClockEnableFrequency => 1_774_000,
-		p_ButtonActive => '0'
+		p_ClockEnableFrequency => 1_774_000
 	)
 	port map
 	(
 		i_Clock => s_CLK_80Mhz,
 		i_ClockEnable => s_CLK_CPU_en,
 		i_Reset => s_Reset,
-		i_ButtonStartStop => Button_Right,
-		i_ButtonNext => Button_Up,
-		i_ButtonPrev => Button_Down,
+		i_ButtonStartStop => s_buttons_trigger(0),
+		i_ButtonNext => s_buttons_trigger(1),
+		i_ButtonPrev => s_buttons_trigger(2),
 		o_sd_op_wr => s_sd_op_wr,
 		o_sd_op_cmd => s_sd_op_cmd,
 		o_sd_op_block_number => s_sd_op_block_number,

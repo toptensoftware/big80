@@ -20,7 +20,6 @@ end top;
 
 architecture Behavioral of top is
 	signal s_reset : std_logic;
-	signal s_reset_n : std_logic;
 	signal s_seven_seg_value : std_logic_vector(11 downto 0);
 	signal s_clken_sevenseg : std_logic;
 	signal s_scan_code : std_logic_vector(6 downto 0);

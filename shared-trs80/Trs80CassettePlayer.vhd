@@ -25,8 +25,7 @@ generic
 (
 	p_ClockEnableFrequency : integer := 1_774_000;  -- Frequency of the clock enable
 	p_BaudRate : integer := 500;					-- Frequency of zero bit pulses
-	p_PulseWidth_us : integer := 100;				-- Width of each pulse (in us)
-	p_ButtonActive : std_logic						-- Active high = '1', active low = '0'
+	p_PulseWidth_us : integer := 100				-- Width of each pulse (in us)
 );
 port
 (
@@ -60,12 +59,6 @@ architecture behavior of Trs80CassettePlayer is
 	signal s_data_needed : std_logic;
 	signal s_sd_op_block_number : std_logic_vector(31 downto 0);
 	signal s_sd_op_wr : std_logic;
-	signal s_play_stop : std_logic;
-	signal s_play_stop_edge : std_logic;
-	signal s_button_next : std_logic;
-	signal s_button_next_edge : std_logic;
-	signal s_button_prev : std_logic;
-	signal s_button_prev_edge : std_logic;
 	signal s_playing : std_logic;
 	signal s_playing_changed : std_logic;
 	signal s_req_pending : std_logic;
@@ -82,23 +75,6 @@ begin
 	s_start_block_number <= "000000000000000" & s_selected_tape & "00000";		-- x 32
 	s_play_position <= std_logic_vector(unsigned(s_sd_op_block_number) - unsigned(s_start_block_number) - 2);
 
-	-- Debounce the start/stop button
-	debounce_start_stop : entity work.DebounceFilterWithEdge
-	GENERIC MAP
-	(
-		p_ClockFrequency => 80_000_000,
-		p_DebounceTimeUS => 5_000,
-		p_ResetState => not p_ButtonActive
-	)
-	PORT MAP
-	(
-		i_Clock => i_Clock,
-		i_Reset => i_Reset,
-		i_Signal => i_ButtonStartStop,
-		o_Signal => s_play_stop,
-		o_SignalEdge => s_play_stop_edge
-	);
-
 	play_pause : process(i_Clock)
 	begin
 		if rising_edge(i_Clock) then
@@ -107,7 +83,7 @@ begin
 				s_playing_changed <= '0';
 			else
 				s_playing_changed <= '0';
-				if s_play_stop = p_ButtonActive and s_play_stop_edge = '1' then
+				if i_ButtonStartStop = '1' then
 					s_playing <= not s_playing;
 					s_playing_changed <= '1';
 				end if;
@@ -115,50 +91,16 @@ begin
 		end if;
 	end process;
 
-	-- Debounce the next button
-	debounce_next : entity work.DebounceFilterWithEdge
-	GENERIC MAP
-	(
-		p_ClockFrequency => 80_000_000,
-		p_DebounceTimeUS => 5_000,
-		p_ResetState => not p_ButtonActive
-	)
-	PORT MAP
-	(
-		i_Clock => i_Clock,
-		i_Reset => i_Reset,
-		i_Signal => i_ButtonNext,
-		o_Signal => s_button_next,
-		o_SignalEdge => s_button_next_edge
-	);
-
-	-- Debounce the prev button
-	debounce_prev : entity work.DebounceFilterWithEdge
-	GENERIC MAP
-	(
-		p_ClockFrequency => 80_000_000,
-		p_DebounceTimeUS => 5_000,
-		p_ResetState => not p_ButtonActive
-	)
-	PORT MAP
-	(
-		i_Clock => i_Clock,
-		i_Reset => i_Reset,
-		i_Signal => i_ButtonPrev,
-		o_Signal => s_button_prev,
-		o_SignalEdge => s_button_prev_edge
-	);
-
 	tape_selector : process(i_Clock)
 	begin
 		if rising_edge(i_Clock) then
 			if i_Reset = '1' then 
 				s_selected_tape <= (others => '0');
 			else
-			if s_button_next = p_ButtonActive and s_button_next_edge = '1' then
+			if i_ButtonNext = '1' then
 				s_selected_tape <= std_logic_vector(unsigned(s_selected_tape) + 1);
 			end if;
-			if s_button_prev = p_ButtonActive and s_button_prev_edge = '1' then
+			if i_ButtonPrev = '1' then
 				s_selected_tape <= std_logic_vector(unsigned(s_selected_tape) - 1);
 			end if;
 			end if;
