@@ -82,7 +82,7 @@ begin
 	s_start_block_number <= "000000000000000" & s_selected_tape & "00000";		-- x 32
 	s_play_position <= std_logic_vector(unsigned(s_sd_op_block_number) - unsigned(s_start_block_number) - 2);
 
-	-- Debounce the dec button
+	-- Debounce the start/stop button
 	debounce_start_stop : entity work.DebounceFilterWithEdge
 	GENERIC MAP
 	(

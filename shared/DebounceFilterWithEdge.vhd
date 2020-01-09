@@ -45,6 +45,7 @@ architecture Behavioral of DebounceFilterWithEdge is
     signal s_Previous : std_logic;
     signal s_Signal : std_logic;
     signal s_SignalEdge : std_logic;
+    signal s_counter : integer range 0 to c_DebounceTicks;
 begin
 
     -- Output the filtered signal and edge flag
@@ -52,7 +53,6 @@ begin
     o_SignalEdge <= s_SignalEdge;
 
     process (i_Clock)
-        variable counter : integer range 0 to c_DebounceTicks;
     begin
         if rising_edge(i_Clock) then
             if i_Reset = '1' then
@@ -61,6 +61,7 @@ begin
                 s_Previous <= p_ResetState;
                 s_Signal <= p_ResetState;
                 s_SignalEdge <= '0';
+                s_counter <= 0;
             else
                 -- Shift input signal
                 s_Previous <= s_Current;
@@ -69,10 +70,10 @@ begin
 
                 if (s_Current xor s_Previous) = '1' then
                     -- signal changed, reset the signal
-                    counter := 0;
-                elsif counter < c_DebounceTicks then 
-                    -- stable period hasn't been hit yet, increment counter
-                    counter := counter + 1;
+                    s_counter <= 0;
+                elsif s_counter < c_DebounceTicks then 
+                    -- stable period hasn't been hit yet, increment s_counter
+                    s_counter <= s_counter + 1;
                 else
                     -- Signal is stable, output the new signal
                     s_Signal <= s_Current;

@@ -29,9 +29,9 @@ port
     io_PS2Data : inout std_logic;               -- PS2 Data
 
     -- Output
-    o_Data : out std_logic_vector(7 downto 0);  -- Outputs received data byte
-    o_DataAvailable : out std_logic;            -- Asserts for one cycle when data available
-    o_Error : out std_logic                     -- When data available, indicates if error
+    o_RXData : out std_logic_vector(7 downto 0);  -- Outputs received data byte
+    o_RXDataAvailable : out std_logic;            -- Asserts for one cycle when data available
+    o_RXDataError : out std_logic                     -- When data available, indicates if error
 );
 end PS2Input;
 
@@ -46,9 +46,9 @@ architecture Behavioral of PS2Input is
 begin
 
     -- Output signals
-    o_Data <= s_Data(8 downto 1);
-    o_DataAvailable <= '1' when s_idle_count = c_IdleTicks-1 else '0';
-    o_Error <= not s_data_valid;
+    o_RXData <= s_Data(8 downto 1);
+    o_RXDataAvailable <= '1' when s_idle_count = c_IdleTicks-1 else '0';
+    o_RXDataError <= not s_data_valid;
                 
     -- Synchronize the async PS2 clock signals to our clock
     process (i_Clock)
