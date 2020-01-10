@@ -1,11 +1,13 @@
 SOURCEFILES ?= *.vhd
-TOPMODULE ?= $(shell $(GHDL) -f $(INPUTFILES) | awk '/entity (.*) \*\*/ {print $$2}')
 BUILDDIR ?= ./build
 GHDLFLAGS ?=
 XILT ?= xilt
 GHDL ?= ghdl
 GTKWAVE ?= gtkwave
-INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath:../../shared --deppath:../../shared-trs80)
+INPUTFILES1 := $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://shared --deppath://shared-trs80)
+INPUTFILES ?= $(INPUTFILES1)
+TOPMODULE1 := $(shell $(GHDL) -f $(INPUTFILES) | awk '/entity (.*) \*\*/ {print $$2}')
+TOPMODULE ?= $(TOPMODULE1)
 OBJS = $(addprefix $(BUILDDIR)/,$(notdir $(INPUTFILES:.vhd=.o)))
 EXE = $(BUILDDIR)/$(TOPMODULE)
 SIMOPTS ?=
@@ -20,14 +22,16 @@ endif
 # Compile and Link
 $(EXE): $(INPUTFILES)
 	@mkdir -p $(BUILDDIR)
-	$(GHDL) -a --workdir=$(BUILDDIR) $(GHDLFLAGS) $(INPUTFILES)
-	$(GHDL) -m --workdir=$(BUILDDIR) -o $(EXE) $(TOPMODULE)
+	xilt ghdl-filter $(GHDL) -a --workdir=$(BUILDDIR) $(GHDLFLAGS) $(INPUTFILES)
+	xilt ghdl-filter $(GHDL) -m --workdir=$(BUILDDIR) -o $(EXE) $(TOPMODULE)
+	@echo
+	@echo "Finished."
 
 # Run simulation if .vcd file is out of date
 $(BUILDDIR)/out.vcd: $(EXE)
-	@echo ------------ Start Simulation ------------
+	@echo ------------ Start Simulation \($(SIMOPTS)\) ------------
 	@$(EXE) --vcd=$(BUILDDIR)/out.vcd $(SIMOPTS)
-	@echo ------------  End Simulation  ------------
+	@echo ------------ End Simulation ------------
 
 # Run
 run: $(BUILDDIR)/out.vcd

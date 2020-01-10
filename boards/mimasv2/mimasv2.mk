@@ -4,8 +4,8 @@ XILT ?= xilt
 TOPMODULE ?= top
 BUILDDIR ?= ./build
 BINFILE ?= $(BUILDDIR)/$(PROJECTNAME).bin
-SOURCEFILES ?= *.vhd *.ucf
-INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath:../../../shared --deppath:../../../shared-trs80 --deppath:./coregen)
+SOURCEFILES ?= *.vhd *.ucf //shared/SuppressBenignWarnings.vhd
+INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://shared --deppath://shared-trs80 --deppath:./coregen)
 
 # Build
 $(BINFILE): $(INPUTFILES)
@@ -16,7 +16,7 @@ $(BINFILE): $(INPUTFILES)
 	--messageFormat:msCompile \
 	--noinfo \
 	@../mimasv2-xilt.txt \
-	$(INPUTFILES) ../../../shared/SuppressBenignWarnings.vhd
+	$(INPUTFILES) 
 	
 # Upload
 upload: $(BINFILE)

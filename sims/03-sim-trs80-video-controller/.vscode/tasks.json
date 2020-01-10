@@ -14,27 +14,19 @@
             "presentation": {
                 "clear": true,
                 "showReuseMessage": false
-            }
+            },
+            "problemMatcher": "$msCompile"
         },
         {
             "label": "Run",
             "type": "shell",
-            "command": "make run",
-            "group": "build",
-            "presentation": {
-                "showReuseMessage": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "View",
-            "type": "shell",
             "command": "make view",
             "group": "build",
             "presentation": {
+                "clear": true,
                 "showReuseMessage": false
             },
-            "problemMatcher": []
+            "problemMatcher": "$msCompile"
         }
     ]
 }
