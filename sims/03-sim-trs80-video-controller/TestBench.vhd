@@ -12,7 +12,7 @@ architecture behavior of TestBench is
     signal S_VPos : integer range -2048 to 2047;
     signal s_VideoRamAddr : std_logic_vector(9 downto 0);
     signal s_VideoRamData : std_logic_vector(7 downto 0);
-    signal s_CharRomAddr :  std_logic_vector(11 downto 0);
+    signal s_CharRomAddr :  std_logic_vector(10 downto 0);
     signal s_CharRomData :  std_logic_vector(5 downto 0);
     signal s_Pixel : std_logic;
 begin

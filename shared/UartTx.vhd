@@ -27,6 +27,7 @@ port
 ( 
     -- Control
     i_Clock : in std_logic;                     -- Clock
+    i_ClockEnable : in std_logic;               -- Clock Enable
     i_Reset : in std_logic;                     -- Reset (synchronous, active high)
 
     -- Input
@@ -55,6 +56,7 @@ begin
     port map
     (
         i_Clock => i_Clock,
+        i_ClockEnable => i_ClockEnable,
         i_Reset => i_Reset,
         o_ClockEnable => s_clock_enable
     );
@@ -67,7 +69,7 @@ begin
                 s_data <= (others => '0');
                 s_bits_left <= 0;
                 o_UartTx <= '1';
-            else
+            elsif i_ClockEnable = '1' then
                 if i_DataAvailable = '1' and s_busy = '0' then
                     s_data <= "1" & i_Data & "0";
                     s_bits_left <= 10;

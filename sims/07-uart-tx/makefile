@@ -1,4 +1,4 @@
-SIMOPTS = --stop-time=150ms
+SIMOPTS = --stop-time=1ms
 
 include ../ghdl.mk
 

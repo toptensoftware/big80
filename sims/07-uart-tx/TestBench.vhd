@@ -13,7 +13,7 @@ architecture behavior of TestBench is
     signal s_data_available : std_logic;
     signal s_uart_tx : std_logic;
     signal s_uart_busy : std_logic;
-    constant c_ClockFrequency : real := 460800.0;
+    constant c_ClockFrequency : real := 100_000_000.0;
 begin
 
 
@@ -32,19 +32,35 @@ begin
         wait for 1 sec / (c_ClockFrequency * 2.0);
     end process;
 
-    uart : entity work.UartTx
+--    uart : entity work.UartTx
+--    generic map
+--    (
+--        p_ClockFrequency => integer(c_ClockFrequency)
+--    )
+--    port map
+--    (
+--        i_Clock => s_clock,
+--        i_ClockEnable => '1',
+--        i_Reset => s_reset,
+--        i_Data => s_data,
+--        i_DataAvailable => s_data_available,
+--        o_UartTx => s_uart_tx,
+--        o_Busy => s_uart_busy
+--    );
+
+    uart : entity work.txer
     generic map
     (
-        p_ClockFrequency => integer(c_ClockFrequency)
+        g_CLKS_PER_BIT => 868
     )
     port map
     (
-        i_Clock => s_clock,
-        i_Reset => s_reset,
-        i_Data => s_data,
-        i_DataAvailable => s_data_available,
-        o_UartTx => s_uart_tx,
-        o_Busy => s_uart_busy
+        i_Clk => s_clock,
+        i_TX_DV => s_data_available,
+        i_TX_Byte => s_data,
+        o_TX_Active => s_uart_busy,
+        o_TX_Serial => s_uart_tx,
+        o_TX_Done => open
     );
 
     data : process(s_clock)
@@ -57,7 +73,7 @@ begin
                 s_data_available <= '0';
             else
                 s_data_available <= '0';
-                if s_uart_busy = '0' then
+                if s_uart_busy = '0' and s_data_available = '0' then
                     s_data_available <= '1';
                     if count < 4 then
                         s_data <= x"00";

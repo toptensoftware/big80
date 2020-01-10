@@ -25,6 +25,7 @@ port
 ( 
     -- Control
     i_Clock : in std_logic;             -- Clock
+    i_ClockEnable : in std_logic;       -- Clock Enable for clock being divided
     i_Reset : in std_logic;             -- Reset (synchronous, active high)
     
     -- Output
@@ -39,7 +40,7 @@ architecture Behavioral of ClockDivider is
 begin
 
     -- Clock enabled?
-    o_ClockEnable <= '1' when s_divider = 0 and i_Reset = '0' else '0';
+    o_ClockEnable <= '1' when s_divider = 0 and i_Reset = '0' and i_ClockEnable = '1' else '0';
 
 	-- Process to handle clock ticks
 	process (i_Clock)
@@ -47,7 +48,7 @@ begin
 		if rising_edge(i_Clock) then
             if i_reset='1' then
                 s_divider <= 0;
-            else
+            elsif i_ClockEnable = '1' then
                 if s_divider = p_DivideCycles - 1 then
                     s_divider <= 0;
                 else

@@ -174,23 +174,10 @@ begin
 	port map
 	(
 		i_Clock => s_CLK_80Mhz,
+		i_ClockEnable => '1',
 		i_Reset => s_reset,
 		o_ClockEnable => s_CLK_CPU_normal_en
 	);
-
-	-- Generate CPU clock enable for turbo mode
-	-- (80Mhz / 4 = 20Mhz)
----	clock_div_cpu_turbo : entity work.ClockDivider
----	generic map
----	(
----		p_DivideCycles => 2
----	)
----	port map
----	(
----		i_Clock => s_CLK_80Mhz,
----		i_Reset => s_reset,
----		o_ClockEnable => s_CLK_CPU_turbo_en
----	);
 
 	s_CLK_CPU_turbo_en <= s_CLK_40Mhz_en;
 	s_CLK_CPU_en <= 

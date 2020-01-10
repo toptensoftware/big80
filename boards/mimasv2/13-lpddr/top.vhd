@@ -78,6 +78,7 @@ begin
 	port map
 	(
 		i_Clock => s_CLK_80Mhz,
+		i_ClockEnable => '1',
 		i_Reset => s_reset,
 		o_ClockEnable => s_CLK_CPU_en
 	);

@@ -54,6 +54,7 @@ begin
 		i_ExtendedKey => s_extended_key,
 		i_KeyRelease => s_key_release,
 		i_DataAvailable => s_key_available,
+		i_TypingMode => '0',
 		i_Addr => Switches,
 		o_Data => LEDs
 	);

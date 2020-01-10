@@ -45,6 +45,7 @@ begin
     port map
     (
         i_Clock => i_Clock,
+        i_ClockEnable => '1',
         i_Reset => i_Reset,
         
         -- Output
