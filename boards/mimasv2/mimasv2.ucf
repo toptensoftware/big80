@@ -18,8 +18,14 @@ CONFIG VCCAUX = "3.3" ;
 ###################################################################################################################################################
 #                                                 UART Interface                                                                                  #
 ################################################################################################################################################### 
+    # Original confusingly labelled not from perspective of FPGA
     #NET "UART_TX"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
     #NET "UART_RX"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+
+    # From perspective of FPGA
+    #NET "UART_RX"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    #NET "UART_TX"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+
 
 ###################################################################################################################################################
 #                                                   SPI Flash                                                                                     #

@@ -20,6 +20,7 @@ port
 	SevenSegment : out std_logic_vector(7 downto 0);
 	SevenSegmentEnable : out std_logic_vector(2 downto 0);
 	Audio : out std_logic_vector(1 downto 0);
+	UART_TX : out std_logic;
 	debug_audio : out std_logic
 );
 end top;
@@ -48,13 +49,19 @@ architecture Behavioral of top is
 	signal s_selected_tape : std_logic_vector(11 downto 0);
 
 	signal s_Audio : std_logic;
+
+	signal s_parser_reset : std_logic;
+	signal s_dout : std_logic_vector(7 downto 0);
+	signal s_dout_available : std_logic;
+	signal s_dout_available_pulse : std_logic;
+	signal s_uart_busy : std_logic;
 begin
 
 	-- Reset signal
 	s_reset <= not Button_B;
 
 	--      audio signal        reading            sdhc             initok
-	LEDs <= s_Audio & "0000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
+	LEDs <= s_Audio & s_uart_busy & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
 
 	dcm : entity work.ClockDCM
 	port map
@@ -178,6 +185,45 @@ begin
 	-- Output audio on both channels
 	Audio <= s_Audio & s_Audio;
 	debug_audio <= s_Audio;
+
+	-- Also parse and send to uart
+	parser : entity work.Trs80CassetteParser
+	generic map
+	(
+		p_ClockEnableFrequency => 1_774_000
+	)
+	port map
+	(
+		i_Clock => s_CLK_80Mhz,
+		i_ClockEnable => s_CLK_CPU_en,
+		i_Reset => s_parser_reset,
+		i_Audio => s_Audio,
+		o_DataAvailable => s_dout_available,
+		o_Data => s_dout
+	);
+
+	-- Reset the parser whenever the play/pause button is pressed
+	s_parser_reset <= s_reset or not s_buttons_unbounced(0);
+
+	s_dout_available_pulse <= s_dout_available and s_CLK_CPU_en;
+
+	uart_txer : entity work.UartTx
+	generic map
+	(
+		p_ClockFrequency => 80_000_000
+	)
+	port map
+	( 
+		i_Clock => s_CLK_80Mhz,
+		i_ClockEnable => '1',
+		i_Reset => s_reset,
+		i_Data => s_dout,
+		i_DataAvailable => s_dout_available_pulse,
+		o_UartTx => UART_TX,
+		o_Busy => s_uart_busy
+	);
+	
+
 
 end Behavioral;
 

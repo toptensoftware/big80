@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Thu Jan  9 23:24:17 2020
+[*] Fri Jan 10 23:21:26 2020
 [*]
 [dumpfile] "/home/brad/Projects/big80/sims/06-sim_trs80-cassette-parser/build/out.vcd"
-[dumpfile_mtime] "Thu Jan  9 23:22:13 2020"
-[dumpfile_size] 79956159
+[dumpfile_mtime] "Fri Jan 10 23:19:28 2020"
+[dumpfile_size] 78637124
 [savefile] "/home/brad/Projects/big80/sims/06-sim_trs80-cassette-parser/gtkwave_config.gtkw"
-[timestart] 224640000000000
+[timestart] 138320000000000
 [size] 1280 751
 [pos] -1 -1
-*-43.994347 41350000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-43.994347 208001126676864 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [sst_width] 196
 [signals_width] 181
@@ -26,5 +26,7 @@ testbench.renderer.i_data[7:0]
 testbench.parser.o_dataavailable
 @22
 testbench.parser.o_data[7:0]
+@28
+testbench.s_parser_reset
 [pattern_trace] 1
 [pattern_trace] 0

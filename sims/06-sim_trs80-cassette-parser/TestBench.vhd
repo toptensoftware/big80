@@ -8,6 +8,7 @@ end TestBench;
 architecture behavior of TestBench is
     signal s_clock : std_logic := '0';
     signal s_reset : std_logic;
+    signal s_parser_reset : std_logic;
     signal s_clock_enable : std_logic;
     signal s_din : std_logic_vector(7 downto 0);
     signal s_din_needed : std_logic;
@@ -64,13 +65,13 @@ begin
                 count := 0;
             elsif s_clock_enable = '1' then            
                 if s_din_needed = '1' then
-                    if count < 4 then
+                    if count < 8 then
                         s_din <= x"00";
                         count := count + 1;
-                    elsif count = 4 then
+                    elsif count = 8 then
                         s_din <= x"A5";
                         count := count + 1;
-                    elsif count = 5 then
+                    elsif count = 9 then
                         s_din <= x"00";
                         count := count + 1;
                     else
@@ -87,11 +88,20 @@ begin
     (
         i_Clock => s_clock,
         i_ClockEnable => s_clock_enable,
-        i_Reset => s_reset,
+        i_Reset => s_parser_reset,
         i_Audio => s_audio,
         o_Data => s_dout,
         o_DataAvailable => s_dout_available
     );
+
+    parser_reset_proc: process
+    begin
+        s_parser_reset <= '1';
+        wait for 50 ms;
+        s_parser_reset <= '0';
+        wait;
+    end process;
+
 
 
 end;
