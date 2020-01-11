@@ -120,10 +120,18 @@ begin
 		i_Clock => i_Clock,
 		i_ClockEnable => i_ClockEnable,
 		i_Reset => s_streamer_reset,
+		i_RecordMode => '0',
 		i_Data => i_sd_data,
 		i_DataAvailable => i_sd_dcycle,
 		o_DataNeeded => s_data_needed,
-		o_Audio => o_Audio
+		o_Audio => o_Audio,
+
+		i_Audio => '0',
+		o_DataAvailable => open,
+		i_DataNeeded => '0',
+		o_Data => open,
+		i_StopRecording => '0',
+		o_RecordingFinished => open	
 	);
 
 	s_streamer_reset <= '1' when i_Reset = '1' or s_playing = '0' else '0';

@@ -9,13 +9,16 @@ architecture behavior of TestBench is
     signal s_clock : std_logic := '0';
     signal s_reset : std_logic;
     signal s_clock_enable : std_logic;
-    signal s_load_addr : std_logic_vector(8 downto 0);
+    constant c_BufferSize : integer := 2;
+    constant c_addr_ones : std_logic_vector(c_BufferSize - 1 downto 0) := (others => '1');
+    signal s_load_addr : std_logic_vector(c_BufferSize - 1 downto 0);
     signal s_loading : std_logic;
     signal s_data_needed : std_logic;
     signal s_data_available : std_logic;
     signal s_audio : std_logic;
     constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
     signal s_load_divider : unsigned(3 downto 0);
+    signal s_data : std_logic_vector(7 downto 0);
 begin
 
 
@@ -46,15 +49,26 @@ begin
     end process;
 
     streamer : entity work.Trs80CassetteStreamer
+    generic map
+    (
+        p_BufferSize => c_BufferSize
+    )
     port map
     (
         i_Clock => s_clock,
         i_ClockEnable => s_clock_enable,
         i_Reset => s_reset,
-        i_Data => s_load_addr(7 downto 0),
+        i_RecordMode => '0',
+        i_Data => s_data,
         i_DataAvailable => s_data_available,
         o_DataNeeded => s_data_needed,
-        o_Audio => s_audio
+        o_Audio => s_audio,
+        i_Audio => '0',
+        o_DataAvailable => open,
+        i_DataNeeded => '0',
+        o_Data => open,
+        i_StopRecording => '0',
+        o_RecordingFinished => open
     );
 
     s_data_available <= '1' when s_loading='1' and s_load_divider="1000" else '0';
@@ -63,18 +77,20 @@ begin
     begin
         if rising_edge(s_clock) then
             if s_reset = '1' then
-                s_load_addr <= "000000000";
+                s_load_addr <= (others => '0');
                 s_loading <= '0';
                 s_load_divider <= (others => '0');
+                s_data <= (others => '0');
             elsif s_data_needed = '1' then
-                s_load_addr <= "000000000";
+                s_load_addr <= (others => '0');
                 s_loading <= '1';
                 s_load_divider <= (others => '0');
             elsif s_loading = '1' then
                 s_load_divider <= s_load_divider + 1;
                 if (s_load_divider = "1111") then
+                    s_data <= std_logic_vector(unsigned(s_data) + 1);
                     s_load_addr <= std_logic_vector(unsigned(s_load_addr) + 1);
-                    if s_load_addr = "111111111" then 
+                    if s_load_addr = c_addr_ones then 
                         s_loading <= '0';
                     end if;
                 end if;

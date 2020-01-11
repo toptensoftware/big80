@@ -27,6 +27,7 @@ generic
 (
 	p_ClockEnableFrequency : integer := 1_774_000;  -- Frequency of the clock enable
 	p_BaudRate : integer := 500;					-- Frequency of zero bit pulses
+	p_BufferSize : integer := 9;					-- Size of half buffer as power of 2
 	p_PulseWidth_us : integer := 100				-- Width of each pulse (in us)
 );
 port
@@ -36,28 +37,90 @@ port
 	i_ClockEnable : in std_logic;					-- Clock Enable
 	i_Reset : in std_logic;                         -- Reset (synchronous, active high)
 
-	-- Input
+	-- Playback or Record?
+	i_RecordMode : in std_logic;					-- Keep high while releasing reset to enter record mode
+
+	-- Playback
+	o_DataNeeded : out std_logic;					-- Asserts high for one main clock cycle when next 512 bytes needed
 	i_Data : in std_logic_vector(7 downto 0);		-- The byte to be buffered
 	i_DataAvailable : in std_logic;					-- Assert for one main clock cycle when ever data available on i_Data
+	o_Audio : out std_logic;						-- generated audio signal
 
-	-- Output
-	o_DataNeeded : out std_logic;					-- Asserts high for one main clock cycle when next 512 bytes needed
-	o_Audio : out std_logic							-- generated audio signal
+	-- Record
+	i_Audio : in std_logic;							-- input audio stream
+	o_DataAvailable : out std_logic;				-- Asserts for one main clock cycle when next 512 bytes are available
+	i_DataNeeded : in std_logic;					-- Assert for one main clock cycle when the next byte needed on o_Data
+	o_Data : out std_logic_vector(7 downto 0);		-- Data to record
+
+	i_StopRecording : in std_logic;					-- Assert for 1 cycle to stop the recorder and flush buffers
+	o_RecordingFinished : out std_logic			-- Asserts for 1 cycle when recording buffers have been flushed
 );
 end Trs80CassetteStreamer;
  
 architecture behavior of Trs80CassetteStreamer is 
+
+	signal s_record_mode : std_logic;
+
 	signal s_render_byte : std_logic_vector(7 downto 0);
-	signal s_render_ram_addr : std_logic_vector(9 downto 0);
 	signal s_render_data_needed : std_logic;
-	signal s_ram_write : std_logic;
-	signal s_ram_write_addr : std_logic_vector(9 downto 0);
-	signal s_buffer_state : std_logic_vector(1 downto 0);
 	signal s_renderer_reset : std_logic;
+
+	signal s_parser_byte : std_logic_vector(7 downto 0);
+	signal s_parser_data_available : std_logic;
+	signal s_parser_reset : std_logic;
+
+	signal s_ram_write : std_logic;
+	signal s_ram_write_addr : std_logic_vector(p_BufferSize downto 0);
+	signal s_ram_write_data : std_logic_vector(7 downto 0);
+	signal s_ram_read_addr : std_logic_vector(p_BufferSize downto 0);
+	signal s_ram_read_data : std_logic_vector(7 downto 0);
+
+	constant c_low_addr_ones : std_logic_vector(p_BufferSize - 1 downto 0) := (others => '1');
+	constant c_low_addr_zeros : std_logic_vector(p_BufferSize - 1 downto 0) := (others => '0');
+
+    type states IS
+    (
+		state_Idle,
+
+        state_PlayInit, 
+        state_PlayPreBuffering, 		-- from sd card
+        state_PlayDraining, 			-- to renderer
+		state_PlayBuffering,			-- from sd card
+		
+		state_RecInit,				
+		state_RecBuffering,				-- from parser
+		state_RecDraining,				-- to sd card
+		state_RecFlush,					-- start flush
+		state_RecFlushZero,				-- fill final buffer with zeros
+		state_RecFlushWrite,			-- write final buffer
+		state_RecFinished0,				-- delay finished signal one cycle
+		state_RecFinished
+    );
+
+	signal s_state : states := state_Idle;
+--pragma synthesis_off
+	signal s_state_integer : integer;
+--pragma synthesis_on
 begin
 
-	-- keep renderer in reset state until pre-buffering finished
-	s_renderer_reset <=  i_Reset or not s_buffer_state(1);
+--pragma synthesis_off
+	process
+	begin
+		aloop : for s in states loop
+			report  integer'image(states'pos(s)) & " " & states'image(s);
+		end loop;
+		wait;
+	end process;
+
+	s_state_integer <= states'pos(s_state);
+--pragma synthesis_on
+
+	-- hold renderer in reset state until pre-buffering finished
+	s_renderer_reset <= '1' when 
+		i_Reset='1' or 
+		s_state = state_PlayInit or
+		s_state = state_PlayPreBuffering 
+		else '0';
 
 	-- renderer
 	renderer : entity work.Trs80CassetteRenderer
@@ -71,11 +134,26 @@ begin
 		o_Audio => o_Audio
 	);
 
-	-- 2 x 512 cluster buffers
+	-- hold parser in reset state unless recording
+	s_parser_reset <= '1' when i_Reset='1' or s_record_mode = '0' else '0';
+
+	-- parser
+	parser : entity work.Trs80CassetteParser
+	port map
+	(
+		i_Clock => i_Clock,
+		i_ClockEnable => i_ClockEnable,
+		i_Reset => s_parser_reset,
+		i_Audio => i_Audio,
+		o_DataAvailable => s_parser_data_available,
+		o_Data => s_parser_byte
+	);
+
+	-- 2 x 512 byte block buffers
 	ram : entity work.RamDualPortInferred	
 	GENERIC MAP
 	(
-		p_AddrWidth => 10
+		p_AddrWidth => p_BufferSize + 1
 	)
 	PORT MAP
 	(
@@ -83,32 +161,34 @@ begin
 		i_Clock_A => i_Clock,
 		i_ClocKEn_A => '1',
 		i_Write_A  => '0',
-		i_Addr_A => s_render_ram_addr,
+		i_Addr_A => s_ram_read_addr,
 		i_Data_A => (others => '0'),
-		o_Data_A => s_render_byte,
+		o_Data_A => s_ram_read_data,
 
 		-- Write port
 		i_Clock_B => i_Clock,
 		i_ClocKEn_B => '1',
-		i_Write_B => i_DataAvailable,
+		i_Write_B => s_ram_write,
 		i_Addr_B => s_ram_write_addr,
-		i_Data_B => i_Data,
+		i_Data_B => s_ram_write_data,
 		o_Data_B => open
 	);
 
-	-- whenever the renderer wants more data, move to the next read address
-	render_proc: process(i_Clock)
-	begin
-		if rising_edge(i_Clock) then
-			if i_Reset = '1' then
-				s_render_ram_addr <= (others => '0');
-			elsif i_ClockEnable = '1' then
-				if s_render_data_needed = '1' then
-					s_render_ram_addr <= std_logic_vector(unsigned(s_render_ram_addr) + 1);
-				end if;
-			end if;
-		end if;
-	end process;
+	-- RAM write depends on record/playback
+	s_ram_write_data <= 
+		x"00" when s_state = state_RecFlushZero else
+		i_Data when s_record_mode = '0' else 
+		s_parser_byte;
+	s_ram_write <= 
+		'1' when s_state = state_RecFlushZero else 
+		i_DataAvailable when s_record_mode = '0' else 
+		(s_parser_data_available and i_ClockEnable);
+
+	-- RAM read goes to both renderer and to output
+	s_render_byte <= s_ram_read_data;
+	o_Data <= s_ram_read_data;
+
+	o_RecordingFinished <= '1' when s_state = state_RecFinished else '0';
 
 	-- whenever the client sends us data, move to next write address
 	buffer_proc: process(i_Clock)
@@ -116,55 +196,132 @@ begin
 		if rising_edge(i_Clock) then
 			if i_Reset = '1' then
 				s_ram_write_addr <= (others => '0');
-				s_buffer_state <= "00";
+				s_ram_read_addr <= (others => '0');
 				o_DataNeeded <= '0';
+				o_DataAvailable <= '0';
+				s_record_mode <= i_RecordMode;
+				if i_RecordMode = '0' then
+					s_state <= state_PlayInit;
+				else
+					s_state <= state_RecInit;
+				end if;
 			else
 				o_DataNeeded <= '0';
-				case s_buffer_state is
+				o_DataAvailable <= '0';
+
+				if i_ClockEnable = '1' then
+
+					-- whenever the renderer wants more data, move to the next read address
+					if s_record_mode = '0' and s_render_data_needed = '1' then
+						s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
+					end if;
+
+					-- whenever the parser has more data, move to the next write address
+					if (s_record_mode = '1' and s_parser_data_available = '1') or (s_state = state_RecFlushZero) then
+						s_ram_write_addr <= std_logic_vector(unsigned(s_ram_write_addr) + 1);
+					end if;
+
+				end if;
+
+				-- Stop recording?
+				if i_StopRecording = '1' then 
+					s_record_mode <= '0';
+				end if;
+				
+				case s_state is
+					when state_Idle => 
+						null;
 					
-					when "00" => 
-						-- initial
-						s_buffer_state <= "01";
+					when state_PlayInit => 
+						-- Start first SD read operation
+						s_state <= state_PlayPreBuffering;
 						o_DataNeeded <= '1';
 
-					when "01"  => 
-						-- pre-loading
+					when state_PlayPreBuffering  => 
+						-- Fill first buffer
 						if i_DataAvailable = '1' then
-
 							s_ram_write_addr <= std_logic_vector(unsigned(s_ram_write_addr) + 1);
-
-							-- Once first cluster is loaded, release the prebuffering flag
-							-- which releases the reset on the renderer, letting it "go".
-							if s_ram_write_addr = "0111111111" then
-								s_buffer_state <= "10";
+							if s_ram_write_addr(p_BufferSize-1 downto 0) = c_low_addr_ones then
+								s_state <= state_PlayDraining;
 							end if;
-
 						end if;
 
-					when "10" => 
-						-- monitoring
-
-						-- readerer has finished with that cluster, request the next
-						if s_render_ram_addr(9) /= s_ram_write_addr(9) then
+					when state_PlayDraining => 
+						-- Monitor for half buffer drained and start a new SD read operation
+						if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
 							o_DataNeeded <= '1';
-							s_buffer_state <= "11";
+							s_state <= state_PlayBuffering;
 						end if;
 
-					when "11"  => 
-						-- loading first half of buffer
+					when state_PlayBuffering  => 
+						-- Fill buffer from SD card
 						if i_DataAvailable = '1' then
-
 							s_ram_write_addr <= std_logic_vector(unsigned(s_ram_write_addr) + 1);
-
-							-- When cluster loaded, back to monitoring state
-							if s_ram_write_addr(8 downto 0)  = "111111111" then
-								s_buffer_state <= "10";
+							if s_ram_write_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
+								s_state <= state_PlayDraining;
 							end if;
-
 						end if;
 
-					when others =>
-						s_buffer_state <= "00";
+					when state_RecInit => 
+						-- Jump straight to buffering state
+						s_state <= state_RecBuffering;
+
+					when state_RecBuffering => 
+						-- Monitor for half buffer full and then start a SD write operation
+						if s_record_mode = '0' then
+							s_state <= state_RecFlush;
+						else
+							if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
+								o_DataAvailable <= '1';
+								s_state <= state_RecDraining;
+							end if;
+						end if;
+
+					when state_RecDraining => 
+						-- Suppy data to SD card from buffer until drained
+						if i_DataNeeded = '1' then
+							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
+							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
+								if s_record_mode = '1' then
+									s_state <= state_RecBuffering;
+								else
+									s_state <= state_RecFlush;
+								end if;
+							end if;
+						end if;
+
+					when state_RecFlush => 
+						-- If the write buffer is partially used, then
+						-- fill it with zeros and write it
+						if s_ram_write_addr(p_BufferSize-1 downto 0) = c_low_addr_zeros then
+							s_state <= state_RecFinished0;
+						else
+							s_state <= state_RecFlushZero;
+						end if;
+
+					when state_RecFlushZero => 
+						-- Fill buffer with zeros
+						if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
+							o_DataAvailable <= '1';
+							s_state <= state_RecFlushWrite;
+						end if;
+
+					when state_RecFlushWrite =>
+						-- Write final block to SD Card
+						if i_DataNeeded = '1' then
+							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
+							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
+								s_state <= state_RecFinished0;
+							end if;
+						end if;
+
+						when state_RecFinished0 =>
+							s_state <= state_RecFinished;
+
+						when state_RecFinished =>
+							-- stay here until reset
+							null;
+
 				end case;
 			end if;
 		end if;

@@ -32,35 +32,20 @@ begin
         wait for 1 sec / (c_ClockFrequency * 2.0);
     end process;
 
---    uart : entity work.UartTx
---    generic map
---    (
---        p_ClockFrequency => integer(c_ClockFrequency)
---    )
---    port map
---    (
---        i_Clock => s_clock,
---        i_ClockEnable => '1',
---        i_Reset => s_reset,
---        i_Data => s_data,
---        i_DataAvailable => s_data_available,
---        o_UartTx => s_uart_tx,
---        o_Busy => s_uart_busy
---    );
-
-    uart : entity work.txer
+    uart : entity work.UartTx
     generic map
     (
-        g_CLKS_PER_BIT => 868
+        p_ClockFrequency => integer(c_ClockFrequency)
     )
     port map
     (
-        i_Clk => s_clock,
-        i_TX_DV => s_data_available,
-        i_TX_Byte => s_data,
-        o_TX_Active => s_uart_busy,
-        o_TX_Serial => s_uart_tx,
-        o_TX_Done => open
+        i_Clock => s_clock,
+        i_ClockEnable => '1',
+        i_Reset => s_reset,
+        i_Data => s_data,
+        i_DataAvailable => s_data_available,
+        o_UartTx => s_uart_tx,
+        o_Busy => s_uart_busy
     );
 
     data : process(s_clock)

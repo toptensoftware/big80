@@ -1,0 +1,43 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sat Jan 11 12:30:40 2020
+[*]
+[dumpfile] "/home/brad/Projects/big80/sims/09-trs80-cassette-streaming-record/build/out.vcd"
+[dumpfile_mtime] "Sat Jan 11 12:28:00 2020"
+[dumpfile_size] 105314675
+[savefile] "/home/brad/Projects/big80/sims/09-trs80-cassette-streaming-record/gtkwave_config.gtkw"
+[timestart] 128590000000000
+[size] 1280 751
+[pos] -1 -1
+*-43.871006 160017192231648 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.fake.
+[treeopen] testbench.streamer.
+[sst_width] 196
+[signals_width] 260
+[sst_expanded] 1
+[sst_vpaned_height] 208
+@28
+testbench.streamer.parser.o_dataavailable
+@22
+testbench.streamer.parser.o_data[7:0]
+@28
+testbench.streamer.s_ram_write_addr[2:0]
+testbench.streamer.s_ram_write
+@22
+testbench.streamer.s_ram_write_data[7:0]
+@29
+testbench.streamer.i_dataneeded
+@22
+testbench.streamer.o_data[7:0]
+@28
+testbench.s_stop_recording
+testbench.streamer.o_recordingfinished
+@200
+-
+@22
+testbench.fake.s_render_data[7:0]
+@28
+testbench.fake.o_audio
+[pattern_trace] 1
+[pattern_trace] 0

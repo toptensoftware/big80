@@ -10,8 +10,6 @@ architecture behavior of TestBench is
     signal s_reset : std_logic;
     signal s_parser_reset : std_logic;
     signal s_clock_enable : std_logic;
-    signal s_din : std_logic_vector(7 downto 0);
-    signal s_din_needed : std_logic;
     signal s_audio : std_logic;
     signal s_dout : std_logic_vector(7 downto 0);
     signal s_dout_available : std_logic;
@@ -45,43 +43,14 @@ begin
         end if;
     end process;
 
-    renderer : entity work.Trs80CassetteRenderer
+    renderer : entity work.Trs80FakeCassetteAudio
     port map
     (
         i_Clock => s_clock,
         i_ClockEnable => s_clock_enable,
         i_Reset => s_reset,
-        i_Data => s_din,
-        o_DataNeeded => s_din_needed,
         o_Audio => s_audio
     );
-
-    data : process(s_clock)
-        variable count : integer := 0;
-    begin
-        if rising_edge(s_clock) then
-            if s_reset = '1' then
-                s_din <= x"00";
-                count := 0;
-            elsif s_clock_enable = '1' then            
-                if s_din_needed = '1' then
-                    if count < 8 then
-                        s_din <= x"00";
-                        count := count + 1;
-                    elsif count = 8 then
-                        s_din <= x"A5";
-                        count := count + 1;
-                    elsif count = 9 then
-                        s_din <= x"00";
-                        count := count + 1;
-                    else
-                       s_din <= std_logic_vector(unsigned(s_din) + 1);
-                    end if;
-
-                end if;
-            end if;
-        end if;
-    end process;
 
     parser : entity work.Trs80CassetteParser
     port map
