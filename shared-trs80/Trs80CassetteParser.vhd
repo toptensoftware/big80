@@ -18,7 +18,7 @@ use ieee.numeric_std.ALL;
 entity Trs80CassetteParser is
 generic
 (
-	p_ClockEnableFrequency : integer := 1_774_000;  -- Frequency of the clock enable
+	p_ClockEnableFrequency : integer;  				-- Frequency of the clock enable
 	p_BaudRate : integer := 500						-- Frequency of zero bit pulses
 );
 port

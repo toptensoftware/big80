@@ -39,7 +39,7 @@ begin
 
     -- Produces the stream of bytes we want to record
     gen_data : process(i_Clock)
-        variable count : integer := 0;
+        variable count : integer range 0 to 6 := 0;
     begin
         if rising_edge(i_Clock) then
             if i_Reset = '1' then

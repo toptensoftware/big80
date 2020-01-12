@@ -23,7 +23,7 @@ use ieee.numeric_std.ALL;
 entity Trs80CassetteRenderer is
 generic
 (
-	p_ClockEnableFrequency : integer := 1_774_000;  -- Frequency of the clock enable
+	p_ClockEnableFrequency : integer;  				-- Frequency of the clock enable
 	p_BaudRate : integer := 500;					-- Frequency of zero bit pulses
 	p_PulseWidth_us : integer := 100				-- Width of each pulse (in us)
 );

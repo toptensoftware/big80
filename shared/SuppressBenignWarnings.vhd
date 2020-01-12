@@ -21,6 +21,10 @@
 -- value of Y in block <Z>. This FF/Latch will be trimmed during the optimization process.
 --xilt:nowarn:~^WARNING:Xst:1895
 
+-- FF/Latch <X> has a constant value of Y in block <Z>. This FF/Latch 
+-- will be trimmed during the optimization process.
+--xilt:nowarn:~^WARNING:Xst:1293
+
 -- FFs/Latches <o_sd_op_cmd<1:1>> (without init value) have a constant value of <X> in 
 -- block <Y>.
 --xilt:nowarn:~^WARNING:Xst:2404

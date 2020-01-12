@@ -40,7 +40,7 @@ port
 end DebounceFilterWithEdge;
 
 architecture Behavioral of DebounceFilterWithEdge is
-    constant c_DebounceTicks : integer := p_ClockFrequency * p_DebounceTimeUS / 1000000;
+    constant c_DebounceTicks : integer := integer(real(p_ClockFrequency) * real(p_DebounceTimeUS) / 1000000.0);
     signal s_Current : std_logic;
     signal s_Previous : std_logic;
     signal s_Signal : std_logic;
