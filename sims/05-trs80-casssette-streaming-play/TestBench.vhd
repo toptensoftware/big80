@@ -13,8 +13,8 @@ architecture behavior of TestBench is
     constant c_addr_ones : std_logic_vector(c_BufferSize - 1 downto 0) := (others => '1');
     signal s_load_addr : std_logic_vector(c_BufferSize - 1 downto 0);
     signal s_loading : std_logic;
-    signal s_data_needed : std_logic;
-    signal s_data_available : std_logic;
+    signal s_block_needed : std_logic;
+    signal s_data_cycle : std_logic;
     signal s_audio : std_logic;
     constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
     signal s_load_divider : unsigned(3 downto 0);
@@ -51,6 +51,7 @@ begin
     streamer : entity work.Trs80CassetteStreamer
     generic map
     (
+        p_ClockEnableFrequency => 1_774_000,
         p_BufferSize => c_BufferSize
     )
     port map
@@ -60,18 +61,17 @@ begin
         i_Reset => s_reset,
         i_RecordMode => '0',
         i_Data => s_data,
-        i_DataAvailable => s_data_available,
-        o_DataNeeded => s_data_needed,
+        i_DataCycle => s_data_cycle,
+        o_BlockNeeded => s_block_needed,
         o_Audio => s_audio,
         i_Audio => '0',
-        o_DataAvailable => open,
-        i_DataNeeded => '0',
+        o_BlockAvailable => open,
         o_Data => open,
         i_StopRecording => '0',
         o_RecordingFinished => open
     );
 
-    s_data_available <= '1' when s_loading='1' and s_load_divider="1000" else '0';
+    s_data_cycle <= '1' when s_loading='1' and s_load_divider="1000" else '0';
 
     data : process(s_clock)
     begin
@@ -81,7 +81,7 @@ begin
                 s_loading <= '0';
                 s_load_divider <= (others => '0');
                 s_data <= (others => '0');
-            elsif s_data_needed = '1' then
+            elsif s_block_needed = '1' then
                 s_load_addr <= (others => '0');
                 s_loading <= '1';
                 s_load_divider <= (others => '0');

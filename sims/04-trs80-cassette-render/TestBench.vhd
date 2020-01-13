@@ -43,6 +43,10 @@ begin
     end process;
 
     renderer : entity work.Trs80CassetteRenderer
+    generic map
+    (
+        p_ClockEnableFrequency => 1_774_000
+    )
     port map
     (
         i_Clock => s_clock,

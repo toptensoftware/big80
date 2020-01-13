@@ -28,7 +28,7 @@ begin
 	generic map
 	(
 		p_ClockFrequency => 100_000_000,
-		p_BytesPerChunk => 64,
+		p_BytesPerChunk => 512,
 		p_ChunksPerSecond => 1
 	)
 	port map

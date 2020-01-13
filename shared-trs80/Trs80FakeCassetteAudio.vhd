@@ -57,7 +57,7 @@ begin
                         s_render_data <= x"00";
                         count := count + 1;
                     else
-					   	if s_render_data = x"07" then
+					   	if s_render_data = x"06" then
 							s_render_data <= x"00";
 					   	else
 							s_render_data <= std_logic_vector(unsigned(s_render_data) + 1);

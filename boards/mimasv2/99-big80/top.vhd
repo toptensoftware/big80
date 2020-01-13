@@ -100,6 +100,7 @@ architecture Behavioral of top is
 	signal s_buttons_debounced : std_logic_vector(2 downto 0);
 	signal s_buttons_edges : std_logic_vector(2 downto 0);
 	signal s_buttons_trigger : std_logic_vector(2 downto 0);
+	signal s_button_record : std_logic;
 
 	signal s_extended_key_press : std_logic;
 	signal s_media_key_play : std_logic;
@@ -112,14 +113,18 @@ architecture Behavioral of top is
 	signal s_sd_op_cmd : std_logic_vector(1 downto 0);
 	signal s_sd_op_block_number : std_logic_vector(31 downto 0);
 	signal s_sd_dcycle : std_logic;
-	signal s_sd_data : std_logic_vector(7 downto 0);
+	signal s_sd_din : std_logic_vector(7 downto 0);
+	signal s_sd_dout : std_logic_vector(7 downto 0);
 	signal s_sd_last_block_number : std_logic_vector(31 downto 0);
 	signal s_sd_status : std_logic_vector(7 downto 0);
 	signal s_seven_seg_value : std_logic_vector(11 downto 0);
 	signal s_selected_tape : std_logic_vector(11 downto 0);
+	signal s_recording : std_logic;
+	signal s_playing_or_recording : std_logic;
 	signal s_PrevCasAudio : std_logic;
-	signal s_CasAudio : std_logic;
-	signal s_CasAudioEdge : std_logic;
+	signal s_CasAudioIn : std_logic;
+	signal s_CasAudioOut : std_logic;
+	signal s_CasAudioInEdge : std_logic;
 	signal s_Audio : std_logic;
 	signal s_Speaker : std_logic_vector(1 downto 0);
 
@@ -427,7 +432,7 @@ begin
 							s_is_vram_range, s_VideoRamDataOut_cpu,
 							s_is_keyboard_Range, s_KeyboardMapDataOut_cpu,
 							s_port_rd,
-							s_is_cas_port, s_CasAudio, s_CasAudioEdge
+							s_is_cas_port, s_CasAudioIn, s_CasAudioInEdge
 							)
 	begin
 
@@ -445,14 +450,13 @@ begin
 			end if;
 		elsif s_port_rd = '1' then
 			if s_is_cas_port = '1' then
-				s_cpu_din <= s_CasAudioEdge & "000000" & s_CasAudio;
+				s_cpu_din <= s_CasAudioInEdge & "000000" & s_CasAudioIn;
 			end if;
 		end if;
 
 	end process;
 
-	--      audio signal        reading            sdhc             initok
-	LEDs <= s_CasAudio & "0000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
+	LEDs <= s_CasAudioIn & s_CasAudioOut & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
 
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
 	generic map
@@ -502,8 +506,8 @@ begin
 		-- DMA access
 		dstart => open,
 		dcycle => s_sd_dcycle,
-		din => x"00",
-		dout => s_sd_data
+		din => s_sd_din,
+		dout => s_sd_dout
 	);
 
 	debounce : entity work.DebounceFilterSet
@@ -526,6 +530,7 @@ begin
 	-- Debounced all buttons
 	s_buttons_unbounced <= Button_Down & Button_Up & Button_Right;
 	s_buttons_trigger <= (s_buttons_edges and not s_buttons_debounced) or s_media_keys;
+	s_button_record <= not Button_Left;
 
 	-- Also map, media keys
 	s_extended_key_press <= s_key_available and not s_key_release and s_extended_key;
@@ -547,39 +552,46 @@ begin
 		i_ClockEnable => s_CLK_CPU_en,
 		i_Reset => s_Reset,
 		i_ButtonStartStop => s_buttons_trigger(0),
+		i_ButtonRecord => s_button_record,
 		i_ButtonNext => s_buttons_trigger(1),
 		i_ButtonPrev => s_buttons_trigger(2),
+		o_PlayingOrRecording => s_playing_or_recording,
+		o_Recording => s_recording,
 		o_sd_op_wr => s_sd_op_wr,
 		o_sd_op_cmd => s_sd_op_cmd,
 		o_sd_op_block_number => s_sd_op_block_number,
 		i_sd_status => s_sd_status,
 		i_sd_dcycle => s_sd_dcycle,
-		i_sd_data => s_sd_data,
+		i_sd_data => s_sd_dout,
+		o_sd_data => s_sd_din,
 		o_SelectedTape => s_selected_tape,
-		o_Audio => s_CasAudio
+		o_Audio => s_CasAudioIn,
+		i_Audio => s_CasAudioOut,
+		debug => open
 	);
 
 	cas_edge_detect : process(s_CLK_80Mhz)
 	begin
 		if rising_edge(s_CLK_80Mhz) then
 			if s_reset = '1' then
-				s_CasAudioEdge <= '0';
+				s_CasAudioInEdge <= '0';
 				s_PrevCasAudio <= '0';
 				s_Speaker <= "00";
 				s_CasMotorRelay <= '0';
 			else
 
 				-- Detect edge
-				s_PrevCasAudio <= s_CasAudio;
-				if s_PrevCasAudio /= s_CasAudio then 
-					s_CasAudioEdge <= '1';
+				s_PrevCasAudio <= s_CasAudioIn;
+				if s_PrevCasAudio /= s_CasAudioIn then 
+					s_CasAudioInEdge <= '1';
 				end if;
 
 				-- Clear flag
 				if s_port_wr = '1' and s_is_cas_port='1' and s_CLK_CPU_en='1' then
-					s_CasAudioEdge <= s_cpu_dout(7);
+					s_CasAudioInEdge <= s_cpu_dout(7);
 					s_Speaker <= s_cpu_dout(1 downto 0);
 					s_CasMotorRelay <= s_cpu_dout(2);
+					s_CasAudioOut <= s_cpu_dout(0);
 				end if;
 
 			end if;
@@ -587,7 +599,7 @@ begin
 	end process;
 
 	-- Output audio on both channels
-	s_Audio <= s_Speaker(0) xor s_CasAudio;
+	s_Audio <= s_Speaker(0) xor s_CasAudioIn xor s_CasAudioOut;
 	Audio <= s_Audio & s_Audio;
 
 end Behavioral;

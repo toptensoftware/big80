@@ -218,6 +218,7 @@ begin
 						
 					when state_stopping =>
 						s_stop_recording <= '1';
+						s_state <= state_flushing;
 						o_debug(4) <= '1';
 
 					when state_flushing =>

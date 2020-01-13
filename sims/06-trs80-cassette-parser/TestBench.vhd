@@ -53,6 +53,10 @@ begin
     );
 
     parser : entity work.Trs80CassetteParser
+    generic map
+    (
+        p_ClockEnableFrequency => 1_774_000
+    )
     port map
     (
         i_Clock => s_clock,

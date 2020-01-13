@@ -7,7 +7,7 @@ CONFIG VCCAUX = "3.3" ;
    NET "CLK_100MHz_in"                  LOC = V10     | IOSTANDARD = LVCMOS33 | PERIOD = 100MHz ;
 
     NET "UART_TX"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
-    #NET "UART_TX"                  LOC = R11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 1
+    NET "UART2_TX"                  LOC = R11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 1
      	
 ###################################################################################################################################################
 #                                              Push Buttons Switches                                                                              #

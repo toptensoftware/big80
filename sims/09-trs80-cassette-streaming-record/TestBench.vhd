@@ -11,8 +11,8 @@ architecture behavior of TestBench is
     signal s_clock_enable : std_logic;
     signal s_audio : std_logic;
     signal s_sd_data : std_logic_vector(7 downto 0);
-    signal s_sd_data_needed : std_logic;
-    signal s_sd_data_available : std_logic;
+    signal s_sd_data_cycle : std_logic;
+    signal s_sd_block_available : std_logic;
     signal s_recording_finished : std_logic;
     signal s_stop_recording : std_logic;
     constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
@@ -64,6 +64,7 @@ begin
     streamer : entity work.Trs80CassetteStreamer
     generic map
     (
+        p_ClockEnableFrequency => 1_774_000,
         p_BufferSize => c_BufferSize
     )
     port map
@@ -73,18 +74,16 @@ begin
         i_Reset => s_reset,
         i_RecordMode => '1',
         i_Data => x"00",
-        i_DataAvailable => '0',
-        o_DataNeeded => open,
         o_Audio => open,
         i_Audio => s_audio,
-        o_DataAvailable => s_sd_data_available,
-        i_DataNeeded => s_sd_data_needed,
+        o_BlockAvailable => s_sd_block_available,
+        i_DataCycle => s_sd_data_cycle,
         o_Data => s_sd_data,
         i_StopRecording => s_stop_recording,
         o_RecordingFinished => s_recording_finished
     );
 
-    s_sd_data_needed <= '1' when s_drain_divider="0001" else '0';
+    s_sd_data_cycle <= '1' when s_drain_divider="0001" else '0';
 
     write_data : process(s_clock)
     begin
@@ -93,7 +92,7 @@ begin
                 s_drain_addr <= (others => '0');
                 s_draining <= '0';
                 s_drain_divider <= (others => '0');
-            elsif s_sd_data_available = '1' then
+            elsif s_sd_block_available = '1' then
                 s_drain_addr <= (others =>'0');
                 s_draining <= '1';
                 s_drain_divider <= (others => '0');

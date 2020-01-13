@@ -32,6 +32,8 @@ generic
 );
 port
 (
+	debug : out std_logic_vector(7 downto 0);
+
     -- Control
 	i_Clock : in std_logic;                         -- Main Clock
 	i_ClockEnable : in std_logic;					-- Clock Enable
@@ -212,12 +214,8 @@ begin
 				s_ram_read_addr <= (others => '0');
 				o_BlockNeeded <= '0';
 				o_BlockAvailable <= '0';
-				s_record_mode <= i_RecordMode;
-				if i_RecordMode = '0' then
-					s_state <= state_PlayInit;
-				else
-					s_state <= state_RecInit;
-				end if;
+				s_state <= state_idle;
+				debug <= (others => '0');
 			else
 				o_BlockNeeded <= '0';
 				o_BlockAvailable <= '0';
@@ -239,11 +237,17 @@ begin
 				-- Stop recording?
 				if i_StopRecording = '1' then 
 					s_record_mode <= '0';
+					debug(0) <= '1';
 				end if;
-				
+
 				case s_state is
 					when state_Idle => 
-						null;
+						s_record_mode <= i_RecordMode;
+						if i_RecordMode = '0' then
+							s_state <= state_PlayInit;
+						else
+							s_state <= state_RecInit;
+						end if;
 					
 					when state_PlayInit => 
 						-- Start first SD read operation
@@ -283,15 +287,19 @@ begin
 						-- Monitor for half buffer full and then start a SD write operation
 						if s_record_mode = '0' then
 							s_state <= state_RecFlush;
+							debug(1) <= '1';
 						else
+							debug(2) <= '1';
 							if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
 								o_BlockAvailable <= '1';
 								s_state <= state_RecDraining;
+								debug(3) <= '1';
 							end if;
 						end if;
 
 					when state_RecDraining => 
 						-- Suppy data to SD card from buffer until drained
+						debug(4) <= '1';
 						if i_DataCycle = '1' then
 							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
 							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
@@ -304,6 +312,7 @@ begin
 						end if;
 
 					when state_RecFlush => 
+						debug(5) <= '1';
 						-- If the write buffer is partially used, then
 						-- fill it with zeros and write it
 						if s_ram_write_addr = s_ram_read_addr then
@@ -313,27 +322,29 @@ begin
 						end if;
 
 					when state_RecFlushZero => 
+							debug(6) <= '1';
 						-- Fill buffer with zeros
 						if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
 							o_BlockAvailable <= '1';
 							s_state <= state_RecFlushWrite;
 						end if;
 
-					when state_RecFlushWrite =>
+					when state_RecFlushWrite =>	
 						-- Write final block to SD Card
 						if i_DataCycle = '1' then
 							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
 							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
 								s_state <= state_RecFinished0;
 							end if;
-						end if;
+					end if;
 
-						when state_RecFinished0 =>
-							s_state <= state_RecFinished;
+					when state_RecFinished0 =>
+						s_state <= state_RecFinished;
 
-						when state_RecFinished =>
-							-- stay here until reset
-							null;
+					when state_RecFinished =>
+						debug(7) <= '1';
+						-- stay here until reset
+						null;
 
 				end case;
 			end if;

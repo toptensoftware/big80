@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Sun Jan 12 02:30:26 2020
+[*] Sun Jan 12 12:31:21 2020
 [*]
 [dumpfile] "/home/brad/Projects/big80/sims/10-trs80-cassette-streaming-record-uart/build/out.vcd"
-[dumpfile_mtime] "Sun Jan 12 02:24:21 2020"
-[dumpfile_size] 202068344
+[dumpfile_mtime] "Sun Jan 12 12:28:17 2020"
+[dumpfile_size] 697227423
 [savefile] "/home/brad/Projects/big80/sims/10-trs80-cassette-streaming-record-uart/gtkwave_config.gtkw"
-[timestart] 0
+[timestart] 916000580000000
 [size] 1280 751
 [pos] -1 -1
-*-47.963001 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-29.963001 916002081867730 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uat.
 [treeopen] testbench.uat.streamer.
@@ -32,9 +32,15 @@ testbench.uat.streamer.parser.o_data[7:0]
 testbench.uat.txer.o_uarttx
 @420
 testbench.uat.txer.clock_divider.s_divider
-@29
+@28
 testbench.uat.txer.o_busy
 @22
 testbench.uat.txer.i_data[7:0]
+@420
+testbench.uat.s_tx_state_integer
+@28
+testbench.uat.s_recording_finished
+@23
+testbench.uat.o_debug[7:0]
 [pattern_trace] 1
 [pattern_trace] 0
