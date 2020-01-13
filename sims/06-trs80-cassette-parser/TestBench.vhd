@@ -70,7 +70,7 @@ begin
     parser_reset_proc: process
     begin
         s_parser_reset <= '1';
-        wait for 50 ms;
+        wait for 5 ms;
         s_parser_reset <= '0';
         wait;
     end process;

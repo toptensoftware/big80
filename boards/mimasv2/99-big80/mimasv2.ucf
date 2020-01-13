@@ -6,6 +6,7 @@ CONFIG VCCAUX = "3.3" ;
 
    NET "CLK_100MHz"                  LOC = V10     | IOSTANDARD = LVCMOS33 | PERIOD = 100MHz ;
 
+   #NET "UART2_TX"                  LOC = R11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 1
      	
 ###################################################################################################################################################
 #                                                 DIP Switches                                                                                    #

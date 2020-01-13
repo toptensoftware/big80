@@ -18,7 +18,7 @@ entity Trs80FakeCassetteAudio is
 generic
 (
 	p_ClockEnableFrequency : integer := 1_774_000;  -- Frequency of the clock enable
-	p_BaudRate : integer := 500					-- Frequency of zero bit pulses
+	p_BaudRate : integer := 500					    -- Frequency of zero bit pulses
 );
 port
 (
@@ -35,6 +35,7 @@ end Trs80FakeCassetteAudio;
 architecture behavior of Trs80FakeCassetteAudio is 
     signal s_render_data : std_logic_vector(7 downto 0);
     signal s_render_data_needed : std_logic;
+    signal s_audio : std_logic;
 begin
 
     -- Produces the stream of bytes we want to record
@@ -57,8 +58,8 @@ begin
                         s_render_data <= x"00";
                         count := count + 1;
                     else
-					   	if s_render_data = x"06" then
-							s_render_data <= x"00";
+					   	if s_render_data = x"05" then
+                            s_render_data <= x"00";
 					   	else
 							s_render_data <= std_logic_vector(unsigned(s_render_data) + 1);
 						end if;
@@ -83,7 +84,9 @@ begin
         i_Reset => i_Reset,
         i_Data => s_render_data,
         o_DataNeeded => s_render_data_needed,
-        o_Audio => o_Audio
+        o_Audio => s_audio
     );
+
+    o_Audio <= s_audio;
 
 end;

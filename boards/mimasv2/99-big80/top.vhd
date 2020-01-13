@@ -35,6 +35,8 @@ port
 	SevenSegment : out std_logic_vector(7 downto 0);
 	SevenSegmentEnable : out std_logic_vector(2 downto 0);
 	Audio : out std_logic_vector(1 downto 0)
+
+--	UART2_TX : out std_logic
 );
 end top;
 
@@ -130,6 +132,12 @@ architecture Behavioral of top is
 	signal s_Speaker : std_logic_vector(1 downto 0);
 
 	signal s_soft_reset : integer range 0 to 15 := 0;
+
+--	signal s_parser_reset : std_logic;
+--	signal s_parser_data : std_logic_vector(7 downto 0);
+--	signal s_parser_data_available : std_logic;
+--	signal s_parser_data_available_pulse : std_logic;
+
 begin
 
 	-- Reset signal
@@ -599,8 +607,49 @@ begin
 	end process;
 
 	-- Output audio on both channels
-	s_Audio <= s_Speaker(0) xor s_CasAudioIn xor s_CasAudioOut;
+	s_Audio <= s_Speaker(0) xor s_CasAudioIn;
 	Audio <= s_Audio & s_Audio;
+
+	
+--	-- Also parse and send to uart
+--	parser : entity work.Trs80CassetteParser
+--	generic map
+--	(
+--		p_ClockEnableFrequency => 1_774_000
+--	)
+--	port map
+--	(
+--		i_Clock => s_CLK_80Mhz,
+--		i_ClockEnable => s_CLK_CPU_en,
+--		i_Reset => s_parser_reset,
+--		i_Audio => s_CasAudioOut,
+--		o_DataAvailable => s_parser_data_available,
+--		o_Data => s_parser_data
+--	);
+--
+--	-- Hold parser in reset state when not active
+--	s_parser_reset <= s_reset; -- or not s_playing_or_recording;
+--
+--	-- Convert pulse back to master clock
+--	s_parser_data_available_pulse <= s_parser_data_available and s_CLK_CPU_en;
+--
+--	-- UART to send parsed audio to PC
+--	uart_txer : entity work.UartTx
+--	generic map
+--	(
+--		p_ClockFrequency => 80_000_000
+--	)
+--	port map
+--	( 
+--		i_Clock => s_CLK_80Mhz,
+--		i_ClockEnable => '1',
+--		i_Reset => s_reset,
+--		i_Data => s_parser_data,
+--		i_DataAvailable => s_parser_data_available_pulse,
+--		o_UartTx => UART2_TX,
+--		o_Busy => open
+--	);	
+--
 
 end Behavioral;
 
