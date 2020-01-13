@@ -9,7 +9,7 @@ architecture behavior of TestBench is
     signal s_clock : std_logic := '0';
     signal s_reset : std_logic;
     signal s_clock_enable : std_logic;
-    signal s_audio : std_logic;
+    signal s_audio : std_logic_vector(1 downto 0);
     signal s_sd_data : std_logic_vector(7 downto 0);
     signal s_sd_data_cycle : std_logic;
     signal s_sd_block_available : std_logic;
@@ -75,7 +75,7 @@ begin
         i_RecordMode => '1',
         i_Data => x"00",
         o_Audio => open,
-        i_Audio => s_audio,
+        i_Audio => s_audio(0),
         o_BlockAvailable => s_sd_block_available,
         i_DataCycle => s_sd_data_cycle,
         o_Data => s_sd_data,

@@ -11,7 +11,9 @@ architecture behavior of TestBench is
     signal s_clock_enable : std_logic;
     signal s_data : std_logic_vector(7 downto 0);
     signal s_data_needed : std_logic;
-    signal s_audio : std_logic;
+    signal s_audio : std_logic_vector(1 downto 0);
+    signal s_audio_pos : std_logic;
+    signal s_audio_neg : std_logic;
     constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
 begin
 
@@ -56,6 +58,9 @@ begin
         o_DataNeeded => s_data_needed,
         o_Audio => s_audio
     );
+
+    s_audio_pos <= s_audio(0);
+    s_audio_neg <= s_audio(1);
 
     data : process(s_clock)
     begin

@@ -53,7 +53,7 @@ port
 	o_sd_data : out std_logic_vector(7 downto 0);
 
 	-- Audio
-	o_Audio : out std_logic;						-- to Trs80
+	o_Audio : out std_logic_vector(1 downto 0);		-- to Trs80
 	i_Audio : in std_logic							-- from Trs80
 
 );

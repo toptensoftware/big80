@@ -42,7 +42,7 @@ port
 
 	-- Playback
 	o_BlockNeeded : out std_logic;					-- Asserts high for one main clock cycle when next 512 bytes needed
-	o_Audio : out std_logic;						-- generated audio signal
+	o_Audio : out std_logic_vector(1 downto 0);		-- generated audio signal
 
 	-- Record
 	i_Audio : in std_logic;							-- input audio stream

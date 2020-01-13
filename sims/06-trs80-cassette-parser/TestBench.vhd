@@ -10,7 +10,7 @@ architecture behavior of TestBench is
     signal s_reset : std_logic;
     signal s_parser_reset : std_logic;
     signal s_clock_enable : std_logic;
-    signal s_audio : std_logic;
+    signal s_audio : std_logic_vector(1 downto 0);
     signal s_dout : std_logic_vector(7 downto 0);
     signal s_dout_available : std_logic;
     constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
@@ -62,7 +62,7 @@ begin
         i_Clock => s_clock,
         i_ClockEnable => s_clock_enable,
         i_Reset => s_parser_reset,
-        i_Audio => s_audio,
+        i_Audio => s_audio(0),
         o_Data => s_dout,
         o_DataAvailable => s_dout_available
     );

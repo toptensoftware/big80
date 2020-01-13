@@ -15,7 +15,7 @@ architecture behavior of TestBench is
     signal s_loading : std_logic;
     signal s_block_needed : std_logic;
     signal s_data_cycle : std_logic;
-    signal s_audio : std_logic;
+    signal s_audio : std_logic_vector(1 downto 0);
     constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
     signal s_load_divider : unsigned(3 downto 0);
     signal s_data : std_logic_vector(7 downto 0);

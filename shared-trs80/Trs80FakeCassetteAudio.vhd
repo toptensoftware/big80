@@ -28,14 +28,14 @@ port
 	i_Reset : in std_logic;                         -- Reset (synchronous, active high)
 
 	-- Output
-	o_Audio : out std_logic
+	o_Audio : out std_logic_vector(1 downto 0)
 );
 end Trs80FakeCassetteAudio;
  
 architecture behavior of Trs80FakeCassetteAudio is 
     signal s_render_data : std_logic_vector(7 downto 0);
     signal s_render_data_needed : std_logic;
-    signal s_audio : std_logic;
+    signal s_audio : std_logic_vector(1 downto 0);
 begin
 
     -- Produces the stream of bytes we want to record

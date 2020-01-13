@@ -27,6 +27,10 @@ port
 	ScanLinesSwitch : in std_logic;
 	RunSwitch : in std_logic;
 
+	P9_1 : out std_logic;
+	P9_3 : out std_logic;
+	P9_5 : out std_logic;
+
 	sd_mosi : out std_logic;
 	sd_miso : in std_logic;
 	sd_ss_n : out std_logic;
@@ -124,8 +128,8 @@ architecture Behavioral of top is
 	signal s_recording : std_logic;
 	signal s_playing_or_recording : std_logic;
 
-	signal s_PrevCasAudio : std_logic;
-	signal s_CasAudioIn : std_logic;
+	signal s_PrevCasAudioIn : std_logic_vector(1 downto 0);
+	signal s_CasAudioIn : std_logic_vector(1 downto 0);
 	signal s_CasAudioOut : std_logic;
 	signal s_CasAudioInEdge : std_logic;
 	signal s_Audio : std_logic;
@@ -459,13 +463,13 @@ begin
 			end if;
 		elsif s_port_rd = '1' then
 			if s_is_cas_port = '1' then
-				s_cpu_din <= s_CasAudioInEdge & "000000" & s_CasAudioIn;
+				s_cpu_din <= s_CasAudioInEdge & "00000" & s_CasAudioIn;
 			end if;
 		end if;
 
 	end process;
 
-	LEDs <= s_CasAudioIn & s_CasAudioOut & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
+	LEDs <= (s_CasAudioIn(0) or s_CasAudioIn(1)) & s_CasAudioOut & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
 
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
 	generic map
@@ -583,14 +587,14 @@ begin
 		if rising_edge(s_CLK_80Mhz) then
 			if s_reset = '1' then
 				s_CasAudioInEdge <= '0';
-				s_PrevCasAudio <= '0';
+				s_PrevCasAudioIn <= "00";
 				s_Speaker <= "00";
 				s_CasMotorRelay <= '0';
 			else
 
 				-- Detect edge
-				s_PrevCasAudio <= s_CasAudioIn;
-				if s_PrevCasAudio /= s_CasAudioIn then 
+				s_PrevCasAudioIn <= s_CasAudioIn;
+				if s_PrevCasAudioIn /= s_CasAudioIn then 
 					s_CasAudioInEdge <= '1';
 				end if;
 
@@ -607,7 +611,7 @@ begin
 	end process;
 
 	-- Output audio on both channels
-	s_Audio <= s_Speaker(0) xor s_CasAudioIn;
+	s_Audio <= s_Speaker(0) xor s_CasAudioIn(0);
 	Audio <= s_Audio & s_Audio;
 
 	
@@ -650,6 +654,10 @@ begin
 --		o_Busy => open
 --	);	
 --
+
+	P9_1 <= s_CasAudioIn(0);
+	P9_3 <= s_CasAudioIn(1);
+	P9_5 <= s_CasAudioInEdge;
 
 end Behavioral;
 

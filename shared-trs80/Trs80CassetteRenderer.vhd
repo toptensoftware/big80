@@ -25,7 +25,7 @@ generic
 (
 	p_ClockEnableFrequency : integer;  				-- Frequency of the clock enable
 	p_BaudRate : integer := 500;					-- Frequency of zero bit pulses
-	p_PulseWidth_us : integer := 100				-- Width of each pulse (in us)
+	p_PulseWidth_us : integer := 200				-- Width of each pulse (in us)
 );
 port
 (
@@ -39,7 +39,7 @@ port
 
 	-- Output
 	o_DataNeeded : out std_logic;					-- Asserts high for one clock cycle when next byte needed
-	o_Audio : out std_logic							-- generated audio signal
+	o_Audio : out std_logic_vector(1 downto 0)		-- generated audio signal
 );
 end Trs80CassetteRenderer;
  
@@ -54,6 +54,8 @@ architecture behavior of Trs80CassetteRenderer is
 	signal s_BaudRateDivider : integer range 0 to c_BaudRate_ticks - 1;
 	signal s_CurrentByte : std_logic_vector(7 downto 0);
 	signal s_BitCounter : integer range 0 to 7;
+	signal s_in_pulse : std_logic;
+	signal s_in_positive_pulse : std_logic;
 begin
 
 	-- Byte shifter
@@ -97,8 +99,8 @@ begin
 		end if;
 	end process;
 
-	-- Generate audio
-	o_Audio <= 
+	-- currently in pulse
+	s_in_pulse <=
 		'0' when
 			i_Reset = '1'
 		else '1' when 
@@ -109,5 +111,13 @@ begin
 			s_BaudRateDivider < (c_BaudRate_ticks / 2) + c_PulseWidth_ticks 
 		else '0';
 
+	s_in_positive_pulse <=
+		'1' when 
+			s_BaudRateDivider < c_PulseWidth_ticks / 2 or
+			(s_BaudRateDivider >= (c_BaudRate_ticks / 2) and s_BaudRateDivider < (c_BaudRate_ticks / 2) + (c_PulseWidth_ticks / 2))
+		else '0';
+
+	o_Audio(0) <= s_in_pulse and s_in_positive_pulse;
+	o_Audio(1) <= s_in_pulse and not s_in_positive_pulse;
 
 end;
