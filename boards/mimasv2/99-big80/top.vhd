@@ -134,6 +134,7 @@ architecture Behavioral of top is
 	signal s_CasAudioInEdge : std_logic;
 	signal s_Audio : std_logic;
 	signal s_Speaker : std_logic_vector(1 downto 0);
+	signal s_WideVideoMode : std_logic;
 
 	signal s_soft_reset : integer range 0 to 15 := 0;
 
@@ -232,6 +233,7 @@ begin
 		i_Reset => s_reset,
 		i_HPos => s_hpos,
 		i_VPos => s_vpos,
+		i_WideMode => s_WideVideoMode,
 		o_VideoRamAddr => s_VideoRamAddr,
 		i_VideoRamData => s_VideoRamData,
 		o_CharRomAddr => s_CharRomAddr,
@@ -590,6 +592,7 @@ begin
 				s_PrevCasAudioIn <= "00";
 				s_Speaker <= "00";
 				s_CasMotorRelay <= '0';
+				s_WideVideoMode <= '0';
 			else
 
 				-- Detect edge
@@ -604,6 +607,7 @@ begin
 					s_Speaker <= s_cpu_dout(1 downto 0);
 					s_CasMotorRelay <= s_cpu_dout(2);
 					s_CasAudioOut <= s_cpu_dout(0);
+					s_WideVideoMode <= s_cpu_dout(3);
 				end if;
 
 			end if;

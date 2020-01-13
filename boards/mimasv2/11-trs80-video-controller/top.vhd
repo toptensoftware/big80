@@ -79,6 +79,7 @@ begin
 		i_Reset => s_reset,
 		i_HPos => s_hpos,
 		i_VPos => s_vpos,
+		i_WideMode => '1',
 		o_VideoRamAddr => s_VideoRamAddr,
 		i_VideoRamData => s_VideoRamData,
 		o_CharRomAddr => s_CharRomAddr,
@@ -112,11 +113,7 @@ begin
 	end process;
 	
 	Red <= "000";
---	Green <= (s_pixel & s_pixel & s_pixel) when s_line_rep = 1
---				else (s_pixel & "00") when s_line_rep = 0
---				else ("0" & s_pixel & "0");
-	Green <= (s_pixel & s_pixel & s_pixel) when s_line_rep = 1
-				else (s_pixel & '0' & s_pixel);
+	Green <= (s_pixel & s_pixel & s_pixel);
 	Blue <= "00";
 
 end Behavioral;

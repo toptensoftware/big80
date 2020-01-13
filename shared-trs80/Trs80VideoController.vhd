@@ -38,6 +38,9 @@ port
     i_HPos : in integer range -2048 to 2047;
     i_VPos : in integer range -2048 to 2047;
 
+    -- 64/32 column mode
+    i_WideMode : in std_logic;
+
     -- Video RAM Access
     o_VideoRamAddr : out std_logic_vector(9 downto 0);
     i_VideoRamData : in std_logic_vector(7 downto 0);
@@ -56,6 +59,7 @@ architecture Behavioral of Trs80VideoController is
     signal s_char_rep : integer range 0 to 1;       -- pixel double horizontally
     signal s_char_pix : integer range 0 to 5;       -- pixel within character cell
     signal s_char_num : integer range 0 to 127;     -- character number horizontally
+    signal s_char_num_bits : std_logic_vector(5 downto 0);
     signal s_line_rep : integer range 0 to 2;       -- pixel triple vertically
     signal s_line_pix : integer range 0 to 11;      -- pixel row within character cell
     signal s_line_num : integer range 0 to 127;     -- line number
@@ -67,11 +71,13 @@ begin
 
     o_LineRep <= s_line_rep;
 
+    s_char_num_bits <= std_logic_vector(to_unsigned(s_char_num, 6));
+
     -- Pixel cycle -2
     -- Calculate the video ram address
     o_VideoRamAddr <= 
         std_logic_vector(to_unsigned(s_line_num, 4)) & 
-        std_logic_vector(to_unsigned(s_char_num, 6));
+        s_char_num_bits(5 downto 1) & (s_char_num_bits(0) and not i_WideMode);
 
     -- Pixel cycle -1
     -- Calculate character rom address
@@ -110,22 +116,36 @@ begin
 
     -- Pixel Cycle 0
     -- Select the correct pixel (remember s_char_pix is two pixels ahead)
-    o_Pixel <= 
---            '1' when i_HPos = 0 else
---            '1' when i_HPos = 799 else
---            '1' when i_VPos = 0 else
---            '1' when i_VPos = 599 else
-            '0' when i_HPos < p_LeftMarginPixels else
-            '0' when i_VPos < p_TopMarginPixels else
-            '0' when i_HPos >= p_LeftMarginPixels + 768 else
-            '0' when i_VPos >= p_TopMarginPixels + 576 else
-            s_pixel_bits(5) when s_char_pix = 1 else
-            s_pixel_bits(4) when s_char_pix = 2 else
-            s_pixel_bits(3) when s_char_pix = 3 else
-            s_pixel_bits(2) when s_char_pix = 4 else
-            s_pixel_bits(1) when s_char_pix = 5 else
-            s_pixel_bits(0) when s_char_pix = 0 else
-            '0';
+    pixel_gen : process(i_HPos, i_VPos, s_char_pix, s_pixel_bits, i_WideMode, s_char_num_bits)
+    begin
+        if i_HPos < p_LeftMarginPixels or  i_VPos < p_TopMarginPixels or
+                    i_HPos >= p_LeftMarginPixels + 768 or i_VPos >= p_TopMarginPixels + 576 then
+            o_Pixel <= '0';
+        elsif i_WideMode = '0' then
+            case s_char_pix is
+                when 1 => o_Pixel <= s_pixel_bits(5);
+                when 2 => o_Pixel <= s_pixel_bits(4);
+                when 3 => o_Pixel <= s_pixel_bits(3);
+                when 4 => o_Pixel <= s_pixel_bits(2);
+                when 5 => o_Pixel <= s_pixel_bits(1);
+                when others => o_Pixel <= s_pixel_bits(0);
+            end case;
+        elsif s_char_num_bits(0) = '0' then
+            case s_char_pix is
+                when 0 => o_Pixel <= s_pixel_bits(0); 
+                when 1|2 => o_Pixel <= s_pixel_bits(5);
+                when 3|4 => o_Pixel <= s_pixel_bits(4);
+                when others => o_Pixel <= s_pixel_bits(3);
+            end case;
+        else
+            case s_char_pix is
+                when 0 => o_Pixel <= s_pixel_bits(3);
+                when 1|2 => o_Pixel <= s_pixel_bits(2);
+                when 3|4 => o_Pixel <= s_pixel_bits(1);
+                when others => o_Pixel <= s_pixel_bits(0);
+            end case;
+        end if;
+    end process;
 
 
     -- Because the TRS80 character cell is 6 pixels wide and 12 pixels tall
