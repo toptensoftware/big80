@@ -32,9 +32,7 @@ generic
 );
 port
 (
-	debug : out std_logic_vector(7 downto 0);
-
-    -- Control
+	-- Control
 	i_Clock : in std_logic;                         -- Main Clock
 	i_ClockEnable : in std_logic;					-- Clock Enable
 	i_Reset : in std_logic;                         -- Reset (synchronous, active high)
@@ -215,7 +213,6 @@ begin
 				o_BlockNeeded <= '0';
 				o_BlockAvailable <= '0';
 				s_state <= state_idle;
-				debug <= (others => '0');
 			else
 				o_BlockNeeded <= '0';
 				o_BlockAvailable <= '0';
@@ -237,7 +234,6 @@ begin
 				-- Stop recording?
 				if i_StopRecording = '1' then 
 					s_record_mode <= '0';
-					debug(0) <= '1';
 				end if;
 
 				case s_state is
@@ -287,19 +283,15 @@ begin
 						-- Monitor for half buffer full and then start a SD write operation
 						if s_record_mode = '0' then
 							s_state <= state_RecFlush;
-							debug(1) <= '1';
 						else
-							debug(2) <= '1';
 							if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
 								o_BlockAvailable <= '1';
 								s_state <= state_RecDraining;
-								debug(3) <= '1';
 							end if;
 						end if;
 
 					when state_RecDraining => 
 						-- Suppy data to SD card from buffer until drained
-						debug(4) <= '1';
 						if i_DataCycle = '1' then
 							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
 							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
@@ -312,7 +304,6 @@ begin
 						end if;
 
 					when state_RecFlush => 
-						debug(5) <= '1';
 						-- If the write buffer is partially used, then
 						-- fill it with zeros and write it
 						if s_ram_write_addr = s_ram_read_addr then
@@ -322,7 +313,6 @@ begin
 						end if;
 
 					when state_RecFlushZero => 
-							debug(6) <= '1';
 						-- Fill buffer with zeros
 						if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
 							o_BlockAvailable <= '1';
@@ -342,7 +332,6 @@ begin
 						s_state <= state_RecFinished;
 
 					when state_RecFinished =>
-						debug(7) <= '1';
 						-- stay here until reset
 						null;
 

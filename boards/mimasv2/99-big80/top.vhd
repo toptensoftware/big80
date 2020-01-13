@@ -121,6 +121,7 @@ architecture Behavioral of top is
 	signal s_selected_tape : std_logic_vector(11 downto 0);
 	signal s_recording : std_logic;
 	signal s_playing_or_recording : std_logic;
+
 	signal s_PrevCasAudio : std_logic;
 	signal s_CasAudioIn : std_logic;
 	signal s_CasAudioOut : std_logic;
@@ -278,21 +279,21 @@ begin
 	)
 	PORT MAP
 	(
-		-- Read only port for video controller
-		i_Clock_A => s_CLK_80Mhz,
-		i_ClockEn_A => s_CLK_40Mhz_en,
-		i_Write_A => '0',
-		i_Addr_A => s_VideoRamAddr,
-		i_Data_A => (others => '0'),
-		o_Data_A => s_VideoRamData,
-
 		-- Read/Write port for CPU
+		i_Clock_A => s_CLK_80Mhz,
+		i_ClockEn_A => s_CLK_CPU_en,
+		i_Write_A => s_VideoRamWrite_cpu,
+		i_Addr_A => s_VideoRamAddr_cpu,
+		i_Data_A => s_VideoRamDataIn_cpu,
+		o_Data_A => s_VideORamDataOut_cpu,
+
+		-- Read only port for video controller
 		i_Clock_B => s_CLK_80Mhz,
-		i_ClockEn_B => '1',
-		i_Write_B => s_VideoRamWrite_cpu,
-		i_Addr_B => s_VideoRamAddr_cpu,
-		i_Data_B => s_VideoRamDataIn_cpu,
-		o_Data_B => s_VideORamDataOut_cpu
+		i_ClockEn_B => s_CLK_40Mhz_en,
+		i_Write_B => '0',
+		i_Addr_B => s_VideoRamAddr,
+		i_Data_B => (others => '0'),
+		o_Data_B => s_VideoRamData
 	);
 
 	-- Main RAM (48K)
@@ -566,8 +567,7 @@ begin
 		o_sd_data => s_sd_din,
 		o_SelectedTape => s_selected_tape,
 		o_Audio => s_CasAudioIn,
-		i_Audio => s_CasAudioOut,
-		debug => open
+		i_Audio => s_CasAudioOut
 	);
 
 	cas_edge_detect : process(s_CLK_80Mhz)

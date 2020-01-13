@@ -52,8 +52,6 @@ port
 	i_sd_data : in std_logic_vector(7 downto 0);	
 	o_sd_data : out std_logic_vector(7 downto 0);
 
-	debug : out std_logic_vector(7 downto 0);
-
 	-- Audio
 	o_Audio : out std_logic;						-- to Trs80
 	i_Audio : in std_logic							-- from Trs80
@@ -78,7 +76,6 @@ architecture behavior of Trs80CassettePlayer is
 	signal s_play_position : std_logic_vector(31 downto 0);
 	signal s_record_position : std_logic_vector(31 downto 0);
 	signal s_position : std_logic_vector(31 downto 0);
-	signal s_debug : std_logic_vector(7 downto 0);
 begin
 
 	-- Combinatorial outputs
@@ -95,11 +92,6 @@ begin
 	s_play_position <= std_logic_vector(unsigned(s_record_position) - 2);
 	s_position <= s_record_position when s_recording = '1' else s_play_position;
 
-	s_debug(4) <= s_recording;
-	s_debug(5) <= s_stop_recording;
-	s_debug(6) <= s_recording_finished;
-	s_debug(7) <= s_streamer_reset;
-
 	-- Handles start/stop user control of the cassette player
 	-- (including waiting for final block flush after stopping recording)
 	start_stop_control : process(i_Clock)
@@ -110,17 +102,13 @@ begin
 				s_recording <= '0';
 				s_mode_changed <= '0';
 				s_stop_recording <= '0';
-				s_debug(3 downto 0) <= (others => '0');
 			else
 				s_mode_changed <= '0';
 
 				if s_stop_recording = '1' then
 
-					s_debug(1) <= '1';
-
 					-- Wait for final block to be flushed
 					if s_recording_finished = '1' then
-						s_debug(2) <= '1';
 						s_playing_or_recording <= '0';
 						s_recording <= '0';
 						s_mode_changed <= '1';
@@ -140,7 +128,6 @@ begin
 							-- For recording, need to wait for last
 							-- block to be flushed
 							s_stop_recording <= '1';
-							s_debug(0) <= '1';
 						else
 							-- For playback just stop immedately
 							s_playing_or_recording <= '0';
@@ -180,8 +167,6 @@ begin
 	)
 	port map
 	(
-		debug => debug,
-
 		i_Clock => i_Clock,
 		i_ClockEnable => i_ClockEnable,
 		i_Reset => s_streamer_reset,
