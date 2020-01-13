@@ -49,7 +49,7 @@ architecture Behavioral of top is
 	signal s_seven_seg_value : std_logic_vector(11 downto 0);
 	signal s_selected_tape : std_logic_vector(11 downto 0);
 
-	signal s_Audio : std_logic;
+	signal s_Audio : std_logic_vector(1 downto 0);
 	signal s_recording : std_logic;
 	signal s_playing_or_recording : std_logic;
 
@@ -62,21 +62,17 @@ architecture Behavioral of top is
 	signal s_uart_busy : std_logic;
 
 	signal s_fake_audio_reset : std_logic;
-	signal s_fake_audio : std_logic;
-
-	signal s_debug : std_logic_vector(7 downto 0);
+	signal s_fake_audio : std_logic_vector(1 downto 0);
 begin
 
 	-- Reset signal
 	s_reset <= not Button_B;
 
 	-- sdhc/sdinit/sdwrite/sdread
---	LEDs(7 downto 4) <=  s_sd_status(7) & s_sd_status(4) & s_sd_status(2) & s_sd_status(1);
+	LEDs(7 downto 4) <=  s_sd_status(7) & s_sd_status(4) & s_sd_status(2) & s_sd_status(1);
 
 	-- uarttx/audio/recording/active
---	LEDS(3 downto 0) <=  s_uart_busy & s_Audio & s_recording & s_playing_or_recording;
-
-	LEDs <= s_debug;
+	LEDS(3 downto 0) <=  s_uart_busy & (s_Audio(0) or s_Audio(1)) & s_recording & s_playing_or_recording;
 
 	UART_TX <= s_uart_tx;
 	UART2_TX <= s_uart_tx;
@@ -198,13 +194,12 @@ begin
 		o_sd_data => s_sd_din,
 		o_SelectedTape => s_selected_tape,
 		o_Audio => s_Audio,
-		i_Audio => s_fake_audio,
-		debug => s_debug
+		i_Audio => s_fake_audio(0)
 	);
 
 	-- Output audio on both channels
-	Audio <= s_Audio & s_Audio;
-	debug_audio <= s_Audio;
+	Audio <= s_Audio(0) & s_Audio(0);
+	debug_audio <= s_Audio(0);
 
 	-- Also parse and send to uart
 	parser : entity work.Trs80CassetteParser
@@ -226,7 +221,7 @@ begin
 	s_parser_reset <= s_reset or not s_playing_or_recording;
 
 	-- Send it either the playback or record audio
-	s_parser_audio <= s_Audio when s_recording = '0' else s_fake_audio;
+	s_parser_audio <= s_Audio(0) when s_recording = '0' else s_fake_audio(0);
 
 	-- Convert pulse back to master clock
 	s_dout_available_pulse <= s_dout_available and s_CLK_CPU_en;

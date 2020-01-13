@@ -101,6 +101,7 @@ begin
         i_Reset => s_Reset,
         i_HPos => s_HPos,
         i_VPos => s_VPos,
+        i_WideMode => '0',
         o_VideoRamAddr => s_VideoRamAddr,
         i_VideoRamData => s_VideoRamData,
         o_CharRomAddr => s_CharRomAddr,
