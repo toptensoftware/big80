@@ -21,6 +21,10 @@ Supported boards:
 
 I've written/am writing a series of blog posts about this project.  You can [read them all here](https://www.toptensoftware.com/blog/tag/big80/).
 
+## Download
+
+* [Mimas V2 .bin file](https://github.com/toptensoftware/big80/blob/master/boards/mimasv2/99-big80/bin/big80.bin?raw=true)
+
 
 ## Build Prerequisites
 
@@ -83,7 +87,8 @@ $ make view
 
 To use Big-80 on the Mimas V2, you'll need to:
 
-* Make sure all the DIP switches are in the on (down) position.
+* Upload the .bin file to the Mimas V2 board (see notes above)
+* Make sure all the DIP switches are in the on (down) position
 * Connect a VGA monitor
 * Connect a speaker to the audio output (optional, for sound)
 * Connect a [PS2 Pmod](https://store.digilentinc.com/pmod-ps2-keyboard-mouse-connector/) to the lower 6 pins of the left most GPIO connector (P6)
