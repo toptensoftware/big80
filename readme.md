@@ -135,9 +135,11 @@ Big-80 can load cassette images using the built-in virtual cassette player.
 1. Prepare the SD card (as described below) and insert into the Mimas V2
 2. If you've just inserted the SD card, you'll need to reset the board for it to be detected
 3. Select the tape number using the 7-segment LED display and the up and down navigation buttons on the Mimas board
-4. Start the TRS-80 load (eg: SYSTEM command, type name of tape and press Enter)
-5. Start the tape playing by pressing the right navigation button.
-6. Wait for the tape to load
+3. If you have the auto-cassette option enabled (third DIP switch from the left in down position) then you don't need
+to do anything else, the cassette player will start and stop automatically. (including automatically recording)
+4. Start the TRS-80 load or save (eg: SYSTEM command, type name of tape and press Enter)
+5. Start the tape playing by pressing the right navigation button.  If you're saving, press and hold the left navigation button while pressing the right navigation button.
+6. Wait for the tape to load/save
 7. Press the right navigation button again to stop the cassette player
 
 (if you don't stop the cassette player it will continue to play indefinitely, reading each
