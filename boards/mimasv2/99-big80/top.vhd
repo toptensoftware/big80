@@ -27,6 +27,9 @@ port
 	i_switch_scan_lines : in std_logic;
 	i_switch_run : in std_logic;
 
+	io_p9_1 : out std_logic;
+	io_p9_3 : out std_logic;
+
 	o_sd_mosi : out std_logic;
 	i_sd_miso : in std_logic;
 	o_sd_ss_n : out std_logic;
@@ -145,6 +148,9 @@ begin
 	-- Reset signal
 	s_reset <= '1' when i_button_b = '0' or s_soft_reset /= 0 else '0';
 	s_reset_n <= not s_reset;
+
+	io_p9_1 <= s_cas_audio_out(0);
+	io_p9_3 <= s_cas_motor;
 
 	-- Soft reset process
 	soft_reset : process(s_clock_80mhz)

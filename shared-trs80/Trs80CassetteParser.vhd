@@ -18,14 +18,13 @@ use ieee.numeric_std.ALL;
 entity Trs80CassetteParser is
 generic
 (
-	p_clken_hz : integer;  				-- Frequency of the clock enable
-	p_baud : integer := 500						-- Frequency of zero bit pulses
+	p_clken_hz : integer  							-- Frequency of the clock enable
 );
 port
 (
     -- Control
 	i_clock : in std_logic;                         -- Clock
-	i_clken : in std_logic;					-- Clock Enable
+	i_clken : in std_logic;							-- Clock Enable
 	i_reset : in std_logic;                         -- Reset (synchronous, active high)
 	
 	-- Input
@@ -40,7 +39,8 @@ end Trs80CassetteParser;
 architecture behavior of Trs80CassetteParser is 
 
 	-- Baud rate converted to clock ticks (3548)
-	constant c_baud_ticks : integer := p_clken_hz  / p_baud;
+	constant c_baud : integer := 500;
+	constant c_baud_ticks : integer := p_clken_hz  / c_baud;
 
 	signal s_tick_since_last_edge : integer range 0 to c_baud_ticks - 1;
 	signal s_current_byte : std_logic_vector(7 downto 0);
