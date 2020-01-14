@@ -5,7 +5,7 @@ Big-80 is an FPGA implementation of TRS-80 Model 1.
 It currently supports/includes:
 
 * Z80 CPU (using the [T80](https://opencores.org/projects/t80) open core) running at 1.777Mhz
-* 16Kb RAM
+* 48Kb RAM
 * 12Kb Level II BASIC ROM
 * 1Kb Video RAM
 * 4Kb Character ROM
@@ -83,6 +83,7 @@ $ make view
 
 To use Big-80 on the Mimas V2, you'll need to:
 
+* Make sure all the DIP switches are in the on (down) position.
 * Connect a VGA monitor
 * Connect a speaker to the audio output (optional, for sound)
 * Connect a [PS2 Pmod](https://store.digilentinc.com/pmod-ps2-keyboard-mouse-connector/) to the lower 6 pins of the left most GPIO connector (P6)
@@ -95,6 +96,32 @@ If the keyboard doesn't work, it could be that your keyboard doesn't work on the
 supplied by the Mimas, or it might take a few seconds to start up at that lower voltage. Give it a good 10 seconds and if it still doesn't work try a different keyboard.
 
 To reset the board, use the top-right button on the Mimas board.
+
+## DIP Switch Settings
+
+From left-to-right, the DIP switches on the Mimas V2 control the following features:
+
+* Run/Stop Switch - when off, the CPU stops execution and display freezes.
+* Unused
+* Auto Cassette Mode - when on, the virtual cassette player start/stop automatically
+* Cassette Audio Monitor - when on, cassette audio signals will be sent to the speaker output
+* No Scan Lines - switch to the off position to enable simulated scan lines on the monitor
+* Green Screen - switches between green and amber screen colour
+* Turbo Tape Mode - enables fast cassette loading (approx 20x faster)
+* Typing Mode - maps PC key strokes to equivalent TRS-80 keys for easier typing
+
+## LED Indicators
+
+From left-to-right, the LED indicators show the followin:
+
+* SD Initialized Successfully (reset to retry if failed)
+* SDHC Mode - indicates if SD card was recognised as an SDHC card
+* SD Write - SD busy writing
+* SD Read - SD busy reading
+* Cassette Audio Out - flickers when sending cassette audio (or sound)
+* Cassette Audio In - flickers when receiving cassette audio
+* Cassette Recording Mode - indicates cassette is recording in progress
+* Cassette Active - indicates cassette is either playing or recording
 
 ## Operating Big-80's Virtual Cassette Player
 

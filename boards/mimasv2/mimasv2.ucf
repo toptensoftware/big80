@@ -91,6 +91,7 @@ CONFIG VCCAUX = "3.3" ;
     #NET "i_switches[4]"                LOC = E18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 4
     #NET "i_switches[5]"                LOC = E16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 3
     #NET "i_switches[6]"                LOC = F18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 2
+
     #NET "i_switches[7]"                LOC = F17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 1
      
 ###################################################################################################################################################

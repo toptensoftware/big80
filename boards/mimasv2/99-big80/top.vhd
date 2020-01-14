@@ -24,11 +24,11 @@ port
 	i_switch_turbo_tape : in std_logic;
 	i_switch_typing_mode : in std_logic;
 	i_switch_green_screen : in std_logic;
-	i_switch_scan_lines : in std_logic;
-	i_switch_run : in std_logic;
+	i_switch_no_scan_lines : in std_logic;
+	i_switch_cas_audio : in std_logic;
+	i_switch_auto_cas : in std_logic;
 
-	io_p9_1 : out std_logic;
-	io_p9_3 : out std_logic;
+	i_switch_run : in std_logic;
 
 	o_sd_mosi : out std_logic;
 	i_sd_miso : in std_logic;
@@ -145,6 +145,7 @@ architecture Behavioral of top is
 	signal s_wide_video_mode : std_logic;
 
 	-- Auto cassette control
+	signal s_cas_motor_monitored : std_logic;
 	signal s_cas_auto_start : std_logic;
 	signal s_cas_auto_record : std_logic;
 	signal s_cas_auto_stop : std_logic;
@@ -154,9 +155,6 @@ begin
 	-- Reset signal
 	s_reset <= '1' when i_button_b = '0' or s_soft_reset /= 0 else '0';
 	s_reset_n <= not s_reset;
-
-	io_p9_1 <= s_cas_audio_out(0);
-	io_p9_3 <= s_cas_motor;
 
 	-- Soft reset process
 	soft_reset : process(s_clock_80mhz)
@@ -252,11 +250,11 @@ begin
 	);
 
 	-- Generate color
-	color_gen : process(s_pixel, i_switch_green_screen, i_switch_scan_lines, s_line_rep)
+	color_gen : process(s_pixel, i_switch_green_screen, i_switch_no_scan_lines, s_line_rep)
 	begin
 		if i_switch_green_screen = '1' then
 			o_red <= "000";
-			if i_switch_scan_lines = '1' then
+			if i_switch_no_scan_lines = '0' then
 				if s_line_rep = 1 then
 					o_green <= s_pixel & s_pixel & s_pixel;
 				else
@@ -268,7 +266,7 @@ begin
 			o_blue <= "00";
 		else
 			o_red <= "000";
-			if i_switch_scan_lines = '1' then
+			if i_switch_no_scan_lines = '0' then
 				if s_line_rep = 1 then
 					o_red <= s_pixel & s_pixel & s_pixel;
 					o_green <= s_pixel & "00";
@@ -637,7 +635,9 @@ begin
 	end process;
 
 	-- Output audio on both channels
-	s_audio <= s_cas_audio_out(0) xor s_cas_audio_in(0);
+	s_audio <=  s_cas_audio_out(0) xor s_cas_audio_in(0)	-- all cass i/o 
+				when i_switch_cas_audio = '1' else
+				s_cas_audio_out(0) and not s_cas_motor;	    -- only cas out when motor off
 	o_audio <= s_audio & s_audio;
 
 	-- Cassette auto start/stop
@@ -651,12 +651,15 @@ begin
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_reset => s_reset,
-		i_motor => s_cas_motor,
+		i_motor => s_cas_motor_monitored,
 		i_audio => s_cas_audio_out(0),
 		o_start => s_cas_auto_start,
 		o_record => s_cas_auto_record,
 		o_stop => s_cas_auto_stop
 	);
+
+	-- When auto cassette mode turned off, hide the motor signal from the detector
+	s_cas_motor_monitored <= s_cas_motor and i_switch_auto_cas;
 
 
 end Behavioral;
