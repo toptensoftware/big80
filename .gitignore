@@ -1,6 +1,12 @@
 # Build directories
 build/
 
+# Xilinx crap in build directory
+*.bit
+*.bgn
+*.xwbt
+*.drc
+
 # Only keep the coregen stuff required to regenerate the IP cores
 **/coregen/*
 !**/coregen/*.vhd

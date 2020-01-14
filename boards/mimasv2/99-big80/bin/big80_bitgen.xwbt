@@ -1,8 +1,0 @@
-INTSTYLE=ise
-INFILE=/home/brad/Projects/big80/boards/mimasv2/99-big80/build/big80.ncd
-OUTFILE=/home/brad/Projects/big80/boards/mimasv2/99-big80/bin/big80.bit
-FAMILY=Spartan6
-PART=xc6slx9-2csg324
-WORKINGDIR=/home/brad/Projects/big80/boards/mimasv2/99-big80/bin
-LICENSE=WebPack
-USER_INFO=208187550_0_0_378
