@@ -17,7 +17,8 @@ entity Trs80AutoCassette is
 generic
 (
 	p_clken_hz : integer;							-- Frequency of the clock enable
-	p_monitor_ms : integer := 1000					-- How long to monitor after motor turning on
+	p_monitor_ms : integer := 8						-- How long to monitor after motor turning on
+													-- (8 = 4 zero bit pulses)
 );
 port
 (

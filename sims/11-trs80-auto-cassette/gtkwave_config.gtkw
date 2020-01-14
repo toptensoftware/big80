@@ -1,25 +1,20 @@
 [*]
-[*] GTKWave Analyzer v3.3.98 (w)1999-2019 BSI
-[*] Tue Jan 14 07:25:18 2020
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Tue Jan 14 08:34:02 2020
 [*]
 [dumpfile] "/home/brad/Projects/big80/sims/11-trs80-auto-cassette/build/out.vcd"
-[dumpfile_mtime] "Tue Jan 14 07:24:15 2020"
-[dumpfile_size] 9498929
+[dumpfile_mtime] "Tue Jan 14 08:33:25 2020"
+[dumpfile_size] 8006350
 [savefile] "/home/brad/Projects/big80/sims/11-trs80-auto-cassette/gtkwave_config.gtkw"
 [timestart] 0
 [size] 1280 751
-[pos] -359 -130
+[pos] -1 -1
 *-44.519669 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [sst_width] 196
 [signals_width] 244
 [sst_expanded] 1
 [sst_vpaned_height] 208
-@28
-testbench.s_reset
-testbench.s_clock
-@200
--
 @28
 testbench.s_motor
 testbench.s_audio

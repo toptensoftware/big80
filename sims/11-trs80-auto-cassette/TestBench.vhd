@@ -35,7 +35,7 @@ begin
     generic map
     (
         p_clken_hz => 1_774_000,
-        p_monitor_ms => 50
+        p_monitor_ms => 8
     )
     port map
     (
@@ -56,18 +56,33 @@ begin
         s_audio <= '0';
 
         wait for 1 ms;
+        s_audio <= '1';
+        wait for 0.1 ms;
+        s_audio <= '0';
+        wait for 1.9 ms;
+        s_audio <= '1';
+        wait for 0.1 ms;
+        s_audio <= '0';
+
+        wait for 10 ms;
+
         s_motor <= '1';
 
---        wait for 5 ms;
---        s_audio <= '1';
---        wait for 5 ms;
---        s_audio <= '0';
---        wait for 5 ms;
---        s_audio <= '1';
---        wait for 5 ms;
---        s_audio <= '0';
+        wait for 1 ms;
+        s_audio <= '1';
+        wait for 0.1 ms;
+        s_audio <= '0';
+        wait for 1.9 ms;
+        s_audio <= '1';
+        wait for 0.1 ms;
+        s_audio <= '0';
 
-        wait for 60 ms;
+        wait for 20 ms;
+        s_motor <= '0';
+
+        wait for 10 ms;
+        s_motor <= '1';
+        wait for 20 ms;
         s_motor <= '0';
 
         wait;

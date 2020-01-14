@@ -113,6 +113,7 @@ architecture Behavioral of top is
 	signal s_buttons_debounced : std_logic_vector(2 downto 0);
 	signal s_buttons_edges : std_logic_vector(2 downto 0);
 	signal s_buttons_trigger : std_logic_vector(2 downto 0);
+	signal s_button_start_stop : std_logic;
 	signal s_button_record : std_logic;
 
 	-- Media Keys
@@ -142,6 +143,11 @@ architecture Behavioral of top is
 	signal s_cas_motor : std_logic;
 	signal s_audio : std_logic;
 	signal s_wide_video_mode : std_logic;
+
+	-- Auto cassette control
+	signal s_cas_auto_start : std_logic;
+	signal s_cas_auto_record : std_logic;
+	signal s_cas_auto_stop : std_logic;
 
 begin
 
@@ -475,7 +481,16 @@ begin
 
 	end process;
 
-	o_leds <= (s_cas_audio_in(0) or s_cas_audio_in(1)) & s_cas_audio_out(0) & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
+	o_leds <= 
+		s_sd_status(4)				-- SD Init
+		 & s_sd_status(7)			-- SDHC
+		 & s_sd_status(2)			-- SD Write
+		 & s_sd_status(1)			-- SD Read
+		 & (s_cas_audio_out(0) or  s_cas_audio_out(1))
+		 & (s_cas_audio_in(0) or s_cas_audio_in(1))
+		 & s_recording
+		 & s_playing_or_recording;
+
 
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
 	generic map
@@ -549,7 +564,11 @@ begin
 	-- Debounced all buttons
 	s_buttons_unbounced <= i_button_down & i_button_up & i_button_right;
 	s_buttons_trigger <= (s_buttons_edges and not s_buttons_debounced) or s_media_keys;
-	s_button_record <= not i_button_left;
+	s_button_start_stop <= 
+		s_buttons_trigger(0) or 
+		(s_cas_auto_start and not s_playing_or_recording and s_clken_cpu) or
+		(s_cas_auto_stop and s_playing_or_recording and s_clken_cpu);
+	s_button_record <= not i_button_left or (s_cas_auto_record and s_clken_cpu);
 
 	-- Also map, media keys
 	s_key_extended_press <= s_key_available and not s_key_release and s_key_extended;
@@ -570,7 +589,7 @@ begin
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_reset => s_Reset,
-		i_button_start_stop => s_buttons_trigger(0),
+		i_button_start_stop => s_button_start_stop,
 		i_button_record => s_button_record,
 		i_button_next => s_buttons_trigger(1),
 		i_button_prev => s_buttons_trigger(2),
@@ -620,6 +639,25 @@ begin
 	-- Output audio on both channels
 	s_audio <= s_cas_audio_out(0) xor s_cas_audio_in(0);
 	o_audio <= s_audio & s_audio;
+
+	-- Cassette auto start/stop
+	cas_auto : entity work.Trs80AutoCassette
+	generic map
+	(
+		p_clken_hz => 1_774_000
+	)
+	port map
+	(
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_reset,
+		i_motor => s_cas_motor,
+		i_audio => s_cas_audio_out(0),
+		o_start => s_cas_auto_start,
+		o_record => s_cas_auto_record,
+		o_stop => s_cas_auto_stop
+	);
+
 
 end Behavioral;
 
