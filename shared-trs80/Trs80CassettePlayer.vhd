@@ -29,12 +29,13 @@ port
 (
     -- Control
 	i_clock : in std_logic;                         -- Main Clock
-	i_clken : in std_logic;					-- Clock Enable
+	i_clken : in std_logic;							-- Clock Enable
 	i_reset : in std_logic;                         -- Reset (synchronous, active high)
 
 	-- User Interface
-	i_button_start_stop : in std_logic;				-- Press to toggle play/stop
-	i_button_record : in std_logic;					-- Hold while start to enter record mode
+	i_button_start : in std_logic;					-- Assert to start playback/recording
+	i_button_record : in std_logic;					-- Assert with i_button_start to enter record mode
+	i_button_stop : std_logic;						-- Assert to stop playback/recording
 	i_button_next : in std_logic;					-- Press to load next tape
 	i_button_prev : in std_logic;					-- Press to load prev tape
 	o_display : out std_logic_vector(11 downto 0);	-- selected tape number
@@ -113,24 +114,21 @@ begin
 						s_stop_recording <= '0';
 					end if;
 
-				elsif i_button_start_stop = '1' then
-
-					if s_playing_or_recording = '0' then
-						-- Start play/record
-						s_playing_or_recording <= '1';
-						s_recording <= i_button_record;
-						s_mode_changed <= '1';
+				elsif i_button_start = '1' and s_playing_or_recording = '0' then
+					-- Start play/record
+					s_playing_or_recording <= '1';
+					s_recording <= i_button_record;
+					s_mode_changed <= '1';
+				elsif i_button_stop = '1' and s_playing_or_recording = '1' then
+					-- Stop play/record
+					if s_recording = '1' then 
+						-- For recording, need to wait for last
+						-- block to be flushed
+						s_stop_recording <= '1';
 					else
-						-- Stop play/record
-						if s_recording = '1' then 
-							-- For recording, need to wait for last
-							-- block to be flushed
-							s_stop_recording <= '1';
-						else
-							-- For playback just stop immedately
-							s_playing_or_recording <= '0';
-							s_mode_changed <= '1';
-						end if;
+						-- For playback just stop immedately
+						s_playing_or_recording <= '0';
+						s_mode_changed <= '1';
 					end if;
 				end if;
 			end if;

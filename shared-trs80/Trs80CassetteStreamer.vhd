@@ -120,9 +120,10 @@ begin
 
 	-- hold renderer in reset state until pre-buffering finished
 	s_renderer_reset <= '1' when 
-		i_reset='1' or 
+		i_reset = '1' or 
 		s_state = state_PlayInit or
-		s_state = state_PlayPreBuffering 
+		s_state = state_PlayPreBuffering or
+		s_record_mode = '1'
 		else '0';
 
 	-- renderer

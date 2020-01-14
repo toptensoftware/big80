@@ -3,7 +3,8 @@ PROJECTNAME ?= $(notdir $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))
 XILT ?= xilt 
 TOPMODULE ?= top
 BUILDDIR ?= ./build
-BINFILE ?= $(BUILDDIR)/$(PROJECTNAME).bin
+OUTDIR ?= ./build
+BINFILE ?= $(OUTDIR)/$(PROJECTNAME).bin
 SOURCEFILES ?= *.vhd *.ucf //shared/SuppressBenignWarnings.vhd
 INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://shared --deppath://shared-trs80 --deppath:./coregen)
 
@@ -12,6 +13,7 @@ $(BINFILE): $(INPUTFILES)
 	@$(XILT) build \
 	--projectName:$(PROJECTNAME) \
 	--intDir:$(BUILDDIR) \
+	--outDir:$(OUTDIR) \
 	--topModule:$(TOPMODULE) \
 	--messageFormat:msCompile \
 	--noinfo \
@@ -24,6 +26,7 @@ upload: $(BINFILE)
 
 # Clean
 clean:
-	rm -rf $(BUILDDIR)
+	@rm -rf $(BUILDDIR)
+	@rm -rf $(OUTDIR)
 
 	

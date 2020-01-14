@@ -113,7 +113,8 @@ architecture Behavioral of top is
 	signal s_buttons_debounced : std_logic_vector(2 downto 0);
 	signal s_buttons_edges : std_logic_vector(2 downto 0);
 	signal s_buttons_trigger : std_logic_vector(2 downto 0);
-	signal s_button_start_stop : std_logic;
+	signal s_button_start : std_logic;
+	signal s_button_stop : std_logic;
 	signal s_button_record : std_logic;
 
 	-- Media Keys
@@ -562,11 +563,9 @@ begin
 	-- Debounced all buttons
 	s_buttons_unbounced <= i_button_down & i_button_up & i_button_right;
 	s_buttons_trigger <= (s_buttons_edges and not s_buttons_debounced) or s_media_keys;
-	s_button_start_stop <= 
-		s_buttons_trigger(0) or 
-		(s_cas_auto_start and not s_playing_or_recording and s_clken_cpu) or
-		(s_cas_auto_stop and s_playing_or_recording and s_clken_cpu);
-	s_button_record <= not i_button_left or (s_cas_auto_record and s_clken_cpu);
+	s_button_start <= s_cas_auto_start or (s_buttons_trigger(0) and not s_playing_or_recording);
+	s_button_stop <= s_cas_auto_stop or (s_buttons_trigger(0) and s_playing_or_recording);
+	s_button_record <= not i_button_left or s_cas_auto_record;
 
 	-- Also map, media keys
 	s_key_extended_press <= s_key_available and not s_key_release and s_key_extended;
@@ -587,8 +586,9 @@ begin
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_reset => s_Reset,
-		i_button_start_stop => s_button_start_stop,
+		i_button_start => s_button_start,
 		i_button_record => s_button_record,
+		i_button_stop => s_button_stop,
 		i_button_next => s_buttons_trigger(1),
 		i_button_prev => s_buttons_trigger(2),
 		o_playing_or_recording => s_playing_or_recording,
