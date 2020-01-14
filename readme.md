@@ -51,7 +51,7 @@ $ cd ./boards/mimasv2/99-big80
 $ make
 ```
 
-The final .bin file will be in the `./boards/mimasv2/99-big80/build` directory.
+The final .bin file will be in the `./boards/mimasv2/99-big80/bin` directory.
 
 I recommend using [this updated firmware](https://github.com/toptensoftware/MimasV2-Loader) for the Mimas V2 which will then let you upload to the board like so:
 
