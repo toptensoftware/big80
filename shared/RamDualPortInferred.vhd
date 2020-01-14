@@ -15,60 +15,60 @@ use ieee.numeric_std.ALL;
 entity RamDualPortInferred is
 	generic
 	(
-		p_AddrWidth : integer;
-		p_DataWidth : integer := 8
+		p_addr_width : integer;
+		p_data_width : integer := 8
 	);
 	port
 	(
 		-- Port A
-		i_Clock_A : in std_logic;
-		i_ClockEn_A : in std_logic;
-		i_Addr_A : in std_logic_vector(p_AddrWidth-1 downto 0);
-		i_Data_A : in std_logic_vector(p_DataWidth-1 downto 0);
-		o_Data_A : out std_logic_vector(p_DataWidth-1 downto 0);
-		i_Write_A : in std_logic;
+		i_clock_a : in std_logic;
+		i_clken_a : in std_logic;
+		i_addr_a : in std_logic_vector(p_addr_width-1 downto 0);
+		i_data_a : in std_logic_vector(p_data_width-1 downto 0);
+		o_data_a : out std_logic_vector(p_data_width-1 downto 0);
+		i_write_a : in std_logic;
 
 		-- Port B
-		i_Clock_B : in std_logic;
-		i_ClockEn_B : in std_logic;
-		i_Addr_B : in std_logic_vector(p_AddrWidth-1 downto 0);
-		i_Data_B : in std_logic_vector(p_DataWidth-1 downto 0);
-		o_Data_B : out std_logic_vector(p_DataWidth-1 downto 0);
-		i_Write_B : in std_logic
+		i_clock_b : in std_logic;
+		i_clken_b : in std_logic;
+		i_addr_b : in std_logic_vector(p_addr_width-1 downto 0);
+		i_data_b : in std_logic_vector(p_data_width-1 downto 0);
+		o_data_b : out std_logic_vector(p_data_width-1 downto 0);
+		i_write_b : in std_logic
 	);
 end RamDualPortInferred;
  
 architecture behavior of RamDualPortInferred is 
-	constant MEM_DEPTH : integer := 2**p_AddrWidth;
-	type mem_type is array(0 to MEM_DEPTH-1) of std_logic_vector(p_DataWidth-1 downto 0);
+	constant c_mem_depth : integer := 2**p_addr_width;
+	type mem_type is array(0 to c_mem_depth-1) of std_logic_vector(p_data_width-1 downto 0);
 	shared variable ram : mem_type;
 begin
 
-	process (i_Clock_A)
+	process (i_clock_a)
 	begin
-		if rising_edge(i_Clock_A) then
-			if i_ClockEn_A = '1' then 
+		if rising_edge(i_clock_a) then
+			if i_clken_a = '1' then 
 
-				if i_Write_A = '1' then
-					ram(to_integer(unsigned(i_Addr_A))) := i_Data_A;
+				if i_write_a = '1' then
+					ram(to_integer(unsigned(i_addr_a))) := i_data_a;
 				end if;
 
-				o_Data_A <= ram(to_integer(unsigned(i_Addr_A)));
+				o_data_a <= ram(to_integer(unsigned(i_addr_a)));
 			
 			end if;
 		end if;
 	end process;
 
-	process (i_Clock_B)
+	process (i_clock_b)
 	begin
-		if rising_edge(i_Clock_B) then
-			if i_ClockEn_B = '1' then 
+		if rising_edge(i_clock_b) then
+			if i_clken_b = '1' then 
 
-				if i_Write_B = '1' then
-					ram(to_integer(unsigned(i_Addr_B))) := i_Data_B;
+				if i_write_b = '1' then
+					ram(to_integer(unsigned(i_addr_b))) := i_data_b;
 				end if;
 
-				o_Data_B <= ram(to_integer(unsigned(i_Addr_B)));
+				o_data_b <= ram(to_integer(unsigned(i_addr_b)));
 
 			end if;
 		end if;

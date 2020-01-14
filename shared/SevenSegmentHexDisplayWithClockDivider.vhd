@@ -16,20 +16,20 @@ use ieee.numeric_std.all;
 entity SevenSegmentHexDisplayWithClockDivider is
 generic
 (
-    p_ClockFrequency : integer
+    p_clock_hz : integer
 );
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;                                     -- Clock
-    i_Reset : in std_logic;                                     -- Reset (syncrhonous, actvive high)
+    i_clock : in std_logic;                             -- Clock
+    i_reset : in std_logic;                             -- Reset (syncrhonous, actvive high)
        
     -- Input
-    i_Value : in std_logic_vector(11 downto 0);                 -- 12 bit value to be displayed
+    i_data : in std_logic_vector(11 downto 0);          -- 12 bit value to be displayed
     
     -- Output
-    o_SevenSegment : out std_logic_vector(6 downto 0);          -- Segements (active low)
-    o_SevenSegmentEnable : out std_logic_vector(2 downto 0)     -- Digit enable (active low)
+    o_segments : out std_logic_vector(6 downto 0);       -- Segements (active low)
+    o_segments_en : out std_logic_vector(2 downto 0)     -- Digit enable (active low)
 );
 end SevenSegmentHexDisplayWithClockDivider;
 
@@ -40,27 +40,27 @@ begin
     clock_divider : entity work.ClockDivider
     generic map
     (
-        p_DivideCycles => p_ClockFrequency / 180
+        p_period => p_clock_hz / 180
     )
     port map
     (
-        i_Clock => i_Clock,
-        i_ClockEnable => '1',
-        i_Reset => i_Reset,
+        i_clock => i_clock,
+        i_clken => '1',
+        i_reset => i_reset,
         
         -- Output
-        o_ClockEnable => s_clock_en
+        o_clken => s_clock_en
     );
 
     display : entity work.SevenSegmentHexDisplay
     port map
     (
-        i_Clock => i_Clock,
-        i_ClockEnable => s_clock_en,
-        i_Reset => i_Reset,
-        i_Value => i_Value,
-        o_SevenSegment => o_SevenSegment,
-        o_SevenSegmentEnable => o_SevenSegmentEnable
+        i_clock => i_clock,
+        i_clken => s_clock_en,
+        i_reset => i_reset,
+        i_data => i_data,
+        o_segments => o_segments,
+        o_segments_en => o_segments_en
     );
 
 end Behavioral;

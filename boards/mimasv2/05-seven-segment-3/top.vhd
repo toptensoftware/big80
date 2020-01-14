@@ -6,10 +6,10 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz : in std_logic;
-	Buttons : in std_logic_vector(0 downto 0);
-	SevenSegment : out std_logic_vector(7 downto 0);
-	SevenSegmentEnable : out std_logic_vector(2 downto 0)
+	i_clock_100mhz : in std_logic;
+	i_buttons : in std_logic_vector(0 downto 0);
+	o_seven_segment : out std_logic_vector(7 downto 0);
+	o_seven_segment_en : out std_logic_vector(2 downto 0)
 );
 end top;
 
@@ -21,42 +21,42 @@ architecture Behavioral of top is
 begin
 
 	-- Reset signal
-	s_reset <= not Buttons(0);
+	s_reset <= not i_buttons(0);
 
 	-- Clock divider
 	clk_div_seven_seg : entity work.ClockDividerPow2
 	GENERIC MAP
 	(
-		p_DividerWidth_1 => 19,
-		p_DividerWidth_2 => 23
+		p_divider_width_1 => 19,
+		p_divider_width_2 => 23
 	)
 	PORT MAP
 	(
-		i_Clock => CLK_100Mhz,
-		i_Reset => s_reset,
-		o_ClockEnable_1 => s_clken_sevenseg,
-		o_ClockEnable_2 => s_clken_counter
+		i_clock => i_clock_100mhz,
+		i_reset => s_reset,
+		o_clken_1 => s_clken_sevenseg,
+		o_clken_2 => s_clken_counter
 	);
 
 	-- Use an instance of the SevenSegmentHexDisplay component
 	display : entity work.SevenSegmentHexDisplay
 	PORT MAP 
 	(
-		i_Clock => CLK_100MHz,
-		i_ClockEnable => s_clken_sevenseg,
-		i_Reset => s_reset,
-		i_Value => std_logic_vector(s_counter),
-		o_SevenSegment => SevenSegment(7 downto 1),
-		o_SevenSegmentEnable => SevenSegmentEnable
+		i_clock => i_clock_100mhz,
+		i_clken => s_clken_sevenseg,
+		i_reset => s_reset,
+		i_data => std_logic_vector(s_counter),
+		o_segments => o_seven_segment(7 downto 1),
+		o_segments_en => o_seven_segment_en
 	);
 
 	-- The display component doesn't handle the 'dot', turn it off
-	SevenSegment(0) <= '1';
+	o_seven_segment(0) <= '1';
 
 	-- Process to increment counter
-	process (CLK_100MHz, s_clken_counter, s_reset)
+	process (i_clock_100mhz, s_clken_counter, s_reset)
 	begin
-		if rising_edge(CLK_100MHz) then
+		if rising_edge(i_clock_100mhz) then
 			if s_reset = '1' then
 				s_counter <= (others => '0');
 			elsif s_clken_counter = '1' then

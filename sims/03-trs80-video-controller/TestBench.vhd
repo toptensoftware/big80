@@ -8,13 +8,13 @@ end TestBench;
 architecture behavior of TestBench is
     signal s_clock : std_logic := '1';
     signal s_reset : std_logic := '0';
-    signal s_HPos : integer range -2048 to 2047;
-    signal S_VPos : integer range -2048 to 2047;
-    signal s_VideoRamAddr : std_logic_vector(9 downto 0);
-    signal s_VideoRamData : std_logic_vector(7 downto 0);
-    signal s_CharRomAddr :  std_logic_vector(10 downto 0);
-    signal s_CharRomData :  std_logic_vector(5 downto 0);
-    signal s_Pixel : std_logic;
+    signal s_horz_pos : integer range -2048 to 2047;
+    signal s_vert_pos : integer range -2048 to 2047;
+    signal s_video_ram_addr : std_logic_vector(9 downto 0);
+    signal s_video_ram_data : std_logic_vector(7 downto 0);
+    signal s_char_rom_addr :  std_logic_vector(10 downto 0);
+    signal s_char_rom_data :  std_logic_vector(5 downto 0);
+    signal s_pixel : std_logic;
 begin
 
     reset_proc: process
@@ -35,26 +35,26 @@ begin
     vgaTiming : entity work.VGATiming
     generic map
     (
-        p_HRes => 6 * 2 * 4,            -- 4 characters wide
-        p_VRes => 12 * 3 * 2,           -- 2 lines high
-        p_PixelLatency => 0,
-        p_HFrontPorch => 5,
-        p_HSyncWidth => 5,
-        p_HBackPorch => 5,
-        p_VFrontPorch => 5,
-        p_VSyncWidth => 5,
-        p_VBackPorch => 5
+        p_horz_res => 6 * 2 * 4,            -- 4 characters wide
+        p_vert_res => 12 * 3 * 2,           -- 2 lines high
+        p_pixel_latency => 0,
+        p_horz_front_porch => 5,
+        p_horz_sync_width => 5,
+        p_horz_back_porch => 5,
+        p_vert_front_porch => 5,
+        p_vert_sync_width => 5,
+        p_vert_back_porch => 5
     )
 	port map
 	(
-        i_Clock => s_Clock,
-        i_ClockEnable => '1',
-        i_Reset => s_Reset,
-        o_HSync => open,
-        o_VSync => open,
-        o_HPos => s_HPos,
-        o_VPos => s_VPos,
-        o_Blank => open
+        i_clock => s_Clock,
+        i_clken => '1',
+        i_reset => s_Reset,
+        o_horz_sync => open,
+        o_vert_sync => open,
+        o_horz_pos => s_horz_pos,
+        o_vert_pos => s_vert_pos,
+        o_blank => open
     );
     
     -- Fake Video RAM
@@ -62,9 +62,9 @@ begin
     begin
         if rising_edge(s_clock) then
             if s_reset = '1' then
-                s_VideoRamData <= x"FF";
+                s_video_ram_data <= x"FF";
             else
-                s_VideoRamData <= "000000" & s_VideoRamAddr(1 downto 0);
+                s_video_ram_data <= "000000" & s_video_ram_addr(1 downto 0);
             end if;
         end if;
     end process;
@@ -74,14 +74,14 @@ begin
     begin
         if rising_edge(s_clock) then
             if s_reset = '1' then
-                s_CharRomData <= "111111";
+                s_char_rom_data <= "111111";
             else
-                case s_CharRomAddr(5 downto 4) is
-                    when "00" => s_CharRomData <= "101010";
-                    when "01" => s_CharRomData <= "000000";
-                    when "10" => s_CharRomData <= "010101";
-                    when "11" => s_CharRomData <= "000000";
-                    when others => s_CharRomData <= "111111";
+                case s_char_rom_addr(5 downto 4) is
+                    when "00" => s_char_rom_data <= "101010";
+                    when "01" => s_char_rom_data <= "000000";
+                    when "10" => s_char_rom_data <= "010101";
+                    when "11" => s_char_rom_data <= "000000";
+                    when others => s_char_rom_data <= "111111";
                 end case;
             end if;
         end if;
@@ -91,21 +91,21 @@ begin
     videoController : entity work.Trs80VideoController
     generic map
     (
-        p_LeftMarginPixels => 0,
-        p_TopMarginPixels => 0
+        p_left_margin_pixels => 0,
+        p_top_margin_pixels => 0
     )
     port map
     (
-        i_Clock => s_Clock,
-        i_ClockEnable => '1',
-        i_Reset => s_Reset,
-        i_HPos => s_HPos,
-        i_VPos => s_VPos,
-        i_WideMode => '0',
-        o_VideoRamAddr => s_VideoRamAddr,
-        i_VideoRamData => s_VideoRamData,
-        o_CharRomAddr => s_CharRomAddr,
-        i_CharRomData => s_CharRomData,
-        o_Pixel => s_Pixel
+        i_clock => s_Clock,
+        i_clken => '1',
+        i_reset => s_Reset,
+        i_horz_pos => s_horz_pos,
+        i_vert_pos => s_vert_pos,
+        i_wide_mode => '0',
+        o_video_ram_addr => s_video_ram_addr,
+        i_video_ram_data => s_video_ram_data,
+        o_char_rom_addr => s_char_rom_addr,
+        i_char_rom_data => s_char_rom_data,
+        o_pixel => s_pixel
     );
 end;

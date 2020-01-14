@@ -9,12 +9,12 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz_in : in std_logic;
+	i_clock_100mhz : in std_logic;
 	c3_sys_rst_n : in std_logic;
-	Button_B : in std_logic;
-	LEDs : out std_logic_vector(7 downto 0);
-	SevenSegment : out std_logic_vector(7 downto 0);
-	SevenSegmentEnable : out std_logic_vector(2 downto 0);
+	i_button_b : in std_logic;
+	o_leds : out std_logic_vector(7 downto 0);
+	o_seven_segment : out std_logic_vector(7 downto 0);
+	o_seven_segment_en : out std_logic_vector(2 downto 0);
 
 	-- Memory controller
 	mcb3_dram_dq    : inout  std_logic_vector(15 downto 0);
@@ -37,18 +37,18 @@ end top;
 architecture Behavioral of top is
 	signal s_reset : std_logic;
 	signal s_CLK_100Mhz_buffered : std_logic;
-	signal s_CLK_80Mhz : std_logic;
-	signal s_CLK_CPU_en : std_logic;
+	signal s_clock_80mhz : std_logic;
+	signal s_clken_cpu : std_logic;
 	signal s_seven_seg_value : std_logic_vector(11 downto 0);
 
 	signal c3_calib_done : std_logic;
 begin
 
 	-- Reset signal
-	s_reset <= (not Button_B);
+	s_reset <= (not i_button_b);
 
-	-- LEDs
-	LEDs <= "0000000" & c3_calib_done;
+	-- o_leds
+	o_leds <= "0000000" & c3_calib_done;
 
 	-- Seven segment value
 	s_seven_seg_value <= "000000000000";
@@ -56,7 +56,7 @@ begin
     clk_ibufg : IBUFG
     port map
     (
-		I => CLK_100Mhz_in,
+		I => i_clock_100mhz,
 		O => s_CLK_100MHz_buffered
 	);
 
@@ -66,38 +66,38 @@ begin
 	(
 		CLK_IN_100MHz => s_CLK_100MHz_buffered,
 		CLK_OUT_100MHz => open,
-		CLK_OUT_80MHz => s_CLK_80MHz
+		CLK_OUT_80MHz => s_clock_80mhz
 	);
 
 	-- Clock divider
 	clock_divider : entity work.ClockDivider
 	generic map
 	(
-		p_DivideCycles => 45
+		p_period => 45
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => '1',
-		i_Reset => s_reset,
-		o_ClockEnable => s_CLK_CPU_en
+		i_clock => s_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		o_clken => s_clken_cpu
 	);
 
 	-- Seven segment display
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
 	generic map
 	(
-		p_ClockFrequency => 80_000_000
+		p_clock_hz => 80_000_000
 	)
 	port map
 	( 
-		i_Clock => s_CLK_80Mhz,
-		i_Reset => s_Reset,
-		i_Value => s_seven_seg_value,
-		o_SevenSegment => SevenSegment(7 downto 1),
-		o_SevenSegmentEnable => SevenSegmentEnable
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_data => s_seven_seg_value,
+		o_segments => o_seven_segment(7 downto 1),
+		o_segments_en => o_seven_segment_en
 	);
-	SevenSegment(0) <= '1';
+	o_seven_segment(0) <= '1';
 
 
 	-- LPDDR Wrapper
@@ -137,16 +137,16 @@ begin
 		c3_clk0          => open,
 		c3_rst0          => open,
 
-		c3_p0_cmd_clk => s_CLK_80Mhz,
-		c3_p0_cmd_en => s_CLK_CPU_en,
+		c3_p0_cmd_clk => s_clock_80mhz,
+		c3_p0_cmd_en => s_clken_cpu,
 		c3_p0_cmd_instr => (others => '0'),
 		c3_p0_cmd_bl => (others => '0'),
 		c3_p0_cmd_byte_addr => (others => '0'),
 		c3_p0_cmd_empty => open,
 		c3_p0_cmd_full => open,
 		
-		c3_p0_wr_clk => s_CLK_80Mhz,
-		c3_p0_wr_en => s_CLK_CPU_en,
+		c3_p0_wr_clk => s_clock_80mhz,
+		c3_p0_wr_en => s_clken_cpu,
 		c3_p0_wr_mask => (others => '0'),
 		c3_p0_wr_data => (others => '0'),
 		c3_p0_wr_full => open,
@@ -155,8 +155,8 @@ begin
 		c3_p0_wr_underrun => open,
 		c3_p0_wr_error => open,
 		
-		c3_p0_rd_clk => s_CLK_80Mhz,
-		c3_p0_rd_en => s_CLK_CPU_en,
+		c3_p0_rd_clk => s_clock_80mhz,
+		c3_p0_rd_en => s_clken_cpu,
 		c3_p0_rd_data => open,
 		c3_p0_rd_full => open,
 		c3_p0_rd_empty => open,

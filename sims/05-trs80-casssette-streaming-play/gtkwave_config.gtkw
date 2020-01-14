@@ -19,11 +19,11 @@
 @28
 testbench.streamer.i_reset
 testbench.streamer.i_clock
-testbench.streamer.i_clockenable
+testbench.streamer.i_clken
 @22
 testbench.streamer.i_data[7:0]
 @28
-testbench.streamer.i_dataavailable
+testbench.streamer.i_data_available
 testbench.streamer.o_audio
 testbench.streamer.o_dataneeded
 testbench.streamer.s_renderer_reset

@@ -6,73 +6,77 @@ entity top is
 port 
 (
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz : in std_logic;
-	Button_B : in std_logic;
-	HSync : out std_logic;
-	VSync : out std_logic;
-	Red : out std_logic_vector(2 downto 0);
-	Green : out std_logic_vector(2 downto 0);
-	Blue : out std_logic_vector(2 downto 1);
-	PS2_Clock : inout std_logic;
-	PS2_Data : inout std_logic;
+	i_clock_100mhz : in std_logic;
+	i_button_b : in std_logic;
+	o_horz_sync : out std_logic;
+	o_vert_sync : out std_logic;
+	o_red : out std_logic_vector(2 downto 0);
+	o_green : out std_logic_vector(2 downto 0);
+	o_blue : out std_logic_vector(2 downto 1);
+	io_ps2_clock : inout std_logic;
+	io_ps2_data : inout std_logic;
 
-	Button_Right : in std_logic;
-	Button_Up : in std_logic;
-	Button_Down : in std_logic;
-	Button_Left : in std_logic;
+	i_button_right : in std_logic;
+	i_button_up : in std_logic;
+	i_button_down : in std_logic;
+	i_button_left : in std_logic;
 
-	TurboSwitch : in std_logic;
-	TypingModeSwitch : in std_logic;
-	GreenScreenSwitch : in std_logic;
-	ScanLinesSwitch : in std_logic;
-	RunSwitch : in std_logic;
+	i_switch_turbo_tape : in std_logic;
+	i_switch_typing_mode : in std_logic;
+	i_switch_green_screen : in std_logic;
+	i_switch_scan_lines : in std_logic;
+	i_switch_run : in std_logic;
 
-	P9_1 : out std_logic;
-	P9_3 : out std_logic;
-	P9_5 : out std_logic;
-
-	sd_mosi : out std_logic;
-	sd_miso : in std_logic;
-	sd_ss_n : out std_logic;
-	sd_sclk : out std_logic;
-	LEDs : out std_logic_vector(7 downto 0);
-	SevenSegment : out std_logic_vector(7 downto 0);
-	SevenSegmentEnable : out std_logic_vector(2 downto 0);
-	Audio : out std_logic_vector(1 downto 0)
-
---	UART2_TX : out std_logic
+	o_sd_mosi : out std_logic;
+	i_sd_miso : in std_logic;
+	o_sd_ss_n : out std_logic;
+	o_sd_sclk : out std_logic;
+	o_leds : out std_logic_vector(7 downto 0);
+	o_seven_segment : out std_logic_vector(7 downto 0);
+	o_seven_segment_en : out std_logic_vector(2 downto 0);
+	o_audio : out std_logic_vector(1 downto 0)
 );
 end top;
 
 architecture Behavioral of top is
+	-- Reset and clocking
 	signal s_reset : std_logic;
 	signal s_reset_n : std_logic;
+	signal s_soft_reset : integer range 0 to 15 := 0;
+	signal s_clock_80mhz : std_logic;
+	signal s_clken_40mhz : std_logic;
+	signal s_clken_cpu_normal : std_logic;
+	signal s_clken_cpu_turbo : std_logic;
+	signal s_clken_cpu : std_logic;
+	signal s_turbo_mode : std_logic;
+
+	-- Video
 	signal s_blank : std_logic;
 	signal s_hpos : integer range -2048 to 2047;
 	signal s_vpos : integer range -2048 to 2047;
-	signal s_CLK_80Mhz : std_logic;
-	signal s_CLK_40Mhz_en : std_logic;
-	signal s_CLK_CPU_normal_en : std_logic;
-	signal s_CLK_CPU_turbo_en : std_logic;
-	signal s_CLK_CPU_en : std_logic;
-	signal s_TurboMode : std_logic;
-	signal s_CasMotorRelay : std_logic;
-	signal s_VideoRamAddr : std_logic_vector(9 downto 0);
-	signal s_VideoRamData : std_logic_vector(7 downto 0);
-	signal s_CharRomAddr : std_logic_vector(10 downto 0);
-	signal s_CharRomData : std_logic_vector(5 downto 0);
-	signal s_VideoRamWrite_cpu : std_logic;
-	signal s_VideoRamAddr_cpu : std_logic_vector(9 downto 0);
-	signal s_VideoRamDataIn_cpu : std_logic_vector(7 downto 0);
-	signal s_VideORamDataOut_cpu : std_logic_vector(7 downto 0);
-	signal s_RamWrite_cpu : std_logic;
-	signal s_RamAddr_cpu : std_logic_vector(14 downto 0);
-	signal s_RamDataIn_cpu : std_logic_vector(7 downto 0);
-	signal s_RamDataOut_cpu : std_logic_vector(7 downto 0);
-	signal s_RomAddr_cpu : std_logic_vector(13 downto 0);
-	signal s_RomDataOut_cpu : std_logic_vector(7 downto 0);
+	signal s_video_ram_addr : std_logic_vector(9 downto 0);
+	signal s_video_ram_data : std_logic_vector(7 downto 0);
+	signal s_char_rom_addr : std_logic_vector(10 downto 0);
+	signal s_char_rom_data : std_logic_vector(5 downto 0);
 	signal s_pixel : std_logic;
 	signal s_line_rep : integer range 0 to 2;
+
+	signal s_video_ram_write_cpu : std_logic;
+	signal s_video_ram_addr_cpu : std_logic_vector(9 downto 0);
+	signal s_video_ram_din_cpu : std_logic_vector(7 downto 0);
+	signal s_video_ram_dout_cpu : std_logic_vector(7 downto 0);
+
+	-- RAM
+	signal s_ram_write_cpu : std_logic;
+	signal s_ram_addr_cpu : std_logic_vector(14 downto 0);
+	signal s_ram_din_cpu : std_logic_vector(7 downto 0);
+	signal s_ram_dout_cpu : std_logic_vector(7 downto 0);
+
+	-- ROM
+	signal s_rom_addr_cpu : std_logic_vector(13 downto 0);
+	signal s_rom_dout_cpu : std_logic_vector(7 downto 0);
+
+	-- CPU
 	signal s_cpu_addr : std_logic_vector(15 downto 0);
 	signal s_cpu_din : std_logic_vector(7 downto 0);
 	signal s_cpu_dout : std_logic_vector(7 downto 0);
@@ -81,14 +85,6 @@ architecture Behavioral of top is
 	signal s_cpu_rd_n : std_logic;
 	signal s_cpu_wr_n : std_logic;
 	signal s_cpu_wait_n : std_logic;
-
-	-- keyboard related
-	signal s_scan_code : std_logic_vector(6 downto 0);
-	signal s_extended_key : std_logic;
-	signal s_key_release : std_logic;
-	signal s_key_available : std_logic;
-	signal s_key_switches : std_logic_vector(63 downto 0);
-	signal s_KeyboardMapDataOut_cpu : std_logic_vector(7 downto 0);
 
 	-- Memory/Port Mapping
 	signal s_mem_rd : std_logic;
@@ -101,6 +97,14 @@ architecture Behavioral of top is
 	signal s_is_keyboard_range : std_logic;
 	signal s_is_cas_port : std_logic;
 
+	-- Keyboard
+	signal s_key_scancode : std_logic_vector(6 downto 0);
+	signal s_key_extended : std_logic;
+	signal s_key_release : std_logic;
+	signal s_key_available : std_logic;
+	signal s_key_switches : std_logic_vector(63 downto 0);
+	signal s_key_dout_cpu : std_logic_vector(7 downto 0);
+
 	-- Button debounce and edge detection
 	signal s_buttons_unbounced : std_logic_vector(2 downto 0);
 	signal s_buttons_debounced : std_logic_vector(2 downto 0);
@@ -108,7 +112,8 @@ architecture Behavioral of top is
 	signal s_buttons_trigger : std_logic_vector(2 downto 0);
 	signal s_button_record : std_logic;
 
-	signal s_extended_key_press : std_logic;
+	-- Media Keys
+	signal s_key_extended_press : std_logic;
 	signal s_media_key_play : std_logic;
 	signal s_media_key_next : std_logic;
 	signal s_media_key_prev : std_logic;
@@ -127,33 +132,25 @@ architecture Behavioral of top is
 	signal s_selected_tape : std_logic_vector(11 downto 0);
 	signal s_recording : std_logic;
 	signal s_playing_or_recording : std_logic;
-
-	signal s_PrevCasAudioIn : std_logic_vector(1 downto 0);
-	signal s_CasAudioIn : std_logic_vector(1 downto 0);
-	signal s_CasAudioOut : std_logic;
-	signal s_CasAudioInEdge : std_logic;
-	signal s_Audio : std_logic;
-	signal s_Speaker : std_logic_vector(1 downto 0);
-	signal s_WideVideoMode : std_logic;
-
-	signal s_soft_reset : integer range 0 to 15 := 0;
-
---	signal s_parser_reset : std_logic;
---	signal s_parser_data : std_logic_vector(7 downto 0);
---	signal s_parser_data_available : std_logic;
---	signal s_parser_data_available_pulse : std_logic;
+	signal s_cas_prev_audio_in : std_logic_vector(1 downto 0);
+	signal s_cas_audio_in : std_logic_vector(1 downto 0);
+	signal s_cas_audio_out : std_logic_vector(1 downto 0);
+	signal s_cas_audio_in_edge : std_logic;
+	signal s_cas_motor : std_logic;
+	signal s_audio : std_logic;
+	signal s_wide_video_mode : std_logic;
 
 begin
 
 	-- Reset signal
-	s_reset <= '1' when Button_B = '0' or s_soft_reset /= 0 else '0';
+	s_reset <= '1' when i_button_b = '0' or s_soft_reset /= 0 else '0';
 	s_reset_n <= not s_reset;
 
 	-- Soft reset process
-	soft_reset : process(s_CLK_80Mhz)
+	soft_reset : process(s_clock_80mhz)
 	begin		
-		if rising_edge(s_CLK_80Mhz) then
-			if s_extended_key_press = '1' and s_scan_code = "0110111" then
+		if rising_edge(s_clock_80mhz) then
+			if s_key_extended_press = '1' and s_key_scancode = "0110111" then
 				s_soft_reset <= 15;
 			end if;
 			if s_soft_reset /= 0 then
@@ -166,19 +163,19 @@ begin
 	dcm : entity work.ClockDCM
 	port map
 	(
-		CLK_IN_100MHz => CLK_100MHz,
+		CLK_IN_100MHz => i_clock_100mhz,
 		CLK_OUT_100MHz => open,
-		CLK_OUT_80MHz => s_CLK_80MHz
+		CLK_OUT_80MHz => s_clock_80mhz
 	);
 
 	-- Generate the 40Mhz clock enable
-	process (s_CLK_80Mhz)
+	process (s_clock_80mhz)
 	begin
-		if rising_edge(s_CLK_80Mhz) then
+		if rising_edge(s_clock_80mhz) then
 			if s_reset = '1' then
-				s_CLK_40Mhz_en <= '0';
+				s_clken_40mhz <= '0';
 			else
-				s_CLK_40Mhz_en <= not s_CLK_40Mhz_en;
+				s_clken_40mhz <= not s_clken_40mhz;
 			end if;
 		end if;
 	end process;
@@ -188,90 +185,90 @@ begin
 	clock_div_cpu_1774 : entity work.ClockDivider
 	generic map
 	(
-		p_DivideCycles => 45
+		p_period => 45
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => '1',
-		i_Reset => s_reset,
-		o_ClockEnable => s_CLK_CPU_normal_en
+		i_clock => s_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		o_clken => s_clken_cpu_normal
 	);
 
-	s_CLK_CPU_turbo_en <= s_CLK_40Mhz_en;
-	s_CLK_CPU_en <= 
-		'0' when RunSwitch = '0' else 
-		s_CLK_CPU_turbo_en when s_TurboMode = '1' else
-		s_CLK_CPU_normal_en;
-	s_TurboMode <= s_CasMotorRelay and TurboSwitch;
+	s_clken_cpu_turbo <= s_clken_40mhz;
+	s_clken_cpu <= 
+		'0' when i_switch_run = '0' else 
+		s_clken_cpu_turbo when s_turbo_mode = '1' else
+		s_clken_cpu_normal;
+	s_turbo_mode <= s_cas_motor and i_switch_turbo_tape;
 
 	-- Generate VGA timing signals for 800x600 @ 60Hz
 	vga_timing : entity work.VGATiming800x600
 	port map
 	(
-		i_Clock => s_CLK_80MHz,
-		i_ClockEnable => s_CLK_40Mhz_en,
-		i_Reset => s_reset,
-		o_VSync => VSync,
-		o_HSync => HSync,
-		o_HPos => s_hpos,
-		o_VPos => s_vpos,
-		o_Blank => s_blank
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_40mhz,
+		i_reset => s_reset,
+		o_vert_sync => o_vert_sync,
+		o_horz_sync => o_horz_sync,
+		o_horz_pos => s_hpos,
+		o_vert_pos => s_vpos,
+		o_blank => s_blank
 	);
 
 	-- TRS80 Video Controller
 	video_controller : entity work.Trs80VideoController
 	generic map
 	(
-		p_LeftMarginPixels => 16,
-		p_TopMarginPixels => 12
+		p_left_margin_pixels => 16,
+		p_top_margin_pixels => 12
 	)
 	port map
 	(
-		i_Clock => s_CLK_80MHz,
-		i_ClockEnable => s_CLK_40Mhz_en,
-		i_Reset => s_reset,
-		i_HPos => s_hpos,
-		i_VPos => s_vpos,
-		i_WideMode => s_WideVideoMode,
-		o_VideoRamAddr => s_VideoRamAddr,
-		i_VideoRamData => s_VideoRamData,
-		o_CharRomAddr => s_CharRomAddr,
-		i_CharRomData => s_CharRomData,
-		o_Pixel => s_pixel,
-		o_LineRep => s_line_rep
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_40mhz,
+		i_reset => s_reset,
+		i_horz_pos => s_hpos,
+		i_vert_pos => s_vpos,
+		i_wide_mode => s_wide_video_mode,
+		o_video_ram_addr => s_video_ram_addr,
+		i_video_ram_data => s_video_ram_data,
+		o_char_rom_addr => s_char_rom_addr,
+		i_char_rom_data => s_char_rom_data,
+		o_pixel => s_pixel,
+		o_line_rep => s_line_rep
 	);
 
 	-- Generate color
-	color_gen : process(s_pixel, GreenScreenSwitch, ScanLinesSwitch, s_line_rep)
+	color_gen : process(s_pixel, i_switch_green_screen, i_switch_scan_lines, s_line_rep)
 	begin
-		if GreenScreenSwitch = '1' then
-			Red <= "000";
-			if ScanLinesSwitch = '1' then
+		if i_switch_green_screen = '1' then
+			o_red <= "000";
+			if i_switch_scan_lines = '1' then
 				if s_line_rep = 1 then
-					Green <= s_pixel & s_pixel & s_pixel;
+					o_green <= s_pixel & s_pixel & s_pixel;
 				else
-					Green <= s_pixel & "0" & s_pixel;
+					o_green <= s_pixel & "0" & s_pixel;
 				end if;
 			else
-				Green <= s_pixel & s_pixel & s_pixel;
+				o_green <= s_pixel & s_pixel & s_pixel;
 			end if;
-			Blue <= "00";
+			o_blue <= "00";
 		else
-			Red <= "000";
-			if ScanLinesSwitch = '1' then
+			o_red <= "000";
+			if i_switch_scan_lines = '1' then
 				if s_line_rep = 1 then
-					Red <= s_pixel & s_pixel & s_pixel;
-					Green <= s_pixel & "00";
+					o_red <= s_pixel & s_pixel & s_pixel;
+					o_green <= s_pixel & "00";
 				else
-					Red <= s_pixel & "0" & s_pixel;
-					Green <= "0" & s_pixel & "0";
+					o_red <= s_pixel & "0" & s_pixel;
+					o_green <= "0" & s_pixel & "0";
 				end if;
 			else
-				Red <= s_pixel & s_pixel & s_pixel;
-				Green <= s_pixel & "00";
+				o_red <= s_pixel & s_pixel & s_pixel;
+				o_green <= s_pixel & "00";
 			end if;
-			Blue <= "00";
+			o_blue <= "00";
 		end if;
 	end process;
 
@@ -280,92 +277,93 @@ begin
 	charrom : entity work.Trs80CharRom
 	port map
 	(
-		clock => s_CLK_80MHz,
-		addr => s_CharRomAddr,
-		dout => s_CharRomData
+		clock => s_clock_80mhz,
+		addr => s_char_rom_addr,
+		dout => s_char_rom_data
 	);
 
 	-- Video RAM (1K)
 	vram : entity work.RamDualPortInferred	
 	GENERIC MAP
 	(
-		p_AddrWidth => 10
+		p_addr_width => 10
 	)
 	PORT MAP
 	(
 		-- Read/Write port for CPU
-		i_Clock_A => s_CLK_80Mhz,
-		i_ClockEn_A => s_CLK_CPU_en,
-		i_Write_A => s_VideoRamWrite_cpu,
-		i_Addr_A => s_VideoRamAddr_cpu,
-		i_Data_A => s_VideoRamDataIn_cpu,
-		o_Data_A => s_VideORamDataOut_cpu,
+		i_clock_a => s_clock_80mhz,
+		i_clken_a => s_clken_cpu,
+		i_write_a => s_video_ram_write_cpu,
+		i_addr_a => s_video_ram_addr_cpu,
+		i_data_a => s_video_ram_din_cpu,
+		o_data_a => s_video_ram_dout_cpu,
 
 		-- Read only port for video controller
-		i_Clock_B => s_CLK_80Mhz,
-		i_ClockEn_B => s_CLK_40Mhz_en,
-		i_Write_B => '0',
-		i_Addr_B => s_VideoRamAddr,
-		i_Data_B => (others => '0'),
-		o_Data_B => s_VideoRamData
+		i_clock_b => s_clock_80mhz,
+		i_clken_b => s_clken_40mhz,
+		i_write_b => '0',
+		i_addr_b => s_video_ram_addr,
+		i_data_b => (others => '0'),
+		o_data_b => s_video_ram_data
 	);
 
 	-- Main RAM (48K)
 	ram : entity work.RamInferred	
 	GENERIC MAP
 	(
-		p_AddrWidth => 15
+		p_addr_width => 15
 	)
 	PORT MAP
 	(
 		-- Read/Write port for CPU
-		i_Clock => s_CLK_80Mhz,
-		i_Write => s_RamWrite_cpu,
-		i_Addr => s_RamAddr_cpu,
-		i_Data => s_RamDataIn_cpu,
-		o_Data => s_RamDataOut_cpu
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_write => s_ram_write_cpu,
+		i_addr => s_ram_addr_cpu,
+		i_data => s_ram_din_cpu,
+		o_data => s_ram_dout_cpu
 	);
 
 	-- Model 1 ROM (12K)
 	rom : entity work.Trs80Level2Rom
 	PORT MAP
 	(
-		clock => s_CLK_80Mhz,
-		addr => s_RomAddr_cpu,
-		dout => s_RomDataOut_cpu
+		clock => s_clock_80mhz,
+		addr => s_rom_addr_cpu,
+		dout => s_rom_dout_cpu
 	);
 
 	-- PS2 Keyboard Controller
 	keyboardController : entity work.PS2KeyboardController
 	GENERIC MAP
 	(
-		p_ClockFrequency => 80_000_000 
+		p_clock_hz => 80_000_000 
 	)
 	PORT MAP
 	(
-		i_Clock => s_CLK_80MHz,
-		i_Reset => s_reset,
-		io_PS2Clock => PS2_Clock,
-		io_PS2Data => PS2_Data,
-		o_ScanCode => s_scan_code,
-		o_ExtendedKey => s_extended_key,
-		o_KeyRelease => s_key_release,
-		o_DataAvailable => s_key_available
+		i_clock => s_clock_80mhz,
+		i_reset => s_reset,
+		io_ps2_clock => io_ps2_clock,
+		io_ps2_data => io_ps2_data,
+		o_key_scancode => s_key_scancode,
+		o_key_extended => s_key_extended,
+		o_key_released => s_key_release,
+		o_key_available => s_key_available
 	);
 
 	-- TRS80 Keyboard Switches
 	keyboardMemoryMap : entity work.Trs80KeyMemoryMap
 	PORT MAP
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_Reset => s_reset,
-		i_ScanCode => s_scan_code,
-		i_ExtendedKey => s_extended_key,
-		i_KeyRelease => s_key_release,
-		i_DataAvailable => s_key_available,
-		i_TypingMode => TypingModeSwitch,
-		i_Addr => s_cpu_addr(7 downto 0),
-		o_Data => s_KeyboardMapDataOut_cpu
+		i_clock => s_clock_80mhz,
+		i_reset => s_reset,
+		i_key_scancode => s_key_scancode,
+		i_key_extended => s_key_extended,
+		i_key_released => s_key_release,
+		i_key_available => s_key_available,
+		i_typing_mode => i_switch_typing_mode,
+		i_addr => s_cpu_addr(7 downto 0),
+		o_data => s_key_dout_cpu
 	);
 
 	-- CPU
@@ -379,8 +377,8 @@ begin
 	PORT MAP
 	(
 		RESET_n => s_reset_n, 
-		CLK_n => s_CLK_80MHz,
-		CLKEN => s_CLK_CPU_en,
+		CLK_n => s_clock_80mhz,
+		CLKEN => s_clken_cpu,
 		A => s_cpu_addr,
 		DI => s_cpu_din,
 		DO => s_cpu_dout,
@@ -430,24 +428,24 @@ begin
 	end process;
 
 	-- Generate addresses and write flags
-	s_VideoRamAddr_cpu <= s_cpu_addr(9 downto 0);
-	s_VideoRamWrite_cpu <= s_mem_wr and s_is_vram_range;
-	s_VideoRamDataIn_cpu <= s_cpu_dout;
+	s_video_ram_addr_cpu <= s_cpu_addr(9 downto 0);
+	s_video_ram_write_cpu <= s_mem_wr and s_is_vram_range;
+	s_video_ram_din_cpu <= s_cpu_dout;
 
-	s_RamAddr_cpu <= s_cpu_addr(14 downto 0);
-	s_RamWrite_cpu <= s_mem_wr and s_is_ram_range;
-	s_RamDataIn_cpu <= s_cpu_dout;
-	s_RomAddr_cpu <= s_cpu_addr(13 downto 0);
+	s_ram_addr_cpu <= s_cpu_addr(14 downto 0);
+	s_ram_write_cpu <= s_mem_wr and s_is_ram_range;
+	s_ram_din_cpu <= s_cpu_dout;
+	s_rom_addr_cpu <= s_cpu_addr(13 downto 0);
 
 	s_cpu_wait_n <= '1';
 
 	cpu_data_in : process(s_mem_rd, 
-							s_is_rom_range, s_RomDataOut_cpu, 
-							s_is_ram_range, s_RamDataOut_cpu, 
-							s_is_vram_range, s_VideoRamDataOut_cpu,
-							s_is_keyboard_Range, s_KeyboardMapDataOut_cpu,
+							s_is_rom_range, s_rom_dout_cpu, 
+							s_is_ram_range, s_ram_dout_cpu, 
+							s_is_vram_range, s_video_ram_dout_cpu,
+							s_is_keyboard_Range, s_key_dout_cpu,
 							s_port_rd,
-							s_is_cas_port, s_CasAudioIn, s_CasAudioInEdge
+							s_is_cas_port, s_cas_audio_in, s_cas_audio_in_edge
 							)
 	begin
 
@@ -455,103 +453,103 @@ begin
 
 		if s_mem_rd = '1' then
 			if s_is_rom_range = '1' then
-				s_cpu_din <= s_RomDataOut_cpu;
+				s_cpu_din <= s_rom_dout_cpu;
 			elsif s_is_ram_range = '1' then
-				s_cpu_din <= s_RamDataOut_cpu;
+				s_cpu_din <= s_ram_dout_cpu;
 			elsif s_is_keyboard_range = '1' then
-				s_cpu_din <= s_KeyboardMapDataOut_cpu;
+				s_cpu_din <= s_key_dout_cpu;
 			elsif s_is_vram_range = '1' then
-				s_cpu_din <= s_VideoRamDataOut_cpu;
+				s_cpu_din <= s_video_ram_dout_cpu;
 			end if;
 		elsif s_port_rd = '1' then
 			if s_is_cas_port = '1' then
-				s_cpu_din <= s_CasAudioInEdge & "00000" & s_CasAudioIn;
+				s_cpu_din <= s_cas_audio_in_edge & "00000" & s_cas_audio_in;
 			end if;
 		end if;
 
 	end process;
 
-	LEDs <= (s_CasAudioIn(0) or s_CasAudioIn(1)) & s_CasAudioOut & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
+	o_leds <= (s_cas_audio_in(0) or s_cas_audio_in(1)) & s_cas_audio_out(0) & "000" & s_sd_status(1) & s_sd_status(7) & s_sd_status(4);
 
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
 	generic map
 	(
-		p_ClockFrequency => 80_000_000
+		p_clock_hz => 80_000_000
 	)
 	port map
 	( 
-		i_Clock => s_CLK_80Mhz,
-		i_Reset => s_Reset,
-		i_Value => s_seven_seg_value,
-		o_SevenSegment => SevenSegment(7 downto 1),
-		o_SevenSegmentEnable => SevenSegmentEnable
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_data => s_seven_seg_value,
+		o_segments => o_seven_segment(7 downto 1),
+		o_segments_en => o_seven_segment_en
 	);
-	SevenSegment(0) <= '1';
+	o_seven_segment(0) <= '1';
 
-	s_seven_seg_value <= s_selected_Tape when Button_Left = '1' else s_sd_last_block_number(11 downto 0);
+	s_seven_seg_value <= s_selected_Tape when i_button_left = '1' else s_sd_last_block_number(11 downto 0);
 
 	sdcard : entity work.SDCardController
 	generic map
 	(
-		p_ClockDiv800Khz => 100,
-		p_ClockDiv50Mhz => 2
+		p_clock_div_800khz => 100,
+		p_clock_div_50mhz => 2
 	)
 	port map
 	(
 		-- Clocking
-		reset => s_reset,
-		clock => s_CLK_80MHz,
+		i_reset => s_reset,
+		i_clock => s_clock_80mhz,
 
 		-- SD Card Signals
-		ss_n => sd_ss_n,
-		mosi => sd_mosi,
-		miso => sd_miso,
-		sclk => sd_sclk,
+		o_ss_n => o_sd_ss_n,
+		o_mosi => o_sd_mosi,
+		i_miso => i_sd_miso,
+		o_sclk => o_sd_sclk,
 
 		-- Status signals
-		status => s_sd_status,
+		o_status => s_sd_status,
 
 		-- Operation
-		op_wr => s_sd_op_wr,
-		op_cmd => s_sd_op_cmd,
-		op_block_number => s_sd_op_block_number,
+		i_op_write => s_sd_op_wr,
+		i_op_cmd => s_sd_op_cmd,
+		i_op_block_number => s_sd_op_block_number,
 
-		last_block_number => s_sd_last_block_number,
+		o_last_block_number => s_sd_last_block_number,
 
 		-- DMA access
-		dstart => open,
-		dcycle => s_sd_dcycle,
-		din => s_sd_din,
-		dout => s_sd_dout
+		o_data_start => open,
+		o_data_cycle => s_sd_dcycle,
+		i_data => s_sd_din,
+		o_data => s_sd_dout
 	);
 
 	debounce : entity work.DebounceFilterSet
 	generic map
 	(
-		p_ClockFrequency => 80_000_000,
-		p_DebounceTimeUS => 5000,
-		p_SignalCount => 3,
-		p_ResetState => '1'
+		p_clock_hz => 80_000_000,
+		p_stable_us => 5000,
+		p_signal_count => 3,
+		p_default_state => '1'
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_Reset => s_Reset,
-		i_Signals => s_buttons_unbounced,
-		o_Signals => s_buttons_debounced,
-		o_SignalEdges => s_buttons_edges
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_signals => s_buttons_unbounced,
+		o_signals => s_buttons_debounced,
+		o_signal_edges => s_buttons_edges
 	);
 
 	-- Debounced all buttons
-	s_buttons_unbounced <= Button_Down & Button_Up & Button_Right;
+	s_buttons_unbounced <= i_button_down & i_button_up & i_button_right;
 	s_buttons_trigger <= (s_buttons_edges and not s_buttons_debounced) or s_media_keys;
-	s_button_record <= not Button_Left;
+	s_button_record <= not i_button_left;
 
 	-- Also map, media keys
-	s_extended_key_press <= s_key_available and not s_key_release and s_extended_key;
-	s_media_key_play <= '1' when s_extended_key_press = '1' and s_scan_code = "0110100" else '0';
-	s_media_key_next <= '1' when s_extended_key_press = '1' and s_scan_code = "1001101" else '0';
-	s_media_key_prev <= '1' when s_extended_key_press = '1' and s_scan_code = "0010101" else '0';
+	s_key_extended_press <= s_key_available and not s_key_release and s_key_extended;
+	s_media_key_play <= '1' when s_key_extended_press = '1' and s_key_scancode = "0110100" else '0';
+	s_media_key_next <= '1' when s_key_extended_press = '1' and s_key_scancode = "1001101" else '0';
+	s_media_key_prev <= '1' when s_key_extended_press = '1' and s_key_scancode = "0010101" else '0';
 	s_media_keys <= s_media_key_prev & s_media_key_next & s_media_key_play;
 
 
@@ -559,19 +557,19 @@ begin
 	player : entity work.Trs80CassettePlayer
 	generic map
 	(
-		p_ClockEnableFrequency => 1_774_000
+		p_clken_hz => 1_774_000
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => s_CLK_CPU_en,
-		i_Reset => s_Reset,
-		i_ButtonStartStop => s_buttons_trigger(0),
-		i_ButtonRecord => s_button_record,
-		i_ButtonNext => s_buttons_trigger(1),
-		i_ButtonPrev => s_buttons_trigger(2),
-		o_PlayingOrRecording => s_playing_or_recording,
-		o_Recording => s_recording,
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_Reset,
+		i_button_start_stop => s_buttons_trigger(0),
+		i_button_record => s_button_record,
+		i_button_next => s_buttons_trigger(1),
+		i_button_prev => s_buttons_trigger(2),
+		o_playing_or_recording => s_playing_or_recording,
+		o_recording => s_recording,
 		o_sd_op_wr => s_sd_op_wr,
 		o_sd_op_cmd => s_sd_op_cmd,
 		o_sd_op_block_number => s_sd_op_block_number,
@@ -579,35 +577,34 @@ begin
 		i_sd_dcycle => s_sd_dcycle,
 		i_sd_data => s_sd_dout,
 		o_sd_data => s_sd_din,
-		o_SelectedTape => s_selected_tape,
-		o_Audio => s_CasAudioIn,
-		i_Audio => s_CasAudioOut
+		o_display => s_selected_tape,
+		o_audio => s_cas_audio_in,
+		i_audio => s_cas_audio_out(0)
 	);
 
-	cas_edge_detect : process(s_CLK_80Mhz)
+	cas_edge_detect : process(s_clock_80mhz)
 	begin
-		if rising_edge(s_CLK_80Mhz) then
+		if rising_edge(s_clock_80mhz) then
 			if s_reset = '1' then
-				s_CasAudioInEdge <= '0';
-				s_PrevCasAudioIn <= "00";
-				s_Speaker <= "00";
-				s_CasMotorRelay <= '0';
-				s_WideVideoMode <= '0';
+				s_cas_audio_in_edge <= '0';
+				s_cas_prev_audio_in <= "00";
+				s_cas_audio_out <= "00";
+				s_cas_motor <= '0';
+				s_wide_video_mode <= '0';
 			else
 
 				-- Detect edge
-				s_PrevCasAudioIn <= s_CasAudioIn;
-				if s_PrevCasAudioIn /= s_CasAudioIn then 
-					s_CasAudioInEdge <= '1';
+				s_cas_prev_audio_in <= s_cas_audio_in;
+				if s_cas_prev_audio_in /= s_cas_audio_in then 
+					s_cas_audio_in_edge <= '1';
 				end if;
 
 				-- Clear flag
-				if s_port_wr = '1' and s_is_cas_port='1' and s_CLK_CPU_en='1' then
-					s_CasAudioInEdge <= s_cpu_dout(7);
-					s_Speaker <= s_cpu_dout(1 downto 0);
-					s_CasMotorRelay <= s_cpu_dout(2);
-					s_CasAudioOut <= s_cpu_dout(0);
-					s_WideVideoMode <= s_cpu_dout(3);
+				if s_port_wr = '1' and s_is_cas_port='1' and s_clken_cpu='1' then
+					s_cas_audio_in_edge <= s_cpu_dout(7);
+					s_cas_audio_out <= s_cpu_dout(1 downto 0);
+					s_cas_motor <= s_cpu_dout(2);
+					s_wide_video_mode <= s_cpu_dout(3);
 				end if;
 
 			end if;
@@ -615,53 +612,8 @@ begin
 	end process;
 
 	-- Output audio on both channels
-	s_Audio <= s_Speaker(0) xor s_CasAudioIn(0);
-	Audio <= s_Audio & s_Audio;
-
-	
---	-- Also parse and send to uart
---	parser : entity work.Trs80CassetteParser
---	generic map
---	(
---		p_ClockEnableFrequency => 1_774_000
---	)
---	port map
---	(
---		i_Clock => s_CLK_80Mhz,
---		i_ClockEnable => s_CLK_CPU_en,
---		i_Reset => s_parser_reset,
---		i_Audio => s_CasAudioOut,
---		o_DataAvailable => s_parser_data_available,
---		o_Data => s_parser_data
---	);
---
---	-- Hold parser in reset state when not active
---	s_parser_reset <= s_reset; -- or not s_playing_or_recording;
---
---	-- Convert pulse back to master clock
---	s_parser_data_available_pulse <= s_parser_data_available and s_CLK_CPU_en;
---
---	-- UART to send parsed audio to PC
---	uart_txer : entity work.UartTx
---	generic map
---	(
---		p_ClockFrequency => 80_000_000
---	)
---	port map
---	( 
---		i_Clock => s_CLK_80Mhz,
---		i_ClockEnable => '1',
---		i_Reset => s_reset,
---		i_Data => s_parser_data,
---		i_DataAvailable => s_parser_data_available_pulse,
---		o_UartTx => UART2_TX,
---		o_Busy => open
---	);	
---
-
-	P9_1 <= s_CasAudioIn(0);
-	P9_3 <= s_CasAudioIn(1);
-	P9_5 <= s_CasAudioInEdge;
+	s_audio <= s_cas_audio_out(0) xor s_cas_audio_in(0);
+	o_audio <= s_audio & s_audio;
 
 end Behavioral;
 

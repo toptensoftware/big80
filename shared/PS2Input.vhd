@@ -16,22 +16,22 @@ use work.FunctionLib.all;
 entity PS2Input is
 generic
 (
-    p_ClockFrequency : integer                  -- In Hz, used to calculate timings
+    p_clock_hz : integer                               -- In Hz, used to calculate timings
 );
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;                     -- Clock
-    i_Reset : in std_logic;                     -- Reset (synchronous, active high)
+    i_clock : in std_logic;                         -- Clock
+    i_reset : in std_logic;                         -- Reset (synchronous, active high)
     
     -- PS2 Signals
-    io_PS2Clock : inout std_logic;              -- PS2 Clock
-    io_PS2Data : inout std_logic;               -- PS2 Data
+    io_ps2_clock : inout std_logic;                 -- PS2 Clock
+    io_ps2_data : inout std_logic;                  -- PS2 Data
 
     -- Output
-    o_RXData : out std_logic_vector(7 downto 0);  -- Outputs received data byte
-    o_RXDataAvailable : out std_logic;            -- Asserts for one cycle when data available
-    o_RXDataError : out std_logic                     -- When data available, indicates if error
+    o_rx_data : out std_logic_vector(7 downto 0);   -- Outputs received data byte
+    o_rx_data_available : out std_logic;            -- Asserts for one cycle when data available
+    o_rx_error : out std_logic                      -- When data available, indicates if error
 );
 end PS2Input;
 
@@ -41,20 +41,20 @@ architecture Behavioral of PS2Input is
     signal s_data : std_logic_vector(10 downto 0);
     signal s_data_valid : std_logic;
     signal s_data_parity : std_logic;
-    constant c_IdleTicks : integer := p_ClockFrequency * 100 / 1_000_000;    -- 100us
-    signal s_idle_count : integer range 0 to c_IdleTicks;
+    constant c_idle_ticks : integer := p_clock_hz * 100 / 1_000_000;    -- 100us
+    signal s_idle_count : integer range 0 to c_idle_ticks;
 begin
 
     -- Output signals
-    o_RXData <= s_Data(8 downto 1);
-    o_RXDataAvailable <= '1' when s_idle_count = c_IdleTicks-1 else '0';
-    o_RXDataError <= not s_data_valid;
+    o_rx_data <= s_Data(8 downto 1);
+    o_rx_data_available <= '1' when s_idle_count = c_idle_ticks-1 else '0';
+    o_rx_error <= not s_data_valid;
                 
     -- Synchronize the async PS2 clock signals to our clock
-    process (i_Clock)
+    process (i_clock)
     begin
-        if rising_edge(i_Clock) then
-            s_ps2_clock_sync <= io_PS2Clock;
+        if rising_edge(i_clock) then
+            s_ps2_clock_sync <= io_ps2_clock;
         end if;
     end process;
 
@@ -62,22 +62,22 @@ begin
 	debounce_clock : entity work.DebounceFilter
 	GENERIC MAP
 	(
-		p_ClockFrequency => p_ClockFrequency,
-		p_DebounceTimeUS => 5
+		p_clock_hz => p_clock_hz,
+		p_stable_us => 5
 	)
 	PORT MAP
 	(
-		i_Clock => i_Clock,
-		i_Reset => i_Reset,
-		i_Signal => s_ps2_clock_sync,
-		o_Signal => s_ps2_clock_debounced
+		i_clock => i_clock,
+		i_reset => i_reset,
+		i_signal => s_ps2_clock_sync,
+		o_signal => s_ps2_clock_debounced
 	);
 
     -- Shift incoming bits into s_data register
     process(s_ps2_clock_debounced)
     begin
         if falling_edge(s_ps2_clock_debounced) then
-            s_data <= io_PS2Data & s_data(10 downto 1);
+            s_data <= io_ps2_data & s_data(10 downto 1);
         end if;
     end process;
 
@@ -87,15 +87,15 @@ begin
     s_data_valid <= '1' when (s_data(0) = '0' and s_data(10) = '1' and s_data_parity = '1') else '0';
 
     -- Idle time measure
-    process (i_Clock)
+    process (i_clock)
     begin
-        if rising_edge(i_Clock) then
-            if i_Reset = '1' then
+        if rising_edge(i_clock) then
+            if i_reset = '1' then
                 s_idle_count <= 0;
             else
                 if s_ps2_clock_debounced = '0' then
                     s_idle_count <= 0;
-                elsif s_idle_count /= c_IdleTicks then
+                elsif s_idle_count /= c_idle_ticks then
                     s_idle_count <= s_idle_count + 1;
                 end if;
             end if;

@@ -19,71 +19,71 @@ entity PCKeyboardDecoder is
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;                         -- Clock
-    i_Reset : in std_logic;                         -- Reset (synchronous, active high)
+    i_clock : in std_logic;                             -- Clock
+    i_reset : in std_logic;                             -- Reset (synchronous, active high)
     
     -- Data from keyboard
-    i_Data : in std_logic_vector(7 downto 0);       -- Data byte from the keyboard
-    i_DataAvailable : in std_logic;                 -- Assert for 1 cycle when data is available
-    i_Error : in std_logic;                         -- Assert if there was an error in the data
+    i_data : in std_logic_vector(7 downto 0);           -- Data byte from the keyboard
+    i_data_available : in std_logic;                    -- Assert for 1 cycle when data is available
+    i_data_error : in std_logic;                        -- Assert if there was an error in the data
 
     -- Generated keyboard event
-    o_ScanCode : out std_logic_vector(6 downto 0);  -- Output scan code
-    o_ExtendedKey : out std_logic;                  -- 0 for normal key, 1 for extended key
-    o_KeyRelease : out std_logic;                   -- 0 if press, 1 if release
-    o_DataAvailable : out std_logic                 -- Asserted for one clock cycle on event
+    o_key_scancode : out std_logic_vector(6 downto 0);  -- Output scan code
+    o_key_extended : out std_logic;                     -- 0 for normal key, 1 for extended key
+    o_key_released : out std_logic;                     -- 0 if press, 1 if release
+    o_key_available : out std_logic                     -- Asserted for one clock cycle on event
 );
 end PCKeyboardDecoder;
 
 architecture Behavioral of PCKeyboardDecoder is
-    signal s_DataAvailable : std_logic;
+    signal s_key_available : std_logic;
 begin
 
     -- Output the data available flag
-    o_DataAvailable <= s_DataAvailable;
+    o_key_available <= s_key_available;
 
-    process (i_Clock)
+    process (i_clock)
     begin
-        if rising_edge(i_Clock) then
-            if i_Reset = '1' then
+        if rising_edge(i_clock) then
+            if i_reset = '1' then
                 -- Reset
-                o_KeyRelease <= '0';
-                o_ExtendedKey <= '0';
-                s_DataAvailable <= '0';
+                o_key_released <= '0';
+                o_key_extended <= '0';
+                s_key_available <= '0';
             else
                 -- Clear data available
-                s_DataAvailable <= '0';
+                s_key_available <= '0';
 
                 -- If event generated on the previous
                 -- cycle, then reset the event flags
-                if s_DataAvailable = '1' then
-                    o_KeyRelease <= '0';
-                    o_ExtendedKey <= '0';
+                if s_key_available = '1' then
+                    o_key_released <= '0';
+                    o_key_extended <= '0';
                 end if;
 
                 -- Input data available?
-                if i_DataAvailable = '1' then
-                    if i_Error = '1' then
+                if i_data_available = '1' then
+                    if i_data_error = '1' then
                         -- Error, reset the flags
-                        o_KeyRelease <= '0';
-                        o_ExtendedKey <= '0';
+                        o_key_released <= '0';
+                        o_key_extended <= '0';
                     else
-                        if i_Data = x"F0" then
+                        if i_data = x"F0" then
                             -- This is a key release event
-                            o_KeyRelease <= '1';
-                        elsif i_Data = x"E0" then
+                            o_key_released <= '1';
+                        elsif i_data = x"E0" then
                             -- This is an extended key code
-                            o_ExtendedKey <= '1';
-                        elsif i_Data(7) = '0' then
+                            o_key_extended <= '1';
+                        elsif i_data(7) = '0' then
                             -- Scan codes are <= 127, generate
                             -- the outgoing event
-                            o_ScanCode <= i_Data(6 downto 0);
-                            s_DataAvailable <= '1';
+                            o_key_scancode <= i_data(6 downto 0);
+                            s_key_available <= '1';
                         else
                             -- Not sure what that was, reset for next
                             -- event                            
-                            o_KeyRelease <= '0';
-                            o_ExtendedKey <= '0';
+                            o_key_released <= '0';
+                            o_key_extended <= '0';
                         end if;
                     end if;
                 end if;

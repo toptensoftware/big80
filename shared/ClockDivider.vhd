@@ -3,7 +3,7 @@
 -- ClockDivider
 --
 -- Divides a clock signal by an arbitrary number of cycles, producing
--- an active high signal every p_DivideCycles.
+-- an active high signal every p_period.
 --
 -- During reset, the generated clock enable signal will be held at '0'.
 --
@@ -19,37 +19,37 @@ use work.FunctionLib.all;
 entity ClockDivider is
 generic
 (
-    p_DivideCycles : integer            -- Period of the clock enable (in clock cycles)
+    p_period : integer                  -- Period of the clock enable (in clock cycles)
 );
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;             -- Clock
-    i_ClockEnable : in std_logic;       -- Clock Enable for clock being divided
-    i_Reset : in std_logic;             -- Reset (synchronous, active high)
+    i_clock : in std_logic;             -- Clock
+    i_clken : in std_logic;             -- Clock Enable for clock being divided
+    i_reset : in std_logic;             -- Reset (synchronous, active high)
     
     -- Output
-    o_ClockEnable : out std_logic       -- Generated clock enable signal
+    o_clken : out std_logic             -- Generated clock enable signal
 );
 end ClockDivider;
 
 architecture Behavioral of ClockDivider is
 
-    signal s_divider: integer range 0 to p_DivideCycles - 1;
+    signal s_divider: integer range 0 to p_period - 1;
 
 begin
 
     -- Clock enabled?
-    o_ClockEnable <= '1' when s_divider = 0 and i_Reset = '0' and i_ClockEnable = '1' else '0';
+    o_clken <= '1' when s_divider = 0 and i_reset = '0' and i_clken = '1' else '0';
 
 	-- Process to handle clock ticks
-	process (i_Clock)
+	process (i_clock)
 	begin
-		if rising_edge(i_Clock) then
+		if rising_edge(i_clock) then
             if i_reset='1' then
                 s_divider <= 0;
-            elsif i_ClockEnable = '1' then
-                if s_divider = p_DivideCycles - 1 then
+            elsif i_clken = '1' then
+                if s_divider = p_period - 1 then
                     s_divider <= 0;
                 else
                     s_divider <= s_divider + 1;

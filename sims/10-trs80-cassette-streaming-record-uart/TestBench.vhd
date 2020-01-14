@@ -6,7 +6,7 @@ entity TestBench is
 end TestBench;
 
 architecture behavior of TestBench is
-    constant c_ClockFrequency : real := 2_400_000.0;
+    constant c_clock_hz : real := 2_400_000.0;
     signal s_clock : std_logic := '0';
     signal s_reset : std_logic := '0';
     signal s_uart_tx : std_logic;
@@ -27,21 +27,21 @@ begin
     stim_proc: process
     begin
         s_clock <= not s_clock;
-        wait for 1 sec / (c_ClockFrequency * 2.0);
+        wait for 1 sec / (c_clock_hz * 2.0);
     end process;
 
     uat : entity work.Trs80CassetteStreamerTest
     generic map
     (
-        p_ClockFrequency => integer(c_ClockFrequency),
-        p_BufferSize => 5
+        p_clock_hz => integer(c_clock_hz),
+        p_buffer_size => 5
     )
     port map
     (
-        i_Clock => s_clock,
-        i_Reset => s_reset,
-        i_RecordButton => s_record_button,
-        o_UartTx => s_uart_tx,
+        i_clock => s_clock,
+        i_reset => s_reset,
+        i_record_button => s_record_button,
+        o_uart_tx => s_uart_tx,
         o_debug => open
     );
 

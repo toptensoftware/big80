@@ -8,12 +8,12 @@ end TestBench;
 architecture behavior of TestBench is
     signal s_clock : std_logic := '0';
     signal s_reset : std_logic;
-    signal s_clock_enable : std_logic;
+    signal s_clken : std_logic;
     signal s_data : std_logic_vector(7 downto 0);
     signal s_data_available : std_logic;
     signal s_uart_tx : std_logic;
     signal s_uart_busy : std_logic;
-    constant c_ClockFrequency : real := 100_000_000.0;
+    constant c_clock_hz : real := 100_000_000.0;
 begin
 
 
@@ -29,21 +29,21 @@ begin
     stim_proc: process
     begin
         s_clock <= not s_clock;
-        wait for 1 sec / (c_ClockFrequency * 2.0);
+        wait for 1 sec / (c_clock_hz * 2.0);
     end process;
 
     uart : entity work.UartTxTest
     generic map
     (
-        p_ClockFrequency => integer(c_ClockFrequency),
-        p_BytesPerChunk => 4,
-        p_ChunksPerSecond => 1000
+        p_clock_hz => integer(c_clock_hz),
+        p_bytes_per_chunk => 4,
+        p_chunks_per_second => 1000
     )
     port map
     (
-        i_Clock => s_clock,
-        i_Reset => s_reset,
-        o_UartTx => s_uart_tx
+        i_clock => s_clock,
+        i_reset => s_reset,
+        o_uart_tx => s_uart_tx
     );
 
 end;

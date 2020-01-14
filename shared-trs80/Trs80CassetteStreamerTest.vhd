@@ -5,21 +5,21 @@ use IEEE.numeric_std.all;
 entity Trs80CassetteStreamerTest is
 generic
 (
-	p_ClockFrequency : integer;
-	p_BufferSize : integer := 4
+	p_clock_hz : integer;
+	p_buffer_size : integer := 4
 );
 port 
 ( 
-	i_Clock : in std_logic;
-	i_Reset : in std_logic;
-	i_RecordButton : in std_logic;
-	o_UartTx : out std_logic;
+	i_clock : in std_logic;
+	i_reset : in std_logic;
+	i_record_button : in std_logic;
+	o_uart_tx : out std_logic;
 	o_debug : out std_logic_vector(7 downto 0)
 );
 end Trs80CassetteStreamerTest;
 
 architecture Behavioral of Trs80CassetteStreamerTest is
-	constant c_ones : std_logic_vector(p_BufferSize - 1 downto 0) := (others => '1');
+	constant c_ones : std_logic_vector(p_buffer_size - 1 downto 0) := (others => '1');
 	signal s_fake_audio_reset : std_logic;
 	signal s_streamer_reset : std_logic;
 	signal s_audio : std_logic_vector(1 downto 0);
@@ -33,7 +33,7 @@ architecture Behavioral of Trs80CassetteStreamerTest is
 	signal s_tx_data_available : std_logic;
 	signal s_button_deb : std_logic;
 	signal s_button_edge : std_logic;		
-	signal s_bytes_sent : std_logic_vector(p_BufferSize - 1 downto 0);
+	signal s_bytes_sent : std_logic_vector(p_buffer_size - 1 downto 0);
 
 	type tx_states is
 	(
@@ -67,20 +67,20 @@ begin
 --pragma synthesis_on
 
 	-- Output stuff
-	o_UartTx <= s_tx;
+	o_uart_tx <= s_tx;
 
     -- Fake cassette audio stream
 	fake : entity work.Trs80FakeCassetteAudio
 	generic map
 	(
-		p_ClockEnableFrequency => p_ClockFrequency
+		p_clken_hz => p_clock_hz
 	)
     port map
     (
-        i_Clock => i_Clock,
-        i_ClockEnable => '1',
-        i_Reset => s_fake_audio_reset,
-        o_Audio => s_audio
+        i_clock => i_clock,
+        i_clken => '1',
+        i_reset => s_fake_audio_reset,
+        o_audio => s_audio
     );
 
     -- Unit under test.  Feed audio into this, expected
@@ -88,64 +88,64 @@ begin
     streamer : entity work.Trs80CassetteStreamer
     generic map
     (
-		p_ClockEnableFrequency => p_ClockFrequency,
-        p_BufferSize => p_BufferSize
+		p_clken_hz => p_clock_hz,
+        p_buffer_size => p_buffer_size
     )
     port map
     (
-        i_Clock => i_Clock,
-        i_ClockEnable => '1',
-        i_Reset => s_streamer_reset,
-        i_RecordMode => '1',
-        o_BlockNeeded => open,
-        o_Audio => open,
-        i_Audio => s_audio(0),
-        o_BlockAvailable => s_sd_block_available,
-        i_DataCycle => s_sd_data_cycle,
-        i_Data => x"00",
-        o_Data => s_sd_data,
-        i_StopRecording => s_stop_recording,
-        o_RecordingFinished => s_recording_finished
+        i_clock => i_clock,
+        i_clken => '1',
+        i_reset => s_streamer_reset,
+        i_record_mode => '1',
+        o_block_needed => open,
+        o_audio => open,
+        i_audio => s_audio(0),
+        o_block_available => s_sd_block_available,
+        i_data_cycle => s_sd_data_cycle,
+        i_data => x"00",
+        o_data => s_sd_data,
+        i_stop_recording => s_stop_recording,
+        o_recording_finished => s_recording_finished
     );
 
 	-- UART to send it
 	txer : entity work.UartTx
 	generic map
 	(
-		p_ClockFrequency  => p_ClockFrequency
+		p_clock_hz  => p_clock_hz
 	)
 	port map
 	( 
-		i_Clock => i_Clock,
-		i_ClockEnable => '1',
-		i_Reset => i_Reset,
-		i_Data => s_sd_data,
-		i_DataAvailable => s_tx_data_available,
-		o_UartTx => s_tx,
-		o_Busy => s_tx_busy
+		i_clock => i_clock,
+		i_clken => '1',
+		i_reset => i_reset,
+		i_data => s_sd_data,
+		i_data_available => s_tx_data_available,
+		o_uart_tx => s_tx,
+		o_busy_tx => s_tx_busy
 	);
 
 	-- Debounce button
 	debounce : entity work.DebounceFilterWithEdge 
 	generic map
 	(
-		p_ClockFrequency => p_ClockFrequency,
-		p_DebounceTimeUS => 5000,
-		p_ResetState => '1'
+		p_clock_hz => p_clock_hz,
+		p_stable_us => 5000,
+		p_default_state => '1'
 	)
 	port map
 	( 
-		i_Clock => i_Clock,
-		i_Reset => i_Reset,
-		i_Signal => i_RecordButton,
-		o_Signal => s_button_deb,
-		o_SignalEdge => s_button_edge
+		i_clock => i_clock,
+		i_reset => i_reset,
+		i_signal => i_record_button,
+		o_signal => s_button_deb,
+		o_signal_edge => s_button_edge
 	);
 
-	uart_streamer : process(i_Clock)
+	uart_streamer : process(i_clock)
 	begin
-		if rising_edge(i_Clock) then 
-			if i_Reset = '1' then
+		if rising_edge(i_clock) then 
+			if i_reset = '1' then
 				s_tx_state <= tx_state_idle;
 				s_tx_data_available <= '0';
 				s_sd_data_cycle <= '0';
@@ -186,10 +186,10 @@ begin
 	end process;
 
 	-- Control logic
-	control : process(i_Clock)
+	control : process(i_clock)
 	begin
-		if rising_edge(i_Clock) then
-			if i_Reset = '1' then
+		if rising_edge(i_clock) then
+			if i_reset = '1' then
 				s_state <= state_idle;
 				s_fake_audio_reset <= '1';
 				s_streamer_reset <= '1';

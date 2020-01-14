@@ -18,58 +18,63 @@ entity PS2KeyboardIndicators is
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;                         -- Clock
-    i_Reset : in std_logic;                         -- Reset (synchronous, active high)
+    i_clock : in std_logic;                         -- Clock
+    i_reset : in std_logic;                         -- Reset (synchronous, active high)
 
 	-- Input
-	i_LEDs : in std_logic_vector(2 downto 0);
+	i_leds : in std_logic_vector(2 downto 0);
 
 	-- Output to PS2 Keyboard
-	o_TXData : out std_logic_vector(7 downto 0);
-	o_TXDataAvailable : out std_logic;
+	o_tx_data : out std_logic_vector(7 downto 0);
+	o_tx_data_available : out std_logic;
 
 	-- Input from PS2 Keyboard
-    i_RXData : in std_logic_vector(7 downto 0);
-    i_RXDataAvailable : in std_logic;
-    i_RXDataError : in std_logic
+    i_rx_data : in std_logic_vector(7 downto 0);
+    i_rx_data_available : in std_logic;
+    i_rx_error : in std_logic
 
 );
 end PS2KeyboardIndicators;
 
 architecture Behavioral of PS2KeyboardIndicators is
 	signal s_currentLeds : std_logic_vector(3 downto 0);
-	TYPE states IS(idle, wait_byte1_reply, wait_byte2_reply);
+	type states is
+	(
+		idle, 
+		wait_byte1_reply, 
+		wait_byte2_reply
+	);
 	signal s_state : states := idle;
 begin
 
-	process (i_Clock)
+	process (i_clock)
 	begin
-		if rising_edge(i_Clock) then
-			if i_Reset = '1' then
+		if rising_edge(i_clock) then
+			if i_reset = '1' then
 				s_currentLeds <= (others => '0');
-				o_TXDataAvailable <= '0';
+				o_tx_data_available <= '0';
 			else
-				o_TXDataAvailable <= '0';
+				o_tx_data_available <= '0';
 
 				case s_state is
 					when idle =>
-						if s_currentLeds /= ('1' & i_LEDs) then
+						if s_currentLeds /= ('1' & i_leds) then
 
 							-- Capture the new state
-							s_currentLeds <= '1' & i_LEDs;
+							s_currentLeds <= '1' & i_leds;
 
 							-- Send the first byte
-							o_TXData <= x"ED";
-							o_TXDataAvailable <= '1';
+							o_tx_data <= x"ED";
+							o_tx_data_available <= '1';
 							s_state <= wait_byte1_reply;
 
 						end if;
 
 					when wait_byte1_reply =>
-						if i_RXDataAvailable = '1' then
-							if i_RXDataError = '0' and i_RXData = x"FA" then
-								o_TXData <= "00000" & s_currentLeds(2 downto 0);
-								o_TXDataAvailable <= '1';
+						if i_rx_data_available = '1' then
+							if i_rx_error = '0' and i_rx_data = x"FA" then
+								o_tx_data <= "00000" & s_currentLeds(2 downto 0);
+								o_tx_data_available <= '1';
 								s_state <= wait_byte2_reply;
 							else
 								s_state <= idle;
@@ -77,7 +82,7 @@ begin
 						end if;
 
 					when wait_byte2_reply => 						
-						if i_RXDataAvailable = '1' then
+						if i_rx_data_available = '1' then
 							s_state <= idle;
 						end if;
 

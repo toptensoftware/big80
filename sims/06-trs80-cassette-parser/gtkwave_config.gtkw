@@ -18,7 +18,7 @@
 [sst_vpaned_height] 208
 @28
 testbench.s_clock
-testbench.s_clock_enable
+testbench.s_clken
 testbench.s_audio
 @29
 testbench.parser.o_dataavailable

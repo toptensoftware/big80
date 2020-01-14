@@ -10,7 +10,7 @@ architecture behavior of TestBench is
     signal s_reset : std_logic;
     signal s_clock_enable_1 : std_logic;
     signal s_clock_enable_2 : std_logic;
-    constant c_ClockFrequency : real := 100_000_000.0;
+    constant c_clock_hz : real := 100_000_000.0;
 begin
 
 
@@ -26,33 +26,33 @@ begin
     stim_proc: process
     begin
         s_clock <= not s_clock;
-        wait for 1 sec / (c_ClockFrequency * 2.0);
+        wait for 1 sec / (c_clock_hz * 2.0);
     end process;
 
     div1 : entity work.ClockDivider
     generic map
     (
-        p_DivideCycles => 4
+        p_period => 4
     )
     port map
     (
-        i_Clock => s_clock,
-        i_Reset => s_reset,
-        i_ClockEnable => '1',
-        o_ClockEnable => s_clock_enable_1
+        i_clock => s_clock,
+        i_reset => s_reset,
+        i_clken => '1',
+        o_clken => s_clock_enable_1
     );
 
     div2 : entity work.ClockDivider
     generic map
     (
-        p_DivideCycles => 2
+        p_period => 2
     )
     port map
     (
-        i_Clock => s_clock,
-        i_Reset => s_reset,
-        i_ClockEnable => s_clock_enable_1,
-        o_ClockEnable => s_clock_enable_2
+        i_clock => s_clock,
+        i_reset => s_reset,
+        i_clken => s_clock_enable_1,
+        o_clken => s_clock_enable_2
     );
 
 

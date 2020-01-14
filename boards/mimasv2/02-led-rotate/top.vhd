@@ -6,8 +6,8 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	LEDs : out std_logic_vector(7 downto 0);
-	CLK_100MHz : in std_logic
+	o_leds : out std_logic_vector(7 downto 0);
+	i_clock_100mhz : in std_logic
 
 );
 end top;
@@ -15,7 +15,7 @@ end top;
 architecture Behavioral of top is
 
 	-- Register to hold the current pattern displayed on the LED strip
-	signal s_LEDs : std_logic_vector(7 downto 0) := "00000001";
+	signal s_leds : std_logic_vector(7 downto 0) := "00000001";
 
 	-- Counter to divide the 100Mhz clock. Each time this wraps around
 	-- the LED pattern is rotated by one position.
@@ -25,22 +25,22 @@ architecture Behavioral of top is
 
 begin
 
-	-- Connect the LED register to the LEDs
-	LEDS <= s_LEDs;
+	-- Connect the LED register to the o_leds
+	o_leds <= s_leds;
 
 	-- Process to handle clock ticks
-	process (CLK_100MHz)
+	process (i_clock_100mhz)
 	begin
 
 		-- Is this clock on a rising edge
-		if rising_edge(CLK_100MHz) then
+		if rising_edge(i_clock_100mhz) then
 
 			-- Increment the divide counter
 			s_divide <= s_divide + 1;
 
 			-- If the divide counter wrapped then rotate the LED pattern
 			if s_divide = 0 then
-				s_LEDs <= s_LEDs(6 downto 0) & s_LEDs(7);
+				s_leds <= s_leds(6 downto 0) & s_leds(7);
 			end if;
 
 		end if;

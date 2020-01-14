@@ -6,31 +6,31 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz_in : in std_logic;
-	Button_B : in std_logic;
-	Button_Right : in std_logic;
-	Button_Up : in std_logic;
-	Button_Down : in std_logic;
-	Button_Left : in std_logic;
-	sd_mosi : out std_logic;
-	sd_miso : in std_logic;
-	sd_ss_n : out std_logic;
-	sd_sclk : out std_logic;
-	LEDs : out std_logic_vector(7 downto 0);
-	SevenSegment : out std_logic_vector(7 downto 0);
-	SevenSegmentEnable : out std_logic_vector(2 downto 0);
-	Audio : out std_logic_vector(1 downto 0);
-	UART_TX : out std_logic;
-	UART2_TX : out std_logic;
+	i_clock_100mhz : in std_logic;
+	i_button_b : in std_logic;
+	i_button_right : in std_logic;
+	i_button_up : in std_logic;
+	i_button_down : in std_logic;
+	i_button_left : in std_logic;
+	o_sd_mosi : out std_logic;
+	i_sd_miso : in std_logic;
+	o_sd_ss_n : out std_logic;
+	o_sd_sclk : out std_logic;
+	o_leds : out std_logic_vector(7 downto 0);
+	o_seven_segment : out std_logic_vector(7 downto 0);
+	o_seven_segment_en : out std_logic_vector(2 downto 0);
+	o_audio : out std_logic_vector(1 downto 0);
+	o_uart_tx : out std_logic;
+	o_uart2_tx : out std_logic;
 	debug_audio : out std_logic
 );
 end top;
 
 architecture Behavioral of top is
 	signal s_reset : std_logic;
-	signal s_CLK_100Mhz_unused : std_logic;
-	signal s_CLK_80Mhz : std_logic;
-	signal s_CLK_CPU_en : std_logic;
+	signal s_clock_100mhz : std_logic;
+	signal s_clock_80mhz : std_logic;
+	signal s_clken_cpu : std_logic;
 
 	signal s_sd_op_wr : std_logic;
 	signal s_sd_op_cmd : std_logic_vector(1 downto 0);
@@ -66,55 +66,55 @@ architecture Behavioral of top is
 begin
 
 	-- Reset signal
-	s_reset <= not Button_B;
+	s_reset <= not i_button_b;
 
 	-- sdhc/sdinit/sdwrite/sdread
-	LEDs(7 downto 4) <=  s_sd_status(7) & s_sd_status(4) & s_sd_status(2) & s_sd_status(1);
+	o_leds(7 downto 4) <=  s_sd_status(7) & s_sd_status(4) & s_sd_status(2) & s_sd_status(1);
 
 	-- uarttx/audio/recording/active
-	LEDS(3 downto 0) <=  s_uart_busy & (s_Audio(0) or s_Audio(1)) & s_recording & s_playing_or_recording;
+	o_leds(3 downto 0) <=  s_uart_busy & (s_Audio(0) or s_Audio(1)) & s_recording & s_playing_or_recording;
 
-	UART_TX <= s_uart_tx;
-	UART2_TX <= s_uart_tx;
+	o_uart_tx <= s_uart_tx;
+	o_uart2_tx <= s_uart_tx;
 
 	-- Generate 80MHz
 	dcm : entity work.ClockDCM
 	port map
 	(
-		CLK_IN_100MHz => CLK_100MHz_in,
-		CLK_OUT_100MHz => s_CLK_100Mhz_unused,
-		CLK_OUT_80MHz => s_CLK_80MHz
+		CLK_IN_100MHz => i_clock_100mhz,
+		CLK_OUT_100MHz => s_clock_100mhz,
+		CLK_OUT_80MHz => s_clock_80mhz
 	);
 
 	-- Divide by 45 for 1.774Mhz
 	cpu_clock_divider : entity work.ClockDivider
 	generic map
 	(
-		p_DivideCycles => 45
+		p_period => 45
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => '1',
-		i_Reset => s_reset,
-		o_ClockEnable => s_CLK_CPU_en
+		i_clock => s_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		o_clken => s_clken_cpu
 	);
 
 	-- Seven segment driver
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
 	generic map
 	(
-		p_ClockFrequency => 80_000_000
+		p_clock_hz => 80_000_000
 	)
 	port map
 	( 
-		i_Clock => s_CLK_80Mhz,
-		i_Reset => s_Reset,
-		i_Value => s_seven_seg_value,
-		o_SevenSegment => SevenSegment(7 downto 1),
-		o_SevenSegmentEnable => SevenSegmentEnable
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_data => s_seven_seg_value,
+		o_segments => o_seven_segment(7 downto 1),
+		o_segments_en => o_seven_segment_en
 	);
-	SevenSegment(0) <= '1';
+	o_seven_segment(0) <= '1';
 
 	-- Show the selected tape/current play position
 	s_seven_seg_value <= s_selected_tape;
@@ -123,68 +123,68 @@ begin
 	sdcard : entity work.SDCardController
 	generic map
 	(
-		p_ClockDiv800Khz => 100,
-		p_ClockDiv50Mhz => 2
+		p_clock_div_800khz => 100,
+		p_clock_div_50mhz => 2
 	)
 	port map
 	(
-		reset => s_reset,
-		clock => s_CLK_80MHz,
-		ss_n => sd_ss_n,
-		mosi => sd_mosi,
-		miso => sd_miso,
-		sclk => sd_sclk,
-		status => s_sd_status,
-		op_wr => s_sd_op_wr,
-		op_cmd => s_sd_op_cmd,
-		op_block_number => s_sd_op_block_number,
-		last_block_number => open,
-		dstart => open,
-		dcycle => s_sd_dcycle,
-		din => s_sd_din,
-		dout => s_sd_dout
+		i_reset => s_reset,
+		i_clock => s_clock_80mhz,
+		o_ss_n => o_sd_ss_n,
+		o_mosi => o_sd_mosi,
+		i_miso => i_sd_miso,
+		o_sclk => o_sd_sclk,
+		o_status => s_sd_status,
+		i_op_write => s_sd_op_wr,
+		i_op_cmd => s_sd_op_cmd,
+		i_op_block_number => s_sd_op_block_number,
+		o_last_block_number => open,
+		o_data_start => open,
+		o_data_cycle => s_sd_dcycle,
+		i_data => s_sd_din,
+		o_data => s_sd_dout
 	);
 
 	-- Debounce buttons
 	debounce : entity work.DebounceFilterSet
 	generic map
 	(
-		p_ClockFrequency => 80_000_000,
-		p_DebounceTimeUS => 5000,
-		p_SignalCount => 3,
-		p_ResetState => '1'
+		p_clock_hz => 80_000_000,
+		p_stable_us => 5000,
+		p_signal_count => 3,
+		p_default_state => '1'
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_Reset => s_Reset,
-		i_Signals => s_buttons_unbounced,
-		o_Signals => s_buttons_debounced,
-		o_SignalEdges => s_buttons_edges
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_signals => s_buttons_unbounced,
+		o_signals => s_buttons_debounced,
+		o_signal_edges => s_buttons_edges
 	);
 
-	s_buttons_unbounced <= Button_Down & Button_Up & Button_Right;
+	s_buttons_unbounced <= i_button_down & i_button_up & i_button_right;
 	s_buttons_trigger <= s_buttons_edges and not s_buttons_debounced;
-	s_button_record <= not Button_Left;
+	s_button_record <= not i_button_left;
 
 
 	-- Cassette Player
 	player : entity work.Trs80CassettePlayer
 	generic map
 	(
-		p_ClockEnableFrequency => 1_774_000
+		p_clken_hz => 1_774_000
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => s_CLK_CPU_en,
-		i_Reset => s_Reset,
-		i_ButtonStartStop => s_buttons_trigger(0),
-		i_ButtonRecord => s_button_record,
-		i_ButtonNext => s_buttons_trigger(1),
-		i_ButtonPrev => s_buttons_trigger(2),
-		o_PlayingOrRecording => s_playing_or_recording,
-		o_Recording => s_recording,
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_Reset,
+		i_button_start_stop => s_buttons_trigger(0),
+		i_button_record => s_button_record,
+		i_button_next => s_buttons_trigger(1),
+		i_button_prev => s_buttons_trigger(2),
+		o_playing_or_recording => s_playing_or_recording,
+		o_recording => s_recording,
 		o_sd_op_wr => s_sd_op_wr,
 		o_sd_op_cmd => s_sd_op_cmd,
 		o_sd_op_block_number => s_sd_op_block_number,
@@ -192,29 +192,29 @@ begin
 		i_sd_dcycle => s_sd_dcycle,
 		i_sd_data => s_sd_dout,
 		o_sd_data => s_sd_din,
-		o_SelectedTape => s_selected_tape,
-		o_Audio => s_Audio,
-		i_Audio => s_fake_audio(0)
+		o_display => s_selected_tape,
+		o_audio => s_Audio,
+		i_audio => s_fake_audio(0)
 	);
 
 	-- Output audio on both channels
-	Audio <= s_Audio(0) & s_Audio(0);
+	o_audio <= s_Audio(0) & s_Audio(0);
 	debug_audio <= s_Audio(0);
 
 	-- Also parse and send to uart
 	parser : entity work.Trs80CassetteParser
 	generic map
 	(
-		p_ClockEnableFrequency => 1_774_000
+		p_clken_hz => 1_774_000
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => s_CLK_CPU_en,
-		i_Reset => s_parser_reset,
-		i_Audio => s_parser_audio,
-		o_DataAvailable => s_dout_available,
-		o_Data => s_dout
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_parser_reset,
+		i_audio => s_parser_audio,
+		o_data_available => s_dout_available,
+		o_data => s_dout
 	);
 
 	-- Hold parser in reset state when not active
@@ -224,37 +224,37 @@ begin
 	s_parser_audio <= s_Audio(0) when s_recording = '0' else s_fake_audio(0);
 
 	-- Convert pulse back to master clock
-	s_dout_available_pulse <= s_dout_available and s_CLK_CPU_en;
+	s_dout_available_pulse <= s_dout_available and s_clken_cpu;
 
 	-- UART to send parsed audio to PC
 	uart_txer : entity work.UartTx
 	generic map
 	(
-		p_ClockFrequency => 80_000_000
+		p_clock_hz => 80_000_000
 	)
 	port map
 	( 
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => '1',
-		i_Reset => s_reset,
-		i_Data => s_dout,
-		i_DataAvailable => s_dout_available_pulse,
-		o_UartTx => s_uart_tx,
-		o_Busy => s_uart_busy
+		i_clock => s_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		i_data => s_dout,
+		i_data_available => s_dout_available_pulse,
+		o_uart_tx => s_uart_tx,
+		o_busy_tx => s_uart_busy
 	);	
 
 	-- Generate fake audio to test the recorder with
 	fake_audio : entity work.Trs80FakeCassetteAudio
 	generic map
 	(
-		p_ClockEnableFrequency => 1_744_000
+		p_clken_hz => 1_744_000
 	)
 	port map
 	(
-		i_Clock => s_CLK_80Mhz,
-		i_ClockEnable => s_CLK_CPU_en,
-		i_Reset => s_fake_audio_reset,
-		o_Audio => s_fake_audio
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_fake_audio_reset,
+		o_audio => s_fake_audio
 	);
 
 	-- Hold fake audio in reset when not recording

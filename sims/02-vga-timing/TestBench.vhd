@@ -27,26 +27,26 @@ begin
     vgaTiming : entity work.VGATiming
     generic map
     (
-        p_HRes => 20,
-        p_VRes => 20,
-        p_PixelLatency => 0,
-        p_HFrontPorch => 5,
-        p_HSyncWidth => 5,
-        p_HBackPorch => 5,
-        p_VFrontPorch => 5,
-        p_VSyncWidth => 5,
-        p_VBackPorch => 5
+        p_horz_res => 20,
+        p_vert_res => 20,
+        p_pixel_latency => 0,
+        p_horz_front_porch => 5,
+        p_horz_sync_width => 5,
+        p_horz_back_porch => 5,
+        p_vert_front_porch => 5,
+        p_vert_sync_width => 5,
+        p_vert_back_porch => 5
     )
 	port map
 	(
-        i_Clock => s_Clock,
-        i_ClockEnable => '1',
-        i_Reset => s_Reset,
-        o_HSync => open,
-        o_VSync => open,
-        o_HPos => open,
-        o_VPos => open,
-        o_Blank => open
+        i_clock => s_Clock,
+        i_clken => '1',
+        i_reset => s_Reset,
+        o_horz_sync => open,
+        o_vert_sync => open,
+        o_horz_pos => open,
+        o_vert_pos => open,
+        o_blank => open
 	);
 
 end;

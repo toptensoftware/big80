@@ -18,11 +18,11 @@
 @28
 testbench.s_clock
 testbench.vgatiming.o_blank
-testbench.vgatiming.o_hsync
-testbench.vgatiming.o_vsync
+testbench.vgatiming.o_horz_sync
+testbench.vgatiming.o_vert_sync
 @421
-testbench.vgatiming.o_hpos
+testbench.vgatiming.o_horz_pos
 @420
-testbench.vgatiming.o_vpos
+testbench.vgatiming.o_vert_pos
 [pattern_trace] 1
 [pattern_trace] 0

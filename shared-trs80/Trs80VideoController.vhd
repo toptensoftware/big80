@@ -24,34 +24,34 @@ generic
 (
     -- Position of TRS-80 display relative to top left of VGA display
     -- (used to center in larger VGA resolution display modes)
-    p_LeftMarginPixels : integer;
-    p_TopMarginPixels : integer
+    p_left_margin_pixels : integer;
+    p_top_margin_pixels : integer
 );
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;                 -- Pixel Clock
-    i_ClockEnable : in std_logic;           -- Clock Enable
-    i_Reset : in std_logic;                 -- Reset (synchronous, active high)
+    i_clock : in std_logic;                 -- Pixel Clock
+    i_clken : in std_logic;           -- Clock Enable
+    i_reset : in std_logic;                 -- Reset (synchronous, active high)
     
     -- Video Timing
-    i_HPos : in integer range -2048 to 2047;
-    i_VPos : in integer range -2048 to 2047;
+    i_horz_pos : in integer range -2048 to 2047;
+    i_vert_pos : in integer range -2048 to 2047;
 
     -- 64/32 column mode
-    i_WideMode : in std_logic;
+    i_wide_mode : in std_logic;
 
     -- Video RAM Access
-    o_VideoRamAddr : out std_logic_vector(9 downto 0);
-    i_VideoRamData : in std_logic_vector(7 downto 0);
+    o_video_ram_addr : out std_logic_vector(9 downto 0);
+    i_video_ram_data : in std_logic_vector(7 downto 0);
 
     -- Character ROM Access
-    o_CharRomAddr : out std_logic_vector(10 downto 0);
-    i_CharRomData : in std_logic_vector(5 downto 0);
+    o_char_rom_addr : out std_logic_vector(10 downto 0);
+    i_char_rom_data : in std_logic_vector(5 downto 0);
 
     -- Output
-    o_Pixel : out std_logic;
-    o_LineRep : out integer range 0 to 2
+    o_pixel : out std_logic;
+    o_line_rep : out integer range 0 to 2
 );
 end Trs80VideoController;
 
@@ -69,45 +69,45 @@ architecture Behavioral of Trs80VideoController is
     signal s_line_pix_std_logic : std_logic_vector(3 downto 0);
 begin
 
-    o_LineRep <= s_line_rep;
+    o_line_rep <= s_line_rep;
 
     s_char_num_bits <= std_logic_vector(to_unsigned(s_char_num, 6));
 
     -- Pixel cycle -2
     -- Calculate the video ram address
-    o_VideoRamAddr <= 
+    o_video_ram_addr <= 
         std_logic_vector(to_unsigned(s_line_num, 4)) & 
-        s_char_num_bits(5 downto 1) & (s_char_num_bits(0) and not i_WideMode);
+        s_char_num_bits(5 downto 1) & (s_char_num_bits(0) and not i_wide_mode);
 
     -- Pixel cycle -1
     -- Calculate character rom address
     s_line_pix_std_logic <= std_logic_vector(to_unsigned(s_line_pix, 4));
-    o_CharRomAddr <= i_VideoRamData(6 downto 0) & s_line_pix_std_logic;
+    o_char_rom_addr <= i_video_ram_data(6 downto 0) & s_line_pix_std_logic;
 
     -- Select pixels from character ROM or graphics generator?
-    s_pixel_bits <= i_CharRomData 
+    s_pixel_bits <= i_char_rom_data 
                     when s_use_graphic_bits = '0' else
                     s_graphic_bits(0) & s_graphic_bits(0) & s_graphic_bits(0) & 
                     s_graphic_bits(1) & s_graphic_bits(1) & s_graphic_bits(1);
 
     -- Generate graphic bits
-    graphics_generator : process(i_Clock)
+    graphics_generator : process(i_clock)
     begin
-        if rising_edge(i_Clock) then
-            if i_Reset = '1' then
+        if rising_edge(i_clock) then
+            if i_reset = '1' then
                 s_use_graphic_bits <= '0';
                 s_graphic_bits <= "00";
-            elsif i_ClockEnable = '1' then
+            elsif i_clken = '1' then
 
                 -- Remember if this character is graphic's character or not
                 -- for the next cycle
-                s_use_graphic_bits <= i_VideoRamData(7);
+                s_use_graphic_bits <= i_video_ram_data(7);
 
                 -- Generate graphics characters
                 case s_line_pix_std_logic(3 downto 2) is
-                    when "00" => s_graphic_bits <= i_VideoRamData(1 downto 0);
-                    when "01" => s_graphic_bits <= i_VideoRamData(3 downto 2);
-                    when "10" => s_graphic_bits <= i_VideoRamData(5 downto 4);
+                    when "00" => s_graphic_bits <= i_video_ram_data(1 downto 0);
+                    when "01" => s_graphic_bits <= i_video_ram_data(3 downto 2);
+                    when "10" => s_graphic_bits <= i_video_ram_data(5 downto 4);
                     when others => s_graphic_bits <= "00";
                 end case;
             end if;
@@ -116,33 +116,33 @@ begin
 
     -- Pixel Cycle 0
     -- Select the correct pixel (remember s_char_pix is two pixels ahead)
-    pixel_gen : process(i_HPos, i_VPos, s_char_pix, s_pixel_bits, i_WideMode, s_char_num_bits)
+    pixel_gen : process(i_horz_pos, i_vert_pos, s_char_pix, s_pixel_bits, i_wide_mode, s_char_num_bits)
     begin
-        if i_HPos < p_LeftMarginPixels or  i_VPos < p_TopMarginPixels or
-                    i_HPos >= p_LeftMarginPixels + 768 or i_VPos >= p_TopMarginPixels + 576 then
-            o_Pixel <= '0';
-        elsif i_WideMode = '0' then
+        if i_horz_pos < p_left_margin_pixels or  i_vert_pos < p_top_margin_pixels or
+                    i_horz_pos >= p_left_margin_pixels + 768 or i_vert_pos >= p_top_margin_pixels + 576 then
+            o_pixel <= '0';
+        elsif i_wide_mode = '0' then
             case s_char_pix is
-                when 1 => o_Pixel <= s_pixel_bits(5);
-                when 2 => o_Pixel <= s_pixel_bits(4);
-                when 3 => o_Pixel <= s_pixel_bits(3);
-                when 4 => o_Pixel <= s_pixel_bits(2);
-                when 5 => o_Pixel <= s_pixel_bits(1);
-                when others => o_Pixel <= s_pixel_bits(0);
+                when 1 => o_pixel <= s_pixel_bits(5);
+                when 2 => o_pixel <= s_pixel_bits(4);
+                when 3 => o_pixel <= s_pixel_bits(3);
+                when 4 => o_pixel <= s_pixel_bits(2);
+                when 5 => o_pixel <= s_pixel_bits(1);
+                when others => o_pixel <= s_pixel_bits(0);
             end case;
         elsif s_char_num_bits(0) = '0' then
             case s_char_pix is
-                when 0 => o_Pixel <= s_pixel_bits(0); 
-                when 1|2 => o_Pixel <= s_pixel_bits(5);
-                when 3|4 => o_Pixel <= s_pixel_bits(4);
-                when others => o_Pixel <= s_pixel_bits(3);
+                when 0 => o_pixel <= s_pixel_bits(0); 
+                when 1|2 => o_pixel <= s_pixel_bits(5);
+                when 3|4 => o_pixel <= s_pixel_bits(4);
+                when others => o_pixel <= s_pixel_bits(3);
             end case;
         else
             case s_char_pix is
-                when 0 => o_Pixel <= s_pixel_bits(3);
-                when 1|2 => o_Pixel <= s_pixel_bits(2);
-                when 3|4 => o_Pixel <= s_pixel_bits(1);
-                when others => o_Pixel <= s_pixel_bits(0);
+                when 0 => o_pixel <= s_pixel_bits(3);
+                when 1|2 => o_pixel <= s_pixel_bits(2);
+                when 3|4 => o_pixel <= s_pixel_bits(1);
+                when others => o_pixel <= s_pixel_bits(0);
             end case;
         end if;
     end process;
@@ -160,15 +160,15 @@ begin
 
 
     -- Horizontal counters
-    char_counter : process(i_Clock)
+    char_counter : process(i_clock)
     begin
-        if rising_edge(i_Clock) then
-            if i_Reset = '1' then
+        if rising_edge(i_clock) then
+            if i_reset = '1' then
                 s_char_rep <= 0;
                 s_char_pix <= 0;
                 s_char_num <= 0;
-            elsif i_ClockEnable = '1' then
-                if i_HPos = (p_LeftMarginPixels - 3) then
+            elsif i_clken = '1' then
+                if i_horz_pos = (p_left_margin_pixels - 3) then
                     s_char_rep <= 0;
                     s_char_pix <= 0;
                     s_char_num <= 0;
@@ -190,16 +190,16 @@ begin
     end process;
 
     -- vertical counters
-    line_counter: process (i_Clock)
+    line_counter: process (i_clock)
     begin
-        if rising_edge(i_Clock) then
-            if i_Reset = '1' then
+        if rising_edge(i_clock) then
+            if i_reset = '1' then
                 s_line_rep <= 0;
                 s_line_pix <= 0;
                 s_line_num <= 0;
-            elsif i_ClockEnable = '1' then
-                if i_HPos = (p_LeftMarginPixels-3) then
-                    if i_VPos = p_TopMarginPixels then
+            elsif i_clken = '1' then
+                if i_horz_pos = (p_left_margin_pixels-3) then
+                    if i_vert_pos = p_top_margin_pixels then
                         s_line_rep <= 0;
                         s_line_pix <= 0;
                         s_line_num <= 0;

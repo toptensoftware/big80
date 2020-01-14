@@ -9,11 +9,11 @@ architecture behavior of TestBench is
     signal s_clock : std_logic := '0';
     signal s_reset : std_logic;
     signal s_parser_reset : std_logic;
-    signal s_clock_enable : std_logic;
+    signal s_clken : std_logic;
     signal s_audio : std_logic_vector(1 downto 0);
     signal s_dout : std_logic_vector(7 downto 0);
     signal s_dout_available : std_logic;
-    constant c_ClockFrequency : real := 1_774_000.0 * 2.0;
+    constant c_clock_hz : real := 1_774_000.0 * 2.0;
 begin
 
 
@@ -29,16 +29,16 @@ begin
     stim_proc: process
     begin
         s_clock <= not s_clock;
-        wait for 1 sec / (c_ClockFrequency * 2.0);
+        wait for 1 sec / (c_clock_hz * 2.0);
     end process;
 
     clken_proc : process(s_clock)
     begin
         if rising_edge(s_clock) then
             if s_reset = '1' then 
-                s_clock_enable <= '0';
+                s_clken <= '0';
             else
-                s_clock_enable <= not s_clock_enable;
+                s_clken <= not s_clken;
             end if;
         end if;
     end process;
@@ -46,25 +46,25 @@ begin
     renderer : entity work.Trs80FakeCassetteAudio
     port map
     (
-        i_Clock => s_clock,
-        i_ClockEnable => s_clock_enable,
-        i_Reset => s_reset,
-        o_Audio => s_audio
+        i_clock => s_clock,
+        i_clken => s_clken,
+        i_reset => s_reset,
+        o_audio => s_audio
     );
 
     parser : entity work.Trs80CassetteParser
     generic map
     (
-        p_ClockEnableFrequency => 1_774_000
+        p_clken_hz => 1_774_000
     )
     port map
     (
-        i_Clock => s_clock,
-        i_ClockEnable => s_clock_enable,
-        i_Reset => s_parser_reset,
-        i_Audio => s_audio(0),
-        o_Data => s_dout,
-        o_DataAvailable => s_dout_available
+        i_clock => s_clock,
+        i_clken => s_clken,
+        i_reset => s_parser_reset,
+        i_audio => s_audio(0),
+        o_data => s_dout,
+        o_data_available => s_dout_available
     );
 
     parser_reset_proc: process

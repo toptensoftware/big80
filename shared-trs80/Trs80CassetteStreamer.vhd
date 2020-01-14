@@ -4,15 +4,15 @@
 --
 -- Fills a buffer of 1024 bytes (2 SD card blocks) that are used
 -- to supply bytes to a Trs80AudioRenderer.  As each buffer is emptied
--- asserts o_BlockNeeded and receives incoming stream of new data that
+-- asserts o_block_needed and receives incoming stream of new data that
 -- uses to fill the next buffer.
 --
--- The client should assert i_DataCycle for one exactly one clock
--- cycle everytime a new byte of data is available on i_Data and should
--- do this exactly 512 times for every time o_BlockNeeded is pulsed.
+-- The client should assert i_data_cycle for one exactly one clock
+-- cycle everytime a new byte of data is available on i_data and should
+-- do this exactly 512 times for every time o_block_needed is pulsed.
 --
 -- This component constantly produces an audio signal.  When not in use,
--- assert i_Reset to go silent.
+-- assert i_reset to go silent.
 --
 -- Copyright (C) 2019 Topten Software.  All Rights Reserved.
 --
@@ -25,40 +25,38 @@ use ieee.numeric_std.ALL;
 entity Trs80CassetteStreamer is
 generic
 (
-	p_ClockEnableFrequency : integer;  				-- Frequency of the clock enable
-	p_BaudRate : integer := 500;					-- Frequency of zero bit pulses
-	p_BufferSize : integer := 9;					-- Size of half buffer as power of 2
-	p_PulseWidth_us : integer := 100				-- Width of each pulse (in us)
+	p_clken_hz : integer;  				-- Frequency of the clock enable
+	p_buffer_size : integer := 9					-- Size of half buffer as power of 2
 );
 port
 (
 	-- Control
-	i_Clock : in std_logic;                         -- Main Clock
-	i_ClockEnable : in std_logic;					-- Clock Enable
-	i_Reset : in std_logic;                         -- Reset (synchronous, active high)
+	i_clock : in std_logic;                         -- Main Clock
+	i_clken : in std_logic;					-- Clock Enable
+	i_reset : in std_logic;                         -- Reset (synchronous, active high)
 
 	-- Playback or Record?
-	i_RecordMode : in std_logic;					-- Keep high while releasing reset to enter record mode
+	i_record_mode : in std_logic;					-- Keep high while releasing reset to enter record mode
 
 	-- Playback
-	o_BlockNeeded : out std_logic;					-- Asserts high for one main clock cycle when next 512 bytes needed
-	o_Audio : out std_logic_vector(1 downto 0);		-- generated audio signal
+	o_block_needed : out std_logic;					-- Asserts high for one main clock cycle when next 512 bytes needed
+	o_audio : out std_logic_vector(1 downto 0);		-- generated audio signal
 
 	-- Record
-	i_Audio : in std_logic;							-- input audio stream
-	o_BlockAvailable : out std_logic;				-- Asserts for one main clock cycle when next 512 bytes are available
+	i_audio : in std_logic;							-- input audio stream
+	o_block_available : out std_logic;				-- Asserts for one main clock cycle when next 512 bytes are available
 
 	-- Buffering
-	i_DataCycle : in std_logic;						-- Play: assert for one main clock cycle when 
-													--       input data on o_Data is valid
+	i_data_cycle : in std_logic;						-- Play: assert for one main clock cycle when 
+													--       input data on o_data is valid
 													-- Record: assert for one main clock cycle when
-													--       next output byte on o_Data needed. Will
+													--       next output byte on o_data needed. Will
 													--		 be available on the next cycle
-	i_Data : in std_logic_vector(7 downto 0);		-- Play: Input data
-	o_Data : out std_logic_vector(7 downto 0);		-- Record: Output data
+	i_data : in std_logic_vector(7 downto 0);		-- Play: Input data
+	o_data : out std_logic_vector(7 downto 0);		-- Record: Output data
 
-	i_StopRecording : in std_logic;					-- Assert for 1 cycle to stop the recorder and flush buffers
-	o_RecordingFinished : out std_logic			-- Asserts for 1 cycle when recording buffers have been flushed
+	i_stop_recording : in std_logic;					-- Assert for 1 cycle to stop the recorder and flush buffers
+	o_recording_finished : out std_logic			-- Asserts for 1 cycle when recording buffers have been flushed
 );
 end Trs80CassetteStreamer;
  
@@ -75,13 +73,13 @@ architecture behavior of Trs80CassetteStreamer is
 	signal s_parser_reset : std_logic;
 
 	signal s_ram_write : std_logic;
-	signal s_ram_write_addr : std_logic_vector(p_BufferSize downto 0);
+	signal s_ram_write_addr : std_logic_vector(p_buffer_size downto 0);
 	signal s_ram_write_data : std_logic_vector(7 downto 0);
-	signal s_ram_read_addr : std_logic_vector(p_BufferSize downto 0);
+	signal s_ram_read_addr : std_logic_vector(p_buffer_size downto 0);
 	signal s_ram_read_data : std_logic_vector(7 downto 0);
 
-	constant c_low_addr_ones : std_logic_vector(p_BufferSize - 1 downto 0) := (others => '1');
-	constant c_low_addr_zeros : std_logic_vector(p_BufferSize - 1 downto 0) := (others => '0');
+	constant c_low_addr_ones : std_logic_vector(p_buffer_size - 1 downto 0) := (others => '1');
+	constant c_low_addr_zeros : std_logic_vector(p_buffer_size - 1 downto 0) := (others => '0');
 
     type states is
     (
@@ -122,7 +120,7 @@ begin
 
 	-- hold renderer in reset state until pre-buffering finished
 	s_renderer_reset <= '1' when 
-		i_Reset='1' or 
+		i_reset='1' or 
 		s_state = state_PlayInit or
 		s_state = state_PlayPreBuffering 
 		else '0';
@@ -131,93 +129,93 @@ begin
 	renderer : entity work.Trs80CassetteRenderer
 	generic map
 	(
-		p_ClockEnableFrequency => p_ClockEnableFrequency
+		p_clken_hz => p_clken_hz
 	)
 	port map
 	(
-		i_Clock => i_Clock,
-		i_ClockEnable => i_ClockEnable,
-		i_Reset => s_renderer_reset,
-		i_Data => s_render_byte,
-		o_DataNeeded => s_render_data_needed,
-		o_Audio => o_Audio
+		i_clock => i_clock,
+		i_clken => i_clken,
+		i_reset => s_renderer_reset,
+		i_data => s_render_byte,
+		o_data_needed => s_render_data_needed,
+		o_audio => o_audio
 	);
 
 	-- hold parser in reset state unless recording
-	s_parser_reset <= '1' when i_Reset='1' or s_record_mode = '0' else '0';
+	s_parser_reset <= '1' when i_reset='1' or s_record_mode = '0' else '0';
 
 	-- parser
 	parser : entity work.Trs80CassetteParser
 	generic map
 	(
-		p_ClockEnableFrequency => p_ClockEnableFrequency
+		p_clken_hz => p_clken_hz
 	)
 	port map
 	(
-		i_Clock => i_Clock,
-		i_ClockEnable => i_ClockEnable,
-		i_Reset => s_parser_reset,
-		i_Audio => i_Audio,
-		o_DataAvailable => s_parser_data_available,
-		o_Data => s_parser_byte
+		i_clock => i_clock,
+		i_clken => i_clken,
+		i_reset => s_parser_reset,
+		i_audio => i_audio,
+		o_data_available => s_parser_data_available,
+		o_data => s_parser_byte
 	);
 
 	-- 2 x 512 byte block buffers
 	ram : entity work.RamDualPortInferred	
 	GENERIC MAP
 	(
-		p_AddrWidth => p_BufferSize + 1
+		p_addr_width => p_buffer_size + 1
 	)
 	PORT MAP
 	(
 		-- Read port
-		i_Clock_A => i_Clock,
-		i_ClocKEn_A => '1',
-		i_Write_A  => '0',
-		i_Addr_A => s_ram_read_addr,
-		i_Data_A => (others => '0'),
-		o_Data_A => s_ram_read_data,
+		i_clock_a => i_clock,
+		i_clken_a => '1',
+		i_write_a  => '0',
+		i_addr_a => s_ram_read_addr,
+		i_data_a => (others => '0'),
+		o_data_a => s_ram_read_data,
 
 		-- Write port
-		i_Clock_B => i_Clock,
-		i_ClocKEn_B => '1',
-		i_Write_B => s_ram_write,
-		i_Addr_B => s_ram_write_addr,
-		i_Data_B => s_ram_write_data,
-		o_Data_B => open
+		i_clock_b => i_clock,
+		i_clken_b => '1',
+		i_write_b => s_ram_write,
+		i_addr_b => s_ram_write_addr,
+		i_data_b => s_ram_write_data,
+		o_data_b => open
 	);
 
 	-- RAM write depends on record/playback
 	s_ram_write_data <= 
 		x"00" when s_state = state_RecFlushZero else
-		i_Data when s_record_mode = '0' else 
+		i_data when s_record_mode = '0' else 
 		s_parser_byte;
 	s_ram_write <= 
 		'1' when s_state = state_RecFlushZero else 
-		i_DataCycle when s_record_mode = '0' else 
-		(s_parser_data_available and i_ClockEnable);
+		i_data_cycle when s_record_mode = '0' else 
+		(s_parser_data_available and i_clken);
 
 	-- RAM read goes to both renderer and to output
 	s_render_byte <= s_ram_read_data;
-	o_Data <= s_ram_read_data;
+	o_data <= s_ram_read_data;
 
-	o_RecordingFinished <= '1' when s_state = state_RecFinished else '0';
+	o_recording_finished <= '1' when s_state = state_RecFinished else '0';
 
 	-- whenever the client sends us data, move to next write address
-	buffer_proc: process(i_Clock)
+	buffer_proc: process(i_clock)
 	begin
-		if rising_edge(i_Clock) then
-			if i_Reset = '1' then
+		if rising_edge(i_clock) then
+			if i_reset = '1' then
 				s_ram_write_addr <= (others => '0');
 				s_ram_read_addr <= (others => '0');
-				o_BlockNeeded <= '0';
-				o_BlockAvailable <= '0';
+				o_block_needed <= '0';
+				o_block_available <= '0';
 				s_state <= state_idle;
 			else
-				o_BlockNeeded <= '0';
-				o_BlockAvailable <= '0';
+				o_block_needed <= '0';
+				o_block_available <= '0';
 
-				if i_ClockEnable = '1' then
+				if i_clken = '1' then
 
 					-- whenever the renderer wants more data, move to the next read address
 					if s_record_mode = '0' and s_render_data_needed = '1' then
@@ -232,14 +230,14 @@ begin
 				end if;
 
 				-- Stop recording?
-				if i_StopRecording = '1' then 
+				if i_stop_recording = '1' then 
 					s_record_mode <= '0';
 				end if;
 
 				case s_state is
 					when state_Idle => 
-						s_record_mode <= i_RecordMode;
-						if i_RecordMode = '0' then
+						s_record_mode <= i_record_mode;
+						if i_record_mode = '0' then
 							s_state <= state_PlayInit;
 						else
 							s_state <= state_RecInit;
@@ -248,29 +246,29 @@ begin
 					when state_PlayInit => 
 						-- Start first SD read operation
 						s_state <= state_PlayPreBuffering;
-						o_BlockNeeded <= '1';
+						o_block_needed <= '1';
 
 					when state_PlayPreBuffering  => 
 						-- Fill first buffer
-						if i_DataCycle = '1' then
+						if i_data_cycle = '1' then
 							s_ram_write_addr <= std_logic_vector(unsigned(s_ram_write_addr) + 1);
-							if s_ram_write_addr(p_BufferSize-1 downto 0) = c_low_addr_ones then
+							if s_ram_write_addr(p_buffer_size-1 downto 0) = c_low_addr_ones then
 								s_state <= state_PlayDraining;
 							end if;
 						end if;
 
 					when state_PlayDraining => 
 						-- Monitor for half buffer drained and start a new SD read operation
-						if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
-							o_BlockNeeded <= '1';
+						if s_ram_read_addr(p_buffer_size) /= s_ram_write_addr(p_buffer_size) then
+							o_block_needed <= '1';
 							s_state <= state_PlayBuffering;
 						end if;
 
 					when state_PlayBuffering  => 
 						-- Fill buffer from SD card
-						if i_DataCycle = '1' then
+						if i_data_cycle = '1' then
 							s_ram_write_addr <= std_logic_vector(unsigned(s_ram_write_addr) + 1);
-							if s_ram_write_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
+							if s_ram_write_addr(p_buffer_size-1 downto 0)  = c_low_addr_ones then
 								s_state <= state_PlayDraining;
 							end if;
 						end if;
@@ -284,17 +282,17 @@ begin
 						if s_record_mode = '0' then
 							s_state <= state_RecFlush;
 						else
-							if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
-								o_BlockAvailable <= '1';
+							if s_ram_read_addr(p_buffer_size) /= s_ram_write_addr(p_buffer_size) then
+								o_block_available <= '1';
 								s_state <= state_RecDraining;
 							end if;
 						end if;
 
 					when state_RecDraining => 
 						-- Suppy data to SD card from buffer until drained
-						if i_DataCycle = '1' then
+						if i_data_cycle = '1' then
 							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
-							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
+							if s_ram_read_addr(p_buffer_size-1 downto 0)  = c_low_addr_ones then
 								if s_record_mode = '1' then
 									s_state <= state_RecBuffering;
 								else
@@ -314,16 +312,16 @@ begin
 
 					when state_RecFlushZero => 
 						-- Fill buffer with zeros
-						if s_ram_read_addr(p_BufferSize) /= s_ram_write_addr(p_BufferSize) then
-							o_BlockAvailable <= '1';
+						if s_ram_read_addr(p_buffer_size) /= s_ram_write_addr(p_buffer_size) then
+							o_block_available <= '1';
 							s_state <= state_RecFlushWrite;
 						end if;
 
 					when state_RecFlushWrite =>	
 						-- Write final block to SD Card
-						if i_DataCycle = '1' then
+						if i_data_cycle = '1' then
 							s_ram_read_addr <= std_logic_vector(unsigned(s_ram_read_addr) + 1);
-							if s_ram_read_addr(p_BufferSize-1 downto 0)  = c_low_addr_ones then
+							if s_ram_read_addr(p_buffer_size-1 downto 0)  = c_low_addr_ones then
 								s_state <= state_RecFinished0;
 							end if;
 					end if;

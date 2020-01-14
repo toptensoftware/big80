@@ -5,29 +5,29 @@
 -- Controller for SD and SDHC cards.
 --
 -- Init
---   * Wait for status(STATUS_BIT_INIT) to assert
---   * status(STATUS_BIT_SDHC) = 1 if SDHC card
+--   * Wait for o_status(STATUS_BIT_INIT) to assert
+--   * o_status(STATUS_BIT_SDHC) = 1 if SDHC card
 --
 -- Read
---   * set op_block_number
---   * set op_cmd to "01"
---   * set op_wr to "1"
---   * dstart will be raised for possibly multiple cycles to indicate
---         data is about the be sent.  (ie: reset DMA address)
---   * dcycle will be raised exactly 512 times for one cycle
---         for each byte with the data on dout.  Data will be available for 
+--   * set i_op_block_number
+--   * set i_op_cmd to "01"
+--   * set i_op_write to "1"
+--   * o_data_start will be raised for possibly multiple cycles to indicate
+--         data is about the be sent.  (ie: i_reset DMA address)
+--   * o_data_cycle will be raised exactly 512 times for one cycle
+--         for each byte with the data on o_data.  Data will be available for 
 --         multiple cycles (about 10)
 --   * wait for STATUS_BIT_BUSY to clear to indicate operation finished
 --
 -- Write
---   * set op_block_number
---   * set op_cmd to "10"
---   * provide first byte on din
---   * set op_wr to "1"
---   * dstart will be raised for possibly multiple cycles to indicate
---         data is about the needed.  (ie: reset DMA address)
---   * dcycle will be raised exactly 512 times.  Each time the next byte
---         should be supplied on din.  Data needs to be available before 
+--   * set i_op_block_number
+--   * set i_op_cmd to "10"
+--   * provide first byte on i_data
+--   * set i_op_write to "1"
+--   * o_data_start will be raised for possibly multiple cycles to indicate
+--         data is about the needed.  (ie: i_reset DMA address)
+--   * o_data_cycle will be raised exactly 512 times.  Each time the next byte
+--         should be supplied on i_data.  Data needs to be available before 
 --		   the next cycle 
 --   * wait for STATUS_BIT_BUSY to clear to indicate operation finished
 --
@@ -64,40 +64,40 @@ use work.SDStatusBits.ALL;
 entity SDCardController is
 generic
 (
-	-- Thse parameters should be set so the supplied clock can 
+	-- Thse parameters should be set so the supplied i_clock can 
 	-- be divided down to provide a frequency that doesn't exceed
 	-- 800Khz and 50Mhz.  These clocks are used to drive the SD
 	-- card at 25Mhz and 400Khz respectively
-	-- eg: for a 100Mhz clock, these would be set to 125 and 2
-	p_ClockDiv800Khz : integer;
-	p_ClockDiv50Mhz : integer
+	-- eg: for a 100Mhz i_clock, these would be set to 125 and 2
+	p_clock_div_800khz : integer;
+	p_clock_div_50mhz : integer
 );
 port 
 (
 	-- Clocking
-	reset : in std_logic;
-	clock : in std_logic;
+	i_reset : in std_logic;
+	i_clock : in std_logic;
 
 	-- SD Card Signals
-	ss_n : out std_logic;
-	mosi : out std_logic;
-	miso : in std_logic;
-	sclk : out std_logic;
+	o_ss_n : out std_logic;
+	o_mosi : out std_logic;
+	i_miso : in std_logic;
+	o_sclk : out std_logic;
 
-	-- Status signals
-	status : out std_logic_vector(7 downto 0) := (others => '1');
-	last_block_number : out std_logic_vector(31 downto 0);
+	-- o_status signals
+	o_status : out std_logic_vector(7 downto 0) := (others => '1');
+	o_last_block_number : out std_logic_vector(31 downto 0);
 
 	-- Operation
-	op_wr : in std_logic;
-	op_cmd : in std_logic_vector(1 downto 0);
-	op_block_number : in std_logic_vector(31 downto 0);
+	i_op_write : in std_logic;
+	i_op_cmd : in std_logic_vector(1 downto 0);
+	i_op_block_number : in std_logic_vector(31 downto 0);
 
 	-- Data in/out
-	dstart : out std_logic;
-	dcycle : out std_logic;
-	din : in std_logic_vector(7 downto 0);
-	dout : out std_logic_vector(7 downto 0)
+	o_data_start : out std_logic;
+	o_data_cycle : out std_logic;
+	i_data : in std_logic_vector(7 downto 0);
+	o_data : out std_logic_vector(7 downto 0)
 );
 end SDCardController;
 
@@ -106,7 +106,7 @@ architecture Behavioral of SDCardController is
 	type states is 
 	(
 		RST,
-		DESELECT,				-- deselect the card and pulse clock
+		DESELECT,				-- deselect the card and pulse i_clock
 		PULSE_SCLK,
 		SEND_CMD0,
 		RECV_CMD0,
@@ -123,7 +123,7 @@ architecture Behavioral of SDCardController is
 		SEND_CMD16,
 		RECV_CMD16,
 	  
-		IDLE,					-- wait for op_cmd
+		IDLE,					-- wait for i_op_cmd
 		SEND_CMD17,
 		RECV_CMD17,
 		READ_BLOCK_WAIT,
@@ -150,7 +150,7 @@ architecture Behavioral of SDCardController is
 
 
 	-- one start byte, plus 512 bytes of data, plus two FF end bytes (CRC)
-	constant WRITE_DATA_SIZE : integer := 515;
+	constant c_write_data_size : integer := 515;
 
 	signal op_wr_prev : std_logic;
 
@@ -177,18 +177,18 @@ begin
 	clock_en <= '1' when clock_div = (clock_div_limit-1) else '0';
 	clock_div_next <= (others=>'0') when clock_en='1' else clock_div + 1;
 
-	last_block_number <= s_block_number;
+	o_last_block_number <= s_block_number;
 
 	cmd_address <= s_block_number(31 downto 0) 
 					when sdhc='1' else
 					s_block_number(22 downto 0) & "000000000";
 
-	sclk <= sclk_sig;
+	o_sclk <= sclk_sig;
 
-	process(clock)
+	process(i_clock)
 	begin
-		if rising_edge(clock) then
-		if reset = '1' then
+		if rising_edge(i_clock) then
+		if i_reset = '1' then
 			clock_div <= (others=>'0');
 		else
 			clock_div <= clock_div_next;
@@ -196,17 +196,17 @@ begin
 		end if;
 	end process;
 
-	dout <= rx_buf(7 downto 0);
-	dcycle <= '1' when state = WRITE_DMA or din_used='1' else '0';
+	o_data <= rx_buf(7 downto 0);
+	o_data_cycle <= '1' when state = WRITE_DMA or din_used='1' else '0';
 
 
-	process(clock)
-		variable byte_counter : integer range 0 to WRITE_DATA_SIZE;
+	process(i_clock)
+		variable byte_counter : integer range 0 to c_write_data_size;
 		variable bit_counter : integer range 0 to 160;
 	begin
 
-		if rising_edge(clock) then
-		if reset='1' then
+		if rising_edge(i_clock) then
+		if i_reset='1' then
 		
  			state <= RST;
 			sclk_sig <= '0';
@@ -215,49 +215,49 @@ begin
 
 			do_deselect <= '0';
 			din_used <= '0';
-			dstart <= '0';
+			o_data_start <= '0';
 
-			status <= (others => '1');			
+			o_status <= (others => '1');			
 			s_block_number(31 downto 0) <= x"FFFFFFFF";
 
 		else
 
-			op_wr_prev <= op_wr;
+			op_wr_prev <= i_op_write;
 
 			din_used <= '0';
-			dstart <= '0';
+			o_data_start <= '0';
 
-			-- reset?
-			if op_wr_prev = '0' and op_wr = '1' and op_cmd="00" then
+			-- i_reset?
+			if op_wr_prev = '0' and i_op_write = '1' and i_op_cmd="00" then
 				state <= RST;
 			end if;
 
 			case state is
 
 				when RST =>
-					clock_div_limit <= to_unsigned(p_ClockDiv800Khz, 8);
+					clock_div_limit <= to_unsigned(p_clock_div_800khz, 8);
 					tx_buf <= (others => '1');
 					byte_counter := 0;
-					status <= "00000" & STATUS_LO_BUSY;
+					o_status <= "00000" & STATUS_LO_BUSY;
 					sdhc <= '0';
 
-					-- setup for initial clock pulse
-					-- ss_n=1, mosi=1, pulse clocks, ss_n=0
+					-- setup for initial i_clock pulse
+					-- o_ss_n=1, o_mosi=1, pulse clocks, o_ss_n=0
 					bit_counter := 160;
 					state <= DESELECT;
 					return_state <= SEND_CMD0;
 
 				when DESELECT =>
 					if clock_en='1' then
-						ss_n <= '1';
-						mosi <= '1';
+						o_ss_n <= '1';
+						o_mosi <= '1';
 						sclk_sig <= '0';
 						do_deselect <= '0';
 						state <= PULSE_SCLK;
 					end if;
 
 				when PULSE_SCLK =>		
-					-- pulse clock bit_counter times then return to return_state		
+					-- pulse i_clock bit_counter times then return to return_state		
 					-- enter with sclk_sig at 0
 					-- bit_counter:    : 2 2 1 1 ret
 					-- sclk_sig:       : 0 1 0 1 0
@@ -373,7 +373,7 @@ begin
 				when RECV_CMD58_DATA =>
 					if rx_buf(30)='1' then
 						-- SDHC mode successfully initialized
-						clock_div_limit <= to_unsigned(p_ClockDiv50Mhz, 8);
+						clock_div_limit <= to_unsigned(p_clock_div_50mhz, 8);
 						state <= IDLE;
 					else
 						-- SDHC but not in block addressing mode
@@ -391,7 +391,7 @@ begin
 
 				when RECV_CMD16 =>
 					if rx_buf(7 downto 1) = "0000000" then	-- ignore idle bit
-						clock_div_limit <= to_unsigned(p_ClockDiv50Mhz, 8);
+						clock_div_limit <= to_unsigned(p_clock_div_50mhz, 8);
 						state <= IDLE;
 					else
 						state <= ERROR;
@@ -399,22 +399,22 @@ begin
 
 
 				when IDLE =>
-					status(2 downto 0) <= STATUS_LO_READY;
-					status(STATUS_BIT_INIT) <= '1';
-					status(STATUS_BIT_SDHC) <= sdhc;
-					if op_wr_prev = '0' and op_wr = '1' then
+					o_status(2 downto 0) <= STATUS_LO_READY;
+					o_status(STATUS_BIT_INIT) <= '1';
+					o_status(STATUS_BIT_SDHC) <= sdhc;
+					if op_wr_prev = '0' and i_op_write = '1' then
 
-						case op_cmd is
+						case i_op_cmd is
 
 							when "01" =>		-- read
 								state <= SEND_CMD17;
-								s_block_number <= op_block_number;
-								dstart <= '1';
+								s_block_number <= i_op_block_number;
+								o_data_start <= '1';
 
 							when "10" =>		-- write
 								state <= SEND_CMD24;
-								s_block_number <= op_block_number;
-								dstart <= '1';
+								s_block_number <= i_op_block_number;
+								o_data_start <= '1';
 
 							when others =>		-- read CSD
 								state <= IDLE;
@@ -424,7 +424,7 @@ begin
 
 
 				when SEND_CMD17 =>
-					status(2 downto 0) <= STATUS_LO_READING;
+					o_status(2 downto 0) <= STATUS_LO_READING;
 					tx_buf <= x"FF" & x"51" & cmd_address & x"FF";
 					state <= TX_CMD;
 					do_deselect <= '0';
@@ -489,7 +489,7 @@ begin
 					state <= READ_BLOCK_DATA;
 
 				when SEND_CMD24 =>
-					status(2 downto 0) <= STATUS_LO_WRITING;
+					o_status(2 downto 0) <= STATUS_LO_WRITING;
 					byte_counter := 512; 
 					tx_buf <= x"FF" & x"58" & cmd_address & x"FF";	-- single block
 					state <= TX_CMD;
@@ -519,7 +519,7 @@ begin
 					else 	
 						-- Send data byte
 						bit_counter := 8;
-						tx_buf(55 downto 48) <= din;
+						tx_buf(55 downto 48) <= i_data;
 						state <= TX_DATA;
 						return_state <= WRITE_BLOCK_DATA;
 						byte_counter := byte_counter - 1;
@@ -528,7 +528,7 @@ begin
 
 				when WAIT_WRITE_DATA_RESPONSE =>
 					if clock_en='1' then
-						if sclk_sig = '1' and miso = '0' then
+						if sclk_sig = '1' and i_miso = '0' then
 							rx_buf(0) <= '0';
 							bit_counter := 4;
 							state <= RX_BITS;
@@ -546,7 +546,7 @@ begin
 
 				when WAIT_WRITE_DATA_FINISHED =>
 					if clock_en='1' then
-						if sclk_sig = '1' and miso = '1' then
+						if sclk_sig = '1' and i_miso = '1' then
 							bit_counter := 2;
 							state <= DESELECT;
 							return_state <= IDLE;
@@ -558,8 +558,8 @@ begin
 				when TX_CMD =>
 					in_tx_cmd <= '1';
 					sclk_sig <= '0';
-					ss_n <= '0';
-					mosi <= tx_buf(55);
+					o_ss_n <= '0';
+					o_mosi <= tx_buf(55);
 					tx_buf <= tx_buf(54 downto 0) & '1';
 					bit_counter := 56;
 					state <= TX_BITS;
@@ -567,19 +567,19 @@ begin
 				when TX_DATA => 
 					in_tx_cmd <= '0';
 					sclk_sig <= '0';
-					ss_n <= '0';
-					mosi <= tx_buf(55);
+					o_ss_n <= '0';
+					o_mosi <= tx_buf(55);
 					tx_buf <= tx_buf(54 downto 0) & '1';
 					state <= TX_BITS;
 
 				when TX_BITS =>
 					-- Send bit_counter bits to SD Card
-					-- Assumes mosi already set to first bit, sclk is lo
+					-- Assumes o_mosi already set to first bit, o_sclk is lo
 					-- and bit_counter - 1 bits left in tx_buf
 
 					-- bit_counter  : 2 2 1 1 ret
 					-- sclk_sig     : 0 1 0 1 0
-					-- mosi         :*    * 
+					-- o_mosi         :*    * 
 					if clock_en='1' then
 						if sclk_sig = '1' then
 							if bit_counter = 1 then
@@ -590,7 +590,7 @@ begin
 								end if;
 							else
 								bit_counter := bit_counter - 1;
-								mosi <= tx_buf(55);
+								o_mosi <= tx_buf(55);
 								tx_buf <= tx_buf(54 downto 0) & '1';
 							end if;
 						end if;
@@ -600,7 +600,7 @@ begin
 				when WAIT_CMD_RESPONSE =>
 					if clock_en='1' then
 						if sclk_sig = '1' then
-							if miso = '0' then
+							if i_miso = '0' then
 								rx_buf(0) <= '0';
 								bit_counter := 7; -- already read bit 7
 								state <= RX_BITS;
@@ -617,7 +617,7 @@ begin
 					-- bit read     :     *   *
 					if clock_en='1' then
 						if sclk_sig = '1' then
-							rx_buf <= rx_buf(30 downto 0) & miso;
+							rx_buf <= rx_buf(30 downto 0) & i_miso;
 							if bit_counter = 1 then
 								state <= RX_BITS_FINISHED;
 							else
@@ -636,8 +636,8 @@ begin
 					end if;
 
 				when others => 
-					status(STATUS_BIT_ERROR) <= '1';
-					status(STATUS_BIT_BUSY) <= '0';
+					o_status(STATUS_BIT_ERROR) <= '1';
+					o_status(STATUS_BIT_BUSY) <= '0';
 			end case;
 		end if;
 		end if;

@@ -29,11 +29,11 @@ testbench.uat.streamer.parser.o_dataavailable
 @22
 testbench.uat.streamer.parser.o_data[7:0]
 @28
-testbench.uat.txer.o_uarttx
+testbench.uat.txer.o_uart_tx
 @420
 testbench.uat.txer.clock_divider.s_divider
 @28
-testbench.uat.txer.o_busy
+testbench.uat.txer.o_busy_tx
 @22
 testbench.uat.txer.i_data[7:0]
 @420

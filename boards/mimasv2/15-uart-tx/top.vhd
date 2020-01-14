@@ -6,10 +6,10 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz : in std_logic;
-	Button_B : in std_logic;
-	UART_TX : out std_logic;
-	UART2_TX : out std_logic
+	i_clock_100mhz : in std_logic;
+	i_button_b : in std_logic;
+	o_uart_tx : out std_logic;
+	o_uart2_tx : out std_logic
 );
 end top;
 
@@ -19,23 +19,23 @@ architecture Behavioral of top is
 begin
 
 	-- Reset signal
-	s_reset <= not Button_B;
+	s_reset <= not i_button_b;
 
-	UART_TX <= s_tx;
-	UART2_TX <= s_tx;
+	o_uart_tx <= s_tx;
+	o_uart2_tx <= s_tx;
 
 	test : entity work.UartTxTest
 	generic map
 	(
-		p_ClockFrequency => 100_000_000,
-		p_BytesPerChunk => 512,
-		p_ChunksPerSecond => 1
+		p_clock_hz => 100_000_000,
+		p_bytes_per_chunk => 512,
+		p_chunks_per_second => 1
 	)
 	port map
 	( 
-		i_Clock => CLK_100MHz,
-		i_Reset => s_reset,
-		o_UartTx => s_tx
+		i_clock => i_clock_100mhz,
+		i_reset => s_reset,
+		o_uart_tx => s_tx
 	);
 
 end Behavioral;

@@ -6,13 +6,13 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz : in std_logic;
-	Button_B : in std_logic;
-	HSync : out std_logic;
-	VSync : out std_logic;
-	Red : out std_logic_vector(2 downto 0);
-	Green : out std_logic_vector(2 downto 0);
-	Blue : out std_logic_vector(2 downto 1)
+	i_clock_100mhz : in std_logic;
+	i_button_b : in std_logic;
+	o_horz_sync : out std_logic;
+	o_vert_sync : out std_logic;
+	o_red : out std_logic_vector(2 downto 0);
+	o_green : out std_logic_vector(2 downto 0);
+	o_blue : out std_logic_vector(2 downto 1)
 );
 end top;
 
@@ -21,29 +21,29 @@ architecture Behavioral of top is
 	signal s_blank : std_logic;
 	signal s_hpos : integer range -2048 to 2047;
 	signal s_vpos : integer range -2048 to 2047;
-	signal s_CLK_80MHz : std_logic;
-	signal s_CLK_40Mhz_en : std_logic;
+	signal s_clock_80mhz : std_logic;
+	signal s_clken_40mhz : std_logic;
 	signal s_pixel : std_logic;
 begin
 
 	-- Reset signal
-	s_reset <= not Button_B;
+	s_reset <= not i_button_b;
 
 	dcm : entity work.ClockDCM
 	port map
 	(
-		CLK_IN_100MHz => CLK_100MHz,
+		CLK_IN_100MHz => i_clock_100mhz,
 		CLK_OUT_100MHz => open,
-		CLK_OUT_80MHz => s_CLK_80Mhz
+		CLK_OUT_80MHz => s_clock_80mhz
 	);
 
-	process (s_CLK_80Mhz)
+	process (s_clock_80mhz)
 	begin
-		if rising_edge(s_CLK_80Mhz) then
+		if rising_edge(s_clock_80mhz) then
 			if s_reset = '1' then
-				s_CLK_40Mhz_en <= '0';
+				s_clken_40mhz <= '0';
 			else
-				s_CLK_40Mhz_en <= not s_CLK_40Mhz_en;
+				s_clken_40mhz <= not s_clken_40mhz;
 			end if;
 		end if;
 	end process;
@@ -51,14 +51,14 @@ begin
 	vga_timing : entity work.VGATiming800x600
 	port map
 	(
-		i_Clock => s_CLK_80MHz,
-		i_ClockEnable => s_CLK_40Mhz_en,
-		i_Reset => s_reset,
-		o_VSync => VSync,
-		o_HSync => HSync,
-		o_HPos => s_hpos,
-		o_VPos => s_vpos,
-		o_Blank => s_blank
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_40mhz,
+		i_reset => s_reset,
+		o_vert_sync => o_vert_sync,
+		o_horz_sync => o_horz_sync,
+		o_horz_pos => s_hpos,
+		o_vert_pos => s_vpos,
+		o_blank => s_blank
 	);
 
 	s_pixel <= 
@@ -69,9 +69,9 @@ begin
 		'1' when s_vpos = 599 else
 		'0';
 
-	Red <= "000";
-	Green <= s_pixel & s_pixel & s_pixel;
-	Blue <= "00";
+	o_red <= "000";
+	o_green <= s_pixel & s_pixel & s_pixel;
+	o_blue <= "00";
 
 end Behavioral;
 

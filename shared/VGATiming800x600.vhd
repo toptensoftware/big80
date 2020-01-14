@@ -20,16 +20,16 @@ entity VGATiming800x600 is
 port 
 ( 
     -- Control
-    i_Clock : in std_logic;                 -- Clock 
-    i_ClockEnable : in std_logic;           -- Clock enable (must be 40MHz)
-    i_Reset : in std_logic;                 -- Reset (synchronous, active high)
+    i_clock : in std_logic;                         -- Clock 
+    i_clken : in std_logic;                         -- Clock enable (must be 40MHz)
+    i_reset : in std_logic;                         -- Reset (synchronous, active high)
     
     -- Outputs
-    o_HSync : out std_logic;                -- Horizontal Sync Pulse
-    o_VSync : out std_logic;                -- Vertical Sync Pulse
-    o_HPos : out integer range -2048 to 2047;   -- Current horizontal position (X Coord)
-    o_VPos : out integer range -2048 to 2047;    -- Current vertical position
-    o_Blank : out std_logic                 -- Currently in blanking area?
+    o_horz_sync : out std_logic;                    -- Horizontal Sync Pulse
+    o_vert_sync : out std_logic;                    -- Vertical Sync Pulse
+    o_horz_pos : out integer range -2048 to 2047;   -- Current horizontal position (X Coord)
+    o_vert_pos : out integer range -2048 to 2047;   -- Current vertical position
+    o_blank : out std_logic                         -- '1' if currently in blanking area
 );
 end VGATiming800x600;
 
@@ -39,25 +39,25 @@ begin
     vgaTiming : entity work.VGATiming
     generic map
     (
-        p_HRes => 800,
-        p_VRes => 600,
-        p_HFrontPorch => 40,
-        p_HSyncWidth => 128,
-        p_HBackPorch => 88,
-        p_VFrontPorch => 1,
-        p_VSyncWidth => 4,
-        p_VBackPorch => 23
+        p_horz_res => 800,
+        p_vert_res => 600,
+        p_horz_front_porch => 40,
+        p_horz_sync_width => 128,
+        p_horz_back_porch => 88,
+        p_vert_front_porch => 1,
+        p_vert_sync_width => 4,
+        p_vert_back_porch => 23
     )
 	port map
 	(
-        i_Clock => i_Clock,
-        i_ClockEnable => i_ClockEnable,
-        i_Reset => i_Reset,
-        o_HSync => o_HSync,
-        o_VSync => o_VSync,
-        o_HPos => o_HPos,
-        o_VPos => o_VPos,
-        o_Blank => o_Blank
+        i_clock => i_clock,
+        i_clken => i_clken,
+        i_reset => i_reset,
+        o_horz_sync => o_horz_sync,
+        o_vert_sync => o_vert_sync,
+        o_horz_pos => o_horz_pos,
+        o_vert_pos => o_vert_pos,
+        o_blank => o_blank
 	);
 
 end Behavioral;

@@ -6,12 +6,12 @@ entity top is
 port 
 ( 
 	-- These signals must match what's in the .ucf file
-	CLK_100MHz : in std_logic;
-	Button_B : in std_logic;
-	PS2_Clock : inout std_logic;
-	PS2_Data : inout std_logic;
-	LEDs : out std_logic_vector(7 downto 0);
-	Switches : in std_logic_vector(7 downto 0)
+	i_clock_100mhz : in std_logic;
+	i_button_b : in std_logic;
+	io_ps2_clock : inout std_logic;
+	io_ps2_data : inout std_logic;
+	o_leds : out std_logic_vector(7 downto 0);
+	i_switches : in std_logic_vector(7 downto 0)
 );
 end top;
 
@@ -24,39 +24,39 @@ architecture Behavioral of top is
 begin
 
 	-- Reset signal
-	s_reset <= not Button_B;
+	s_reset <= not i_button_b;
 
 	-- PS2 Keyboard Controller
 	keyboardController : entity work.PS2KeyboardController
 	GENERIC MAP
 	(
-		p_ClockFrequency => 100_000_000 
+		p_clock_hz => 100_000_000 
 	)
 	PORT MAP
 	(
-		i_Clock => CLK_100MHz,
-		i_Reset => s_reset,
-		io_PS2Clock => PS2_Clock,
-		io_PS2Data => PS2_Data,
-		o_ScanCode => s_scan_code,
-		o_ExtendedKey => s_extended_key,
-		o_KeyRelease => s_key_release,
-		o_DataAvailable => s_key_available
+		i_clock => i_clock_100mhz,
+		i_reset => s_reset,
+		io_ps2_clock => io_ps2_clock,
+		io_ps2_data => io_ps2_data,
+		o_key_scancode => s_scan_code,
+		o_key_extended => s_extended_key,
+		o_key_released => s_key_release,
+		o_key_available => s_key_available
 	);
 
 	-- TRS80 Keyboard Switches
 	keyboardSwitches : entity work.Trs80KeyMemoryMap
 	PORT MAP
 	(
-		i_Clock => CLK_100Mhz,
-		i_Reset => s_reset,
-		i_ScanCode => s_scan_code,
-		i_ExtendedKey => s_extended_key,
-		i_KeyRelease => s_key_release,
-		i_DataAvailable => s_key_available,
-		i_TypingMode => '0',
-		i_Addr => Switches,
-		o_Data => LEDs
+		i_clock => i_clock_100mhz,
+		i_reset => s_reset,
+		i_key_scancode => s_scan_code,
+		i_key_extended => s_extended_key,
+		i_key_released => s_key_release,
+		i_key_available => s_key_available,
+		i_typing_mode => '0',
+		i_addr => i_switches,
+		o_data => o_leds
 	);
 
 end Behavioral;

@@ -23,25 +23,23 @@ use ieee.numeric_std.ALL;
 entity Trs80CassettePlayer is
 generic
 (
-	p_ClockEnableFrequency : integer := 1_774_000;  -- Frequency of the clock enable
-	p_BaudRate : integer := 500;					-- Frequency of zero bit pulses
-	p_PulseWidth_us : integer := 100				-- Width of each pulse (in us)
+	p_clken_hz : integer := 1_774_000  -- Frequency of the clock enable
 );
 port
 (
     -- Control
-	i_Clock : in std_logic;                         -- Main Clock
-	i_ClockEnable : in std_logic;					-- Clock Enable
-	i_Reset : in std_logic;                         -- Reset (synchronous, active high)
+	i_clock : in std_logic;                         -- Main Clock
+	i_clken : in std_logic;					-- Clock Enable
+	i_reset : in std_logic;                         -- Reset (synchronous, active high)
 
 	-- User Interface
-	i_ButtonStartStop : in std_logic;				-- Press to toggle play/stop
-	i_ButtonRecord : in std_logic;					-- Hold while start to enter record mode
-	i_ButtonNext : in std_logic;					-- Press to load next tape
-	i_ButtonPrev : in std_logic;					-- Press to load prev tape
-	o_SelectedTape : out std_logic_vector(11 downto 0);	-- selected tape number
-	o_PlayingOrRecording : out std_logic;
-	o_Recording : out std_logic;
+	i_button_start_stop : in std_logic;				-- Press to toggle play/stop
+	i_button_record : in std_logic;					-- Hold while start to enter record mode
+	i_button_next : in std_logic;					-- Press to load next tape
+	i_button_prev : in std_logic;					-- Press to load prev tape
+	o_display : out std_logic_vector(11 downto 0);	-- selected tape number
+	o_playing_or_recording : out std_logic;
+	o_recording : out std_logic;
 
 	-- SD Inteface
 	o_sd_op_wr : out std_logic;
@@ -53,8 +51,8 @@ port
 	o_sd_data : out std_logic_vector(7 downto 0);
 
 	-- Audio
-	o_Audio : out std_logic_vector(1 downto 0);		-- to Trs80
-	i_Audio : in std_logic							-- from Trs80
+	o_audio : out std_logic_vector(1 downto 0);		-- to Trs80
+	i_audio : in std_logic							-- from Trs80
 
 );
 end Trs80CassettePlayer;
@@ -82,9 +80,9 @@ begin
 	o_sd_op_cmd <= "01" when s_recording = '0' else "10";
 	o_sd_op_block_number <= s_sd_op_block_number;
 	o_sd_op_wr <= s_sd_op_wr;
-	o_SelectedTape <= s_selected_tape when s_playing_or_recording='0' else s_position(11 downto 0);
-	o_PlayingOrRecording <= s_playing_or_recording;
-	o_Recording <= s_recording;
+	o_display <= s_selected_tape when s_playing_or_recording='0' else s_position(11 downto 0);
+	o_playing_or_recording <= s_playing_or_recording;
+	o_recording <= s_recording;
 
 	-- Combinatirial Internal
 	s_start_block_number <= "000000000000000" & s_selected_tape & "00000";		-- x 32
@@ -94,10 +92,10 @@ begin
 
 	-- Handles start/stop user control of the cassette player
 	-- (including waiting for final block flush after stopping recording)
-	start_stop_control : process(i_Clock)
+	start_stop_control : process(i_clock)
 	begin
-		if rising_edge(i_Clock) then
-			if i_Reset = '1' then 
+		if rising_edge(i_clock) then
+			if i_reset = '1' then 
 				s_playing_or_recording <= '0';
 				s_recording <= '0';
 				s_mode_changed <= '0';
@@ -115,12 +113,12 @@ begin
 						s_stop_recording <= '0';
 					end if;
 
-				elsif i_ButtonStartStop = '1' then
+				elsif i_button_start_stop = '1' then
 
 					if s_playing_or_recording = '0' then
 						-- Start play/record
 						s_playing_or_recording <= '1';
-						s_recording <= i_ButtonRecord;
+						s_recording <= i_button_record;
 						s_mode_changed <= '1';
 					else
 						-- Stop play/record
@@ -141,16 +139,16 @@ begin
 
 	-- Handles next/prev tape select buttons
 	-- (unresponsive during play/record)
-	tape_selector : process(i_Clock)
+	tape_selector : process(i_clock)
 	begin
-		if rising_edge(i_Clock) then
-			if i_Reset = '1' then 
+		if rising_edge(i_clock) then
+			if i_reset = '1' then 
 				s_selected_tape <= (others => '0');
 			elsif s_playing_or_recording = '0' then
-				if i_ButtonNext = '1' then
+				if i_button_next = '1' then
 					s_selected_tape <= std_logic_vector(unsigned(s_selected_tape) + 1);
 				end if;
-				if i_ButtonPrev = '1' then
+				if i_button_prev = '1' then
 					s_selected_tape <= std_logic_vector(unsigned(s_selected_tape) - 1);
 				end if;
 			end if;
@@ -161,40 +159,38 @@ begin
 	streamer : entity work.Trs80CassetteStreamer
 	generic map
 	(
-		p_ClockEnableFrequency => p_ClockEnableFrequency,
-		p_BaudRate => p_BaudRate,
-		p_PulseWidth_us => p_PulseWidth_us
+		p_clken_hz => p_clken_hz
 	)
 	port map
 	(
-		i_Clock => i_Clock,
-		i_ClockEnable => i_ClockEnable,
-		i_Reset => s_streamer_reset,
+		i_clock => i_clock,
+		i_clken => i_clken,
+		i_reset => s_streamer_reset,
 
-		i_RecordMode => s_recording,
+		i_record_mode => s_recording,
 
-		o_BlockNeeded => s_sd_block_needed,
-		o_Audio => o_Audio,
+		o_block_needed => s_sd_block_needed,
+		o_audio => o_audio,
 
-		i_Audio => i_Audio,
-		o_BlockAvailable => s_sd_block_available,
-		i_StopRecording => s_stop_recording,
-		o_RecordingFinished => s_recording_finished,	
+		i_audio => i_audio,
+		o_block_available => s_sd_block_available,
+		i_stop_recording => s_stop_recording,
+		o_recording_finished => s_recording_finished,	
 
-		i_DataCycle => i_sd_dcycle,
-		i_Data => i_sd_data,
-		o_Data => o_sd_data
+		i_data_cycle => i_sd_dcycle,
+		i_data => i_sd_data,
+		o_data => o_sd_data
 	);
 
 	-- Hold the stream in reset state when not playing or recording
-	s_streamer_reset <= '1' when i_Reset = '1' or s_playing_or_recording = '0' else '0';
+	s_streamer_reset <= '1' when i_reset = '1' or s_playing_or_recording = '0' else '0';
 
 	-- generates read/write commands for the SD card controller and  increments 
 	-- block number after each comamd has been invoked
-	sd_command_generator : process(i_Clock)
+	sd_command_generator : process(i_clock)
 	begin
-		if rising_edge(i_Clock) then 
-			if i_Reset = '1' then
+		if rising_edge(i_clock) then 
+			if i_reset = '1' then
 				s_sd_op_wr <= '0';
 				s_sd_op_block_number <= (others => '0');
 				s_sd_op_pending <= '0';

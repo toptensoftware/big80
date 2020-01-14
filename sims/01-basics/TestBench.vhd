@@ -14,15 +14,15 @@ begin
     divider : entity work.ClockDividerPow2
     generic map
     (
-        p_DividerWidth_1 => 2,
-        p_DividerWidth_2 => 4
+        p_divider_width_1 => 2,
+        p_divider_width_2 => 4
     )
     port map
     (
-        i_Clock => s_clock,
-        i_Reset => s_reset,
-        o_ClockEnable_1 => s_clken_1,
-        o_ClockEnable_2 => s_clken_2
+        i_clock => s_clock,
+        i_reset => s_reset,
+        o_clken_1 => s_clken_1,
+        o_clken_2 => s_clken_2
     );
 
     reset_proc: process
