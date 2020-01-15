@@ -20,7 +20,7 @@ entity UartTx is
 generic
 (
     -- Resolution
-    p_clock_hz : integer;                          -- Frequency of the clock
+    p_clock_hz : integer;                       -- Frequency of the clock
     p_baud : integer := 115200                  -- Baud Rate
 );
 port 
@@ -36,6 +36,8 @@ port
 
     -- Output
     o_uart_tx : out std_logic;                  -- UART TX Signal
+
+    -- Status
     o_busy_tx : out std_logic                   -- '1' when transmitting
 );
 end UartTx;
