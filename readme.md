@@ -21,6 +21,10 @@ Supported boards:
 
 I've written/am writing a series of blog posts about this project.  You can [read them all here](https://www.toptensoftware.com/blog/tag/big80/).
 
+## Download
+
+* [Mimas V2 .bin file](https://github.com/toptensoftware/big80/blob/master/boards/mimasv2/99-big80/bin/big80.bin?raw=true)
+
 
 ## Build Prerequisites
 
@@ -47,7 +51,7 @@ $ cd ./boards/mimasv2/99-big80
 $ make
 ```
 
-The final .bin file will be in the `./boards/mimasv2/99-big80/build` directory.
+The final .bin file will be in the `./boards/mimasv2/99-big80/bin` directory.
 
 I recommend using [this updated firmware](https://github.com/toptensoftware/MimasV2-Loader) for the Mimas V2 which will then let you upload to the board like so:
 
@@ -83,7 +87,8 @@ $ make view
 
 To use Big-80 on the Mimas V2, you'll need to:
 
-* Make sure all the DIP switches are in the on (down) position.
+* Upload the .bin file to the Mimas V2 board (see notes above)
+* Make sure all the DIP switches are in the on (down) position
 * Connect a VGA monitor
 * Connect a speaker to the audio output (optional, for sound)
 * Connect a [PS2 Pmod](https://store.digilentinc.com/pmod-ps2-keyboard-mouse-connector/) to the lower 6 pins of the left most GPIO connector (P6)
@@ -130,9 +135,11 @@ Big-80 can load cassette images using the built-in virtual cassette player.
 1. Prepare the SD card (as described below) and insert into the Mimas V2
 2. If you've just inserted the SD card, you'll need to reset the board for it to be detected
 3. Select the tape number using the 7-segment LED display and the up and down navigation buttons on the Mimas board
-4. Start the TRS-80 load (eg: SYSTEM command, type name of tape and press Enter)
-5. Start the tape playing by pressing the right navigation button.
-6. Wait for the tape to load
+3. If you have the auto-cassette option enabled (third DIP switch from the left in down position) then you don't need
+to do anything else, the cassette player will start and stop automatically. (including automatically recording)
+4. Start the TRS-80 load or save (eg: SYSTEM command, type name of tape and press Enter)
+5. Start the tape playing by pressing the right navigation button.  If you're saving, press and hold the left navigation button while pressing the right navigation button.
+6. Wait for the tape to load/save
 7. Press the right navigation button again to stop the cassette player
 
 (if you don't stop the cassette player it will continue to play indefinitely, reading each

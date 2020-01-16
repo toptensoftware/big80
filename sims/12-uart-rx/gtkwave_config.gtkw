@@ -1,0 +1,45 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Wed Jan 15 23:40:20 2020
+[*]
+[dumpfile] "/home/brad/Projects/big80/sims/12-uart-rx/build/out.vcd"
+[dumpfile_mtime] "Wed Jan 15 23:39:59 2020"
+[dumpfile_size] 21380194
+[savefile] "/home/brad/Projects/big80/sims/12-uart-rx/gtkwave_config.gtkw"
+[timestart] 0
+[size] 1280 751
+[pos] -1 -1
+*-35.765526 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.uart_tx.
+[treeopen] testbench.uart_tx.uart.
+[sst_width] 196
+[signals_width] 181
+[sst_expanded] 1
+[sst_vpaned_height] 208
+@200
+-Input
+@22
+testbench.uart_tx.uart.i_data[7:0]
+@28
+testbench.uart_tx.uart.i_data_available
+testbench.uart_tx.uart.s_busy
+@200
+-
+-Signal
+@28
+testbench.uart_tx.uart.o_uart_tx
+@420
+testbench.uart_rx.s_bits_left
+@200
+-
+-Output
+@29
+testbench.uart_rx.o_data_available
+@22
+testbench.uart_rx.o_data[7:0]
+@28
+testbench.uart_rx.o_busy_rx
+testbench.uart_rx.o_error_rx
+[pattern_trace] 1
+[pattern_trace] 0
