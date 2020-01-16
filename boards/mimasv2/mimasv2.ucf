@@ -20,10 +20,10 @@ CONFIG VCCAUX = "3.3" ;
 ################################################################################################################################################### 
     # Original confusingly labelled not from perspective of FPGA
     #NET "o_uart_tx"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
-    #NET "UART_RX"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    #NET "o_uart_rx"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
 
     # From perspective of FPGA
-    #NET "UART_RX"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    #NET "i_uart_rx"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
     #NET "o_uart_tx"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
 
 

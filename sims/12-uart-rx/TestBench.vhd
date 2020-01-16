@@ -36,7 +36,7 @@ begin
         p_clock_hz => integer(c_clock_hz),
         p_bytes_per_chunk => 4,
         p_chunks_per_second => 2000,
-        p_baud => c_baud+3000
+        p_baud => c_baud-5000
     )
     port map
     (
@@ -49,18 +49,19 @@ begin
     generic map
     (
         p_clock_hz => integer(c_clock_hz),
-        p_baud => c_baud
+        p_baud => c_baud,
+        p_sync => false,
+        p_debounce => false
     )
     port map
     ( 
         i_clock => s_clock,
-        i_clken => '1',
         i_reset => s_reset,
         i_uart_rx => s_uart_tx,
         o_data => open,
         o_data_available => open,
-        o_busy_rx => open,
-        o_error_rx => open
+        o_busy => open,
+        o_error => open
     );
 
 

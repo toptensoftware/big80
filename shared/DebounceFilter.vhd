@@ -20,7 +20,7 @@ use work.FunctionLib.all;
 entity DebounceFilter is
 generic
 (
-    p_clock_hz : integer;                      -- Hz.  eg: 100_000_000 for 100Mhz
+    p_clock_hz : integer;                   -- Hz.  eg: 100_000_000 for 100Mhz
     p_stable_us : integer;                  -- Time signal must be stable in us
     p_default_state : std_logic := '0'      -- Starting state after reset
 );

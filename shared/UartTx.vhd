@@ -2,10 +2,7 @@
 --
 -- UartTx
 --
--- UART Transmit Module
---
--- This is a really simple UART TX module.  No parity bit, no
--- configuration of start/stop bits.
+-- Simple UART TX module - no parity bit, 1 start and 1 stop bit
 --
 -- Copyright (C) 2019 Topten Software.  All Rights Reserved.
 --
@@ -19,7 +16,6 @@ use work.FunctionLib.all;
 entity UartTx is
 generic
 (
-    -- Resolution
     p_clock_hz : integer;                       -- Frequency of the clock
     p_baud : integer := 115200                  -- Baud Rate
 );
@@ -38,7 +34,7 @@ port
     o_uart_tx : out std_logic;                  -- UART TX Signal
 
     -- Status
-    o_busy_tx : out std_logic                   -- '1' when transmitting
+    o_busy : out std_logic                   -- '1' when transmitting
 );
 end UartTx;
 
@@ -88,7 +84,7 @@ begin
 
     -- Generate busy signal
     s_busy <= '0' when s_bits_left = 0 else '1';
-    o_busy_tx <= s_busy or i_data_available;
+    o_busy <= s_busy or i_data_available;
 
 end Behavioral;
 
