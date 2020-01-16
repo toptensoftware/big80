@@ -17,7 +17,7 @@ entity ReflectorTx is
 generic
 (
     -- Resolution
-    p_clock_hz : integer;                       -- Frequency of the clock
+    p_clken_hz : integer;                       -- Frequency of the clock
     p_baud : integer := 115200;                 -- Baud Rate
     p_bit_width : integer                       -- Bit width of bits to be reflected
 );
@@ -128,7 +128,7 @@ begin
     uart_tx : entity work.UartTx
     generic map
     (
-        p_clock_hz => p_clock_hz,
+        p_clken_hz => p_clken_hz,
         p_baud => p_baud
     )
     port map
