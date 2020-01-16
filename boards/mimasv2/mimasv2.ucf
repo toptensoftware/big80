@@ -111,7 +111,7 @@ CONFIG VCCAUX = "3.3" ;
     #NET "i_button_right"               LOC = L18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
     #NET "i_button_down"                LOC = M16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
     #NET "i_button_up"                  LOC = L17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW4
-    #NET "Button_A"                   LOC = K17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW6
+    #NET "i_button_a"                   LOC = K17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW6
     #NET "i_button_b"                   LOC = K18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW6
 
 

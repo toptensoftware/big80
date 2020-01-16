@@ -1,0 +1,18 @@
+# This is a cut down version of the MimasV2 UCF file containing
+# just the signals relevant for this project.
+
+CONFIG VCCAUX = "3.3" ;
+
+
+    NET "i_clock_100mhz"            LOC = V10     | IOSTANDARD = LVCMOS33 | PERIOD = 100MHz ;
+    NET "i_button_b"              LOC = K18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW6
+    #NET "UART_RX"               LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_uart_tx"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    #NET "UART_RX"                  LOC = R10     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 3
+    #NET "o_uart2_tx"                  LOC = R11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 1
+
+
+    NET "i_buttons[0]"                LOC = M18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
+    NET "i_buttons[1]"               LOC = L18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
+    NET "i_buttons[2]"                LOC = M16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
+    NET "i_buttons[3]"                  LOC = L17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW4

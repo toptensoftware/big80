@@ -16,7 +16,7 @@ use work.FunctionLib.all;
 entity UartTx is
 generic
 (
-    p_clock_hz : integer;                       -- Frequency of the clock
+    p_clken_hz : integer;                       -- Frequency of the clock
     p_baud : integer := 115200                  -- Baud Rate
 );
 port 
@@ -49,7 +49,7 @@ begin
     clock_divider : entity work.ClockDivider
     generic map
     (
-        p_period => p_clock_hz / p_baud
+        p_period => p_clken_hz / p_baud
     )
     port map
     (
