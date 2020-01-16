@@ -94,7 +94,7 @@ begin
                     -- we're getting close
                     if s_ticks_since_edge = c_ticks_per_bit - 1 or 
                                 (s_prev_uart_rx /= i_uart_rx and 
-                                 s_ticks_since_edge > c_ticks_per_bit * 13 / 16) then
+                                 s_ticks_since_edge > c_ticks_per_bit * 11 / 16) then
 
                         -- end of the current bit
                         s_bits_left <= s_bits_left - 1;
@@ -126,7 +126,7 @@ begin
                     -- If there's an edge near the start of the bit then it's probably a late
                     -- running transition between the previous bit and this bit.  Re-sync
                     -- the tick counter to this edge as the start of the bit.
-                    if s_prev_uart_rx /= i_uart_rx and s_ticks_since_edge < c_ticks_per_bit * 3 / 16 then
+                    if s_prev_uart_rx /= i_uart_rx and s_ticks_since_edge < c_ticks_per_bit * 5 / 16 then
                         s_ticks_since_edge <= 0;
                     end if;
 

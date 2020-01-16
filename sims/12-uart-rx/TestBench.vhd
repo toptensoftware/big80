@@ -36,7 +36,7 @@ begin
         p_clock_hz => integer(c_clock_hz),
         p_bytes_per_chunk => 4,
         p_chunks_per_second => 2000,
-        p_baud => c_baud
+        p_baud => c_baud+3000
     )
     port map
     (
@@ -49,7 +49,7 @@ begin
     generic map
     (
         p_clock_hz => integer(c_clock_hz),
-        p_baud => c_baud - 5000
+        p_baud => c_baud
     )
     port map
     ( 
