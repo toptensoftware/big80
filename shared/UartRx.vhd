@@ -28,8 +28,8 @@ generic
     -- Resolution
     p_clock_hz : integer;                       -- Frequency of the clock
     p_baud : integer := 115200;                 -- Baud Rate
-    p_sync: boolean := true;                 -- Sync the i_uart_rx signal to this clock domain
-    p_debounce: boolean := true                -- Debounce the incoming signal
+    p_sync: boolean := true;                    -- Sync the i_uart_rx signal to this clock domain
+    p_debounce: boolean := true                 -- Debounce the incoming signal
 );
 port 
 ( 

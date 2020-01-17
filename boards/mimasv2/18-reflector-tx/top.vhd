@@ -64,7 +64,7 @@ begin
 	counter_pulse : entity work.ClockDivider
 	generic map
 	(
-		p_period => 100_000_000
+		p_period => 20_000_000
 	)
 	port map
 	( 
