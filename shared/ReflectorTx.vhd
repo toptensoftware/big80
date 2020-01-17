@@ -2,7 +2,7 @@
 --
 -- ReflectorTx
 --
--- Simple UART TX module - no parity bit, 1 start and 1 stop bit
+-- Reflect a bit pattern from this FPGA design to a PC
 --
 -- Copyright (C) 2019 Topten Software.  All Rights Reserved.
 --
@@ -83,7 +83,7 @@ begin
                             s_prev_signals <= i_signals;
 
                             -- setup transfer
-                            s_transmit(p_bit_width-1 downto 0) <= i_signals;
+                            s_transmit <= i_signals;
                             s_bytes_left <= c_bytes_per_packet - 1;
 
                             -- start transfer
@@ -144,7 +144,7 @@ begin
 
 
     data_lt7 : if p_bit_width < 7 generate
-        s_uart_data(6 - (7-p_bit_width) downto 0) <= (others => '0');
+        s_uart_data(6 downto p_bit_width) <= (others => '0');
     end generate;
 
     data_eq7 : if p_bit_width <= 7 generate
