@@ -2,14 +2,14 @@ const ansiEscapes = require('ansi-escapes');
 const readline = require('readline');
 const SerialPort = require('serialport');
 
+// Open Serial port
+const port = new SerialPort('COM6', {
+    baudRate: 115200
+})
+
 // Clear screen and make room for status line
 process.stdout.write(ansiEscapes.clearScreen);
 process.stdout.write("\n\n");
-
-// Open Serial port
-const port = new SerialPort('COM4', {
-    baudRate: 115200
-})
 
 // Show status message
 function showStatus(msg)
@@ -45,6 +45,19 @@ port.on('data', function (data) {
 });
   
 
+function encodeBits(bits)
+{
+    let byteCount = parseInt((bits.length + 6) / 7);
+    bits = bits.padStart(byteCount * 7, '0');
+    let buf = Buffer.allocUnsafe(byteCount);
+    for (let i=0; i<byteCount; i++)
+    {
+        let subbits = bits.substr(-7 - i * 7, 7);
+        buf[i] = parseInt(subbits, 2) | (i==0 ? 0x80 : 0);
+    }
+    return buf;
+}
+
 
 // Readline console
 const rl = readline.createInterface({
@@ -63,6 +76,14 @@ rl.on('line', (line) => {
         return;
     }
 
+    port.write(encodeBits("11110000000010000001"), function (err, written) {
+        if (err)
+            console.log("err", err);
+        else
+            console.log("ok");
+    });
+    
+    
     // Display command result
     process.stdout.write(ansiEscapes.cursorTo(0,2));
     process.stdout.write(ansiEscapes.eraseDown);

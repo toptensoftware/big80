@@ -26,7 +26,7 @@ begin
 
 	-- Reflector component automatically tracks
 	-- changes to its input signals and sends them
-	-- via uart to the PC as quickly as possible
+	-- via uart to the PC
     reflector : entity work.ReflectorTx
     generic map
     (
