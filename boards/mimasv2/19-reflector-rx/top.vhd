@@ -18,12 +18,17 @@ end top;
 architecture Behavioral of top is
 	signal s_reset : std_logic;
 	signal s_signals : std_logic_vector(19 downto 0);
+	signal s_seven_segment_value : std_logic_vector(12 downto 0);
 begin
 
 	-- Reset signal
 	s_reset <= not i_button_b;
 
+	-- Bottom 8 bits to LEDs
 	o_leds <= s_signals(7 downto 0);
+
+	-- Top 12 bits to seven-segment
+	s_seven_segment_value <= s_signals(19 downto 8)
 
 	-- Reflector component automatically tracks
 	-- changes to its input signals and sends them
@@ -52,7 +57,7 @@ begin
 	( 
 		i_clock => i_clock_100mhz,
 		i_reset => s_reset,
-		i_data => s_signals(19 downto 8),
+		i_data => s_seven_segment_value,
 		o_segments => o_seven_segment(7 downto 1),
 		o_segments_en => o_seven_segment_en
 	);
