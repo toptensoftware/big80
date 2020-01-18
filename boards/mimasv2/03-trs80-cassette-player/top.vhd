@@ -235,7 +235,7 @@ begin
 	uart_txer : entity work.UartTx
 	generic map
 	(
-		p_clock_hz => 80_000_000
+		p_clken_hz => 80_000_000
 	)
 	port map
 	( 
@@ -245,7 +245,7 @@ begin
 		i_data => s_dout,
 		i_data_available => s_dout_available_pulse,
 		o_uart_tx => s_uart_tx,
-		o_busy_tx => s_uart_busy
+		o_busy => s_uart_busy
 	);	
 
 	-- Generate fake audio to test the recorder with
