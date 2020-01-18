@@ -5,8 +5,8 @@ TOPMODULE ?= top
 BUILDDIR ?= ./build
 OUTDIR ?= ./build
 BINFILE ?= $(OUTDIR)/$(PROJECTNAME).bin
-SOURCEFILES ?= *.vhd *.ucf //shared/SuppressBenignWarnings.vhd
-INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://shared --deppath://shared-trs80 --deppath:./coregen)
+SOURCEFILES ?= *.vhd *.ucf //fpgakit/shared/SuppressBenignWarnings.vhd
+INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://fpgakit/shared --deppath://shared-trs80 --deppath:./coregen)
 
 # Build
 $(BINFILE): $(INPUTFILES)

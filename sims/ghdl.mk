@@ -4,7 +4,7 @@ GHDLFLAGS ?=
 XILT ?= xilt
 GHDL ?= ghdl
 GTKWAVE ?= gtkwave
-INPUTFILES1 := $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://shared --deppath://shared-trs80)
+INPUTFILES1 := $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://fpgakit/shared --deppath://shared-trs80)
 INPUTFILES ?= $(INPUTFILES1)
 TOPMODULE1 := $(shell $(GHDL) -f $(INPUTFILES) | awk '/entity (.*) \*\*/ {print $$2}')
 TOPMODULE ?= $(TOPMODULE1)
@@ -42,6 +42,6 @@ view: run
 
 # Clean
 clean:
-	rm -rf build
+	@rm -rf build
 
 

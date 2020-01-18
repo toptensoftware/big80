@@ -1,0 +1,5 @@
+[submodule "fpgakit"]
+	path = fpgakit
+	url = https://github.com/toptensoftware/fpgakit.git
+	branch = master
+	

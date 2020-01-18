@@ -4,10 +4,10 @@
 			"path": "."
 		},
 		{
-			"path": "../../../fpgakit/shared"
+			"path": "../../fpgakit/shared"
 		},
 		{
-			"path": "../../../shared-trs80"
+			"path": "../../shared-trs80"
 		}
 	],
 	"settings": {}

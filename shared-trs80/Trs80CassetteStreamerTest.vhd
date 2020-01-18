@@ -112,7 +112,7 @@ begin
 	txer : entity work.UartTx
 	generic map
 	(
-		p_clock_hz  => p_clock_hz
+		p_clken_hz  => p_clock_hz
 	)
 	port map
 	( 
@@ -122,7 +122,7 @@ begin
 		i_data => s_sd_data,
 		i_data_available => s_tx_data_available,
 		o_uart_tx => s_tx,
-		o_busy_tx => s_tx_busy
+		o_busy => s_tx_busy
 	);
 
 	-- Debounce button
