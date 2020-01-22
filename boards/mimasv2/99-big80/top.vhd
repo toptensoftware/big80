@@ -37,7 +37,15 @@ port
 	o_leds : out std_logic_vector(7 downto 0);
 	o_seven_segment : out std_logic_vector(7 downto 0);
 	o_seven_segment_en : out std_logic_vector(2 downto 0);
-	o_audio : out std_logic_vector(1 downto 0)
+	o_audio : out std_logic_vector(1 downto 0);
+
+	-- PSX Signals
+	o_psx_att : out std_logic;
+	o_psx_clock : out std_logic;
+	o_psx_hoci : out std_logic;
+	i_psx_hico : in std_logic;
+	i_psx_ack : in std_logic
+	
 );
 end top;
 
@@ -99,6 +107,7 @@ architecture Behavioral of top is
 	signal s_is_ram_range : std_logic;
 	signal s_is_keyboard_range : std_logic;
 	signal s_is_cas_port : std_logic;
+	signal s_is_trisstick_port : std_logic;
 
 	-- Keyboard
 	signal s_key_scancode : std_logic_vector(6 downto 0);
@@ -150,6 +159,9 @@ architecture Behavioral of top is
 	signal s_cas_auto_start : std_logic;
 	signal s_cas_auto_record : std_logic;
 	signal s_cas_auto_stop : std_logic;
+
+	-- PSX Controller
+	signal s_psx_buttons : std_logic_vector(15 downto 0);
 
 begin
 
@@ -414,6 +426,7 @@ begin
 	s_port_wr <= '1' when (s_cpu_iorq_n = '0' and s_cpu_mreq_n = '1' and s_cpu_wr_n = '0') else '0';
 
 	s_is_cas_port <= '1' when (s_cpu_addr(7 downto 0) = x"FF") else '0';
+	s_is_trisstick_port <= '1' when (s_cpu_addr(7 downto 0) = x"13") else '0';
 
 	-- Memory range mapping
 	memmap : process(s_cpu_addr)
@@ -456,7 +469,8 @@ begin
 							s_is_vram_range, s_video_ram_dout_cpu,
 							s_is_keyboard_Range, s_key_dout_cpu,
 							s_port_rd,
-							s_is_cas_port, s_cas_audio_in, s_cas_audio_in_edge
+							s_is_cas_port, s_cas_audio_in, s_cas_audio_in_edge,
+							s_is_trisstick_port, s_psx_buttons
 							)
 	begin
 
@@ -475,6 +489,14 @@ begin
 		elsif s_port_rd = '1' then
 			if s_is_cas_port = '1' then
 				s_cpu_din <= s_cas_audio_in_edge & "00000" & s_cas_audio_in;
+			end if;
+			if s_is_trisstick_port = '1' then
+				s_cpu_din <= "111" & 
+					not s_psx_buttons(14) & 	-- X
+					not s_psx_buttons(7) &		-- Left
+					not s_psx_buttons(5) &		-- Right 
+					not s_psx_buttons(6) & 		-- Down
+					not s_psx_buttons(4);		-- Up
 			end if;
 		end if;
 
@@ -661,6 +683,25 @@ begin
 	-- When auto cassette mode turned off, hide the motor signal from the detector
 	s_cas_motor_monitored <= s_cas_motor and i_switch_auto_cas;
 
+	psxhost : entity work.PsxControllerHost
+	generic map
+	(
+		p_clken_hz => 80_000_000,
+		p_poll_hz => 60
+	)
+	port map
+	( 
+		i_clock => s_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		o_psx_att => o_psx_att,
+		o_psx_clock => o_psx_clock,
+		o_psx_hoci => o_psx_hoci,
+		i_psx_hico => i_psx_hico,
+		i_psx_ack => i_psx_ack,
+		o_connected => open,
+		o_buttons => s_psx_buttons
+	);
 
 end Behavioral;
 

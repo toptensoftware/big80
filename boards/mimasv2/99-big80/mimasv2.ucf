@@ -98,3 +98,10 @@ CONFIG VCCAUX = "3.3" ;
     NET "o_seven_segment_en[1]"      LOC = A2      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   
     NET "o_seven_segment_en[0]"      LOC = B2      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
 
+
+    # -- P7 for PSX controller --
+    NET "o_psx_hoci"                    LOC = U8          | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "i_psx_hico"                    LOC = V8 | PULLUP | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_psx_att"                     LOC = R8          | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_psx_clock"                   LOC = T8          | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "i_psx_ack"                     LOC = R5 | PULLUP | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
