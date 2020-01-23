@@ -493,8 +493,8 @@ begin
 			if s_is_trisstick_port = '1' then
 				s_cpu_din <= "111" & 
 					not s_psx_buttons(14) & 	-- X
-					not s_psx_buttons(7) &		-- Left
 					not s_psx_buttons(5) &		-- Right 
+					not s_psx_buttons(7) &		-- Left
 					not s_psx_buttons(6) & 		-- Down
 					not s_psx_buttons(4);		-- Up
 			end if;
