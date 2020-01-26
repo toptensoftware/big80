@@ -7,6 +7,7 @@ OUTDIR ?= ./build
 BINFILE ?= $(OUTDIR)/$(PROJECTNAME).bin
 SOURCEFILES ?= *.vhd *.ucf //fpgakit/shared/SuppressBenignWarnings.vhd
 INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://fpgakit/shared --deppath://shared-trs80 --deppath:./coregen)
+OTHERBINDEPS ?=
 
 # Build
 $(BINFILE): $(INPUTFILES)
