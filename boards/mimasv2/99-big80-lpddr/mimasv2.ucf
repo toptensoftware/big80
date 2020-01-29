@@ -1,0 +1,159 @@
+# This is a cut down version of the MimasV2 UCF file containing
+# just the signals relevant for this project.
+
+CONFIG VCCAUX = "3.3" ;
+
+    # --- Clocking ---
+   NET "i_clock_100mhz"                  LOC = V10     | IOSTANDARD = LVCMOS33 | PERIOD = 100MHz ;
+
+    # --- UART ---
+    NET "o_uart_tx"                     LOC = B8  | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+
+    # --- DIP Switches ---
+    NET "i_switch_typing_mode"           LOC = C17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 7
+    NET "i_switch_turbo_tape"                LOC = C18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 8
+    NET "i_switch_green_screen"          LOC = D17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 6
+    NET "i_switch_no_scan_lines"            LOC = D18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 5
+    NET "i_switch_cas_audio"                LOC = E18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 4
+    NET "i_switch_auto_cas"                LOC = E16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 3
+    NET "i_switch_run"                  LOC = F17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP;  #DP 1
+
+###################################################################################################################################################
+#                                              Push Buttons Switches                                                                              #
+################################################################################################################################################### 
+
+    NET "i_button_left"                LOC = M18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
+    NET "i_button_right"               LOC = L18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
+    NET "i_button_down"                LOC = M16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW5
+    NET "i_button_up"                  LOC = L17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW4
+    NET "i_button_b"                   LOC = K18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW6
+
+
+###################################################################################################################################################
+#                                                    VGA                                                                                          #
+################################################################################################################################################### 
+    NET "o_horz_sync"                      LOC = B12     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_vert_sync"                      LOC = A12     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_red[2]"                     LOC = C9      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_red[1]"                     LOC = B9      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_red[0]"                     LOC = A9      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_green[2]"                   LOC = C11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_green[1]"                   LOC = A10     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_green[0]"                   LOC = C10     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_blue[2]"                    LOC = A11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_blue[1]"                    LOC = B11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+
+###################################################################################################################################################
+#                                                   HEADER P6  (Bottom row of 6 pins)                                                                                   #
+################################################################################################################################################### 
+
+    NET "io_ps2_data"                   LOC = V7      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 2
+    NET "io_ps2_clock"                  LOC = V5      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 6
+
+###################################################################################################################################################
+#                                                   Micro SD Card                                                                                 #
+###################################################################################################################################################
+    NET "i_sd_miso"                       LOC = K14     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #MISO
+    NET "o_sd_ss_n"                       LOC = L13     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #CS
+    NET "o_sd_mosi"                       LOC = G16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #MOSI
+    NET "o_sd_sclk"                       LOC = L12     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #CLK
+
+
+###################################################################################################################################################
+#                                                    LEDs                                                                                         #
+################################################################################################################################################### 
+
+    NET "o_leds[7]"                     LOC = P15     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D1
+    NET "o_leds[6]"                     LOC = P16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D2
+    NET "o_leds[5]"                     LOC = N15     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D3
+    NET "o_leds[4]"                     LOC = N16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D4
+    NET "o_leds[3]"                     LOC = U17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D5
+    NET "o_leds[2]"                     LOC = U18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D6
+    NET "o_leds[1]"                     LOC = T17     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D7
+    NET "o_leds[0]"                     LOC = T18     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  #D8
+
+###################################################################################################################################################
+#                                                    Audio                                                                                        #
+################################################################################################################################################### 
+
+    NET "o_audio[0]"                     LOC = B16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  # o_audio Left               
+    NET "o_audio[1]"                     LOC = A16     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;  # o_audio Right
+
+###################################################################################################################################################
+#                                               Seven Segment Display                                                                             #
+################################################################################################################################################### 
+
+    NET "o_seven_segment[7]"            LOC = A3      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #a
+    NET "o_seven_segment[6]"            LOC = B4      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #b
+    NET "o_seven_segment[5]"            LOC = A4      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #c
+    NET "o_seven_segment[4]"            LOC = C4      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #d
+    NET "o_seven_segment[3]"            LOC = C5      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #e
+    NET "o_seven_segment[2]"            LOC = D6      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #f
+    NET "o_seven_segment[1]"            LOC = C6      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #g
+    NET "o_seven_segment[0]"            LOC = A5      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #dot
+    
+    NET "o_seven_segment_en[2]"      LOC = B3      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #Enables for Seven Segment
+    NET "o_seven_segment_en[1]"      LOC = A2      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   
+    NET "o_seven_segment_en[0]"      LOC = B2      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+
+
+    # -- P7 for PSX controller --
+    NET "o_psx_hoci"                    LOC = U8          | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "i_psx_hico"                    LOC = V8 | PULLUP | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_psx_att"                     LOC = R8          | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "o_psx_clock"                   LOC = T8          | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "i_psx_ack"                     LOC = R5 | PULLUP | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+
+
+###################################################################################################################################################
+#                                                 LPDDR MT46H32M16XXXX-5                                                                          #
+################################################################################################################################################### 
+    NET "lpddr/mig/memc?_wrapper_inst/memc?_mcb_raw_wrapper_inst/selfrefresh_mcb_mode" TIG;
+    NET "lpddr/mig/memc3_infrastructure_inst/sys_clk_ibufg" TIG;
+    NET "lpddr/mig/c?_pll_lock" TIG;
+
+    NET  "mcb_xcl[0]"    LOC = G3 | IOSTANDARD = DIFF_MOBILE_DDR;  # mcb3_dram_ck
+    NET  "mcb_xcl[1]"    LOC = G1 | IOSTANDARD = DIFF_MOBILE_DDR;  # mcb3_dram_ck_n
+
+    NET  "mcb_xtx[0]"    LOC = J7 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[0] 
+    NET  "mcb_xtx[1]"    LOC = J6 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[1] 
+    NET  "mcb_xtx[2]"    LOC = H5 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[2] 
+    NET  "mcb_xtx[3]"    LOC = L7 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[3] 
+    NET  "mcb_xtx[4]"    LOC = F3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[4] 
+    NET  "mcb_xtx[5]"    LOC = H4 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[5] 
+    NET  "mcb_xtx[6]"    LOC = H3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[6] 
+    NET  "mcb_xtx[7]"    LOC = H6 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[7] 
+    NET  "mcb_xtx[8]"    LOC = D2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[8] 
+    NET  "mcb_xtx[9]"    LOC = D1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[9] 
+    NET  "mcb_xtx[10]"   LOC = F4 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[10]
+    NET  "mcb_xtx[11]"   LOC = D3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[11]
+    NET  "mcb_xtx[12]"   LOC = G6 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_a[12]
+    NET  "mcb_xtx[13]"   LOC = F2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_ba[0]
+    NET  "mcb_xtx[14]"   LOC = F1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_ba[1]
+    NET  "mcb_xtx[15]"   LOC = H7 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_cke
+    NET  "mcb_xtx[16]"   LOC = L5 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_ras_n
+    NET  "mcb_xtx[17]"   LOC = K5 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_cas_n
+    NET  "mcb_xtx[18]"   LOC = E3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_we_n
+    NET  "mcb_xtx[19]"   LOC = K3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dm   
+    NET  "mcb_xtx[20]"   LOC = K4 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_udm 
+
+
+    NET  "mcb_xtr[0]"    LOC = L2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[0] 
+    NET  "mcb_xtr[1]"    LOC = L1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[1]
+    NET  "mcb_xtr[2]"    LOC = K2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[2]
+    NET  "mcb_xtr[3]"    LOC = K1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[3]
+    NET  "mcb_xtr[4]"    LOC = H2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[4]
+    NET  "mcb_xtr[5]"    LOC = H1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[5]
+    NET  "mcb_xtr[6]"    LOC = J3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[6]
+    NET  "mcb_xtr[7]"    LOC = J1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[7]
+    NET  "mcb_xtr[8]"    LOC = M3 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[8]
+    NET  "mcb_xtr[9]"    LOC = M1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[9]
+    NET  "mcb_xtr[10]"   LOC = N2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[10]
+    NET  "mcb_xtr[11]"   LOC = N1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[11]
+    NET  "mcb_xtr[12]"   LOC = T2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[12]
+    NET  "mcb_xtr[13]"   LOC = T1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[13]
+    NET  "mcb_xtr[14]"   LOC = U2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[14]
+    NET  "mcb_xtr[15]"   LOC = U1 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dq[15]
+    NET  "mcb_xtr[16]"   LOC = P2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_udqs
+    NET  "mcb_xtr[17]"   LOC = L4 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dqs
+    NET  "mcb_xtr[18]"   LOC = N4 | IOSTANDARD = MOBILE_DDR;       # mcb3_rzq"    

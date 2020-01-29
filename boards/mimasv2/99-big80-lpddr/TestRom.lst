@@ -1,0 +1,48 @@
+                                
+
+0000: 21 00 40                      ld  hl,0x4000
+0003: 11 00 04                      ld  de,8
+0006: 06 00                         ld  b,0
+                                fill_loop:
+0008: 70                            ld  (hl),b
+0009: 23                            inc hl
+000A: 04                            inc b
+000B: 1B                            dec de
+000C: 7A                            ld  a,d
+000D: B3                            or  a,e
+000E: 20 F8                         jr  nz,fill_loop
+                                
+0010: 21 00 40                      ld  hl,0x4000
+0013: 11 00 50                      ld  de,0x5000
+0016: 01 08 00                      ld  bc,8
+0019: ED B0                         ldir
+                                
+001B: 21 00 50                      ld  hl,0x5000
+001E: 11 00 3C                      ld  de,0x3c00
+0021: 01 08 00                      ld  bc,8
+0024: ED B0                         ldir
+                                
+                                ; Rotating LEDs
+0026: 31 00 F0                      ld SP,0xF000
+0029: 3E 01                         ld a,1
+                                loop_continue:
+002B: D3 00                         out (0),a
+002D: CD 33 00                      call delay
+0030: 07                            rlca
+0031: 18 F8                         jr  loop_continue
+                                
+                                delay:
+0033: F5                            push af
+0034: 11 32 00                      ld de,50
+0037: 06 00                         ld b, 0
+                                dloop:
+0039: 10 FE                         djnz $
+003B: 1B                            dec de
+003C: 7A                            ld a,d
+003D: B3                            or e
+003E: 20 F9                         jr nz,dloop
+0040: F1                            pop af
+0041: C9                            ret
+                                
+
+0042:
