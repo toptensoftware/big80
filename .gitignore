@@ -16,3 +16,6 @@ build/
 
 # Node Stuff
 node_modules
+
+*.vcd
+*.gtkw

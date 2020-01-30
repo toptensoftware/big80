@@ -182,44 +182,44 @@ architecture Behavioral of top is
     signal s_sri_addr : std_logic_vector(29 downto 0);
 	signal s_calib_done : std_logic;
 
-	signal s_logic_capture : std_logic_vector(119 downto 0);
-	signal s_logic_trigger : std_logic;
-	signal s_pc : std_logic_vector(15 downto 0);
+--	signal s_logic_capture : std_logic_vector(119 downto 0);
+--	signal s_logic_trigger : std_logic;
+--	signal s_pc : std_logic_vector(15 downto 0);
 	signal s_m1_n : std_logic;
 begin
 
+--
+--	-- Logic Capture
+--	s_logic_capture <= 
+--		s_pc & s_cpu_addr & s_cpu_din & s_cpu_dout 
+--		& s_cpu_mreq_n & s_cpu_iorq_n 
+--		& s_cpu_rd_n & s_cpu_wr_n 
+--		& mig_xrx_p0(44 downto 13)			-- rd data
+--		& mig_xtx_p0(78 downto 47)			-- wr data
+--		& mig_xtx_p0(46 downto 43)			-- wr mask
+--		;
+--	s_logic_trigger <= 
+--		'1' when s_pc = x"0006" else '0';
+--
+--	cap : entity work.LogicCapture
+--	generic map
+--	(
+--		p_clock_hz => 80_000_000,
+--		p_bit_width => 120,
+--		p_addr_width => 11
+--	)
+--	port map
+--	( 
+--		i_clock => s_clock_80mhz,
+--		i_clken => s_clken_cpu,
+--		i_reset => s_reset,
+--		i_trigger => s_logic_trigger,
+--		i_signals => s_logic_capture,
+--		o_uart_tx => o_uart_tx
+--	);
+--
 
-	-- Logic Capture
-	s_logic_capture <= 
-		s_pc & s_cpu_addr & s_cpu_din & s_cpu_dout 
-		& s_cpu_mreq_n & s_cpu_iorq_n 
-		& s_cpu_rd_n & s_cpu_wr_n 
-		& mig_xrx_p0(44 downto 13)			-- rd data
-		& mig_xtx_p0(78 downto 47)			-- wr data
-		& mig_xtx_p0(46 downto 43)			-- wr mask
-		;
-	s_logic_trigger <= 
-		'1' when s_pc = x"0006" else '0';
-
-	cap : entity work.LogicCapture
-	generic map
-	(
-		p_clock_hz => 80_000_000,
-		p_bit_width => 120,
-		p_addr_width => 11
-	)
-	port map
-	( 
-		i_clock => s_clock_80mhz,
-		i_clken => s_clken_cpu,
-		i_reset => s_reset,
-		i_trigger => s_logic_trigger,
-		i_signals => s_logic_capture,
-		o_uart_tx => o_uart_tx
-	);
-
-
---	cap : entity work.ReflectorTx
+--	ref : entity work.ReflectorTx
 --	generic map
 --	(
 --		p_clken_hz => 1_774_000,
@@ -233,6 +233,22 @@ begin
 --		i_signals => s_logic_capture,
 --		o_uart_tx => o_uart_tx
 --	);
+
+--	-- Capture PC address
+--	pcproc : process(s_clock_80mhz)
+--	begin
+--		if rising_edge(s_clock_80mhz) then 
+--			if s_reset = '1' then
+--				s_pc <= x"FFFF";
+--			else
+--				if s_m1_n = '0' then
+--					s_pc <= s_cpu_addr;
+--				end if;
+--			end if;
+--		end if;
+--	end process;
+	o_uart_tx <= '0';
+
 
 	-- Reset signal
 	s_reset <= '1' when i_button_b = '0' or s_soft_reset /= 0 else '0';
@@ -408,8 +424,8 @@ begin
 	);
 
 	-- Model 1 ROM (12K)
---	rom : entity work.Trs80Level2Rom
-	rom : entity work.TestRom
+	rom : entity work.Trs80Level2Rom
+--	rom : entity work.TestRom
 	PORT MAP
 	(
 		clock => s_clock_80mhz,
@@ -479,20 +495,6 @@ begin
 		HALT_n => open,
 		BUSAK_n => open
 	);
-
-	-- Capture PC address
-	pcproc : process(s_clock_80mhz)
-	begin
-		if rising_edge(s_clock_80mhz) then 
-			if s_reset = '1' then
-				s_pc <= x"FFFF";
-			else
-				if s_m1_n = '0' then
-					s_pc <= s_cpu_addr;
-				end if;
-			end if;
-		end if;
-	end process;
 
 	-- Edge detection for memory read/write
 	mem_wr_edge_detector : entity work.EdgeDetector
@@ -590,15 +592,15 @@ begin
 
 	end process;
 
---	o_leds <= 
---		s_sd_status(4)				-- SD Init
---		 & s_sd_status(7)			-- SDHC
---		 & s_sd_status(2)			-- SD Write
---		 & s_sd_status(1)			-- SD Read
---		 & (s_cas_audio_out(0) or  s_cas_audio_out(1))
---		 & (s_cas_audio_in(0) or s_cas_audio_in(1))
---		 & s_recording
---		 & s_playing_or_recording;
+	o_leds <= 
+		s_sd_status(4)				-- SD Init
+		 & s_sd_status(7)			-- SDHC
+		 & s_sd_status(2)			-- SD Write
+		 & s_sd_status(1)			-- SD Read
+		 & (s_cas_audio_out(0) or  s_cas_audio_out(1))
+		 & (s_cas_audio_in(0) or s_cas_audio_in(1))
+		 & s_recording
+		 & s_playing_or_recording;
 
 
 	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
@@ -616,7 +618,7 @@ begin
 	);
 	o_seven_segment(0) <= '1';
 
-	--s_seven_seg_value <= s_selected_Tape when i_button_left = '1' else s_sd_last_block_number(11 downto 0);
+	s_seven_seg_value <= s_selected_Tape;
 
 	sdcard : entity work.SDCardController
 	generic map
@@ -745,29 +747,29 @@ begin
 	end process;
 
 	-- Listen for port writes
-	port_handler : process(s_clock_80mhz)
-	begin
-		if rising_edge(s_clock_80mhz) then
-			if s_reset = '1' then
-				o_leds <= (others => '0');
-				s_seven_seg_value <= (others => '0');
-			elsif s_clken_cpu = '1' then
-			
-				if s_port_wr = '1' then
-
-					if s_cpu_addr(7 downto 0) = x"00" then
-						o_leds <= s_cpu_dout;
-					elsif s_cpu_addr(7 downto 0) = x"01" then
-						s_seven_seg_value(7 downto 0) <= s_cpu_dout;
-					elsif s_cpu_addr(7 downto 0) = x"02" then
-						s_seven_seg_value(11 downto 8) <= s_cpu_dout(3 downto 0);
-					end if;
-
-				end if;
-
-			end if;
-		end if;
-	end process;
+--	port_handler : process(s_clock_80mhz)
+--	begin
+--		if rising_edge(s_clock_80mhz) then
+--			if s_reset = '1' then
+--				o_leds <= (others => '0');
+--				s_seven_seg_value <= (others => '0');
+--			elsif s_clken_cpu = '1' then
+--			
+--				if s_port_wr = '1' then
+--
+--					if s_cpu_addr(7 downto 0) = x"00" then
+--						o_leds <= s_cpu_dout;
+--					elsif s_cpu_addr(7 downto 0) = x"01" then
+--						s_seven_seg_value(7 downto 0) <= s_cpu_dout;
+--					elsif s_cpu_addr(7 downto 0) = x"02" then
+--						s_seven_seg_value(11 downto 8) <= s_cpu_dout(3 downto 0);
+--					end if;
+--
+--				end if;
+--
+--			end if;
+--		end if;
+--	end process;
 
 	-- Output audio on both channels
 	s_audio <=  s_cas_audio_out(0) xor s_cas_audio_in(0)	-- all cass i/o 

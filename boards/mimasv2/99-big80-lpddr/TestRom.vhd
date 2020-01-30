@@ -24,7 +24,7 @@ architecture behavior of TestRom is
 	type mem_type is array(0 to 16383) of std_logic_vector(7 downto 0);
 	signal ram : mem_type := (
 
-x"21", x"00", x"40", x"11", x"00", x"04", x"06", x"00", x"70", x"23", x"04", x"1b", x"7a", x"b3", x"20", x"f8",
+	x"21", x"00", x"40", x"11", x"08", x"00", x"06", x"00", x"70", x"23", x"04", x"1b", x"7a", x"b3", x"20", x"f8",
 	x"21", x"00", x"40", x"11", x"00", x"50", x"01", x"08", x"00", x"ed", x"b0", x"21", x"00", x"50", x"11", x"00",
 	x"3c", x"01", x"08", x"00", x"ed", x"b0", x"31", x"00", x"f0", x"3e", x"01", x"d3", x"00", x"cd", x"33", x"00",
 	x"07", x"18", x"f8", x"f5", x"11", x"32", x"00", x"06", x"00", x"10", x"fe", x"1b", x"7a", x"b3", x"20", x"f9",
