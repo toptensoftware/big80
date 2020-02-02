@@ -209,7 +209,7 @@ The directory structure of this project is as follows:
 * `./boards` - anything that's specific to a particular FPGA board.
 * `./resources` - miscellaneous resources like original ROM images etc...
 * `./shared` - shared VHDL components that aren't specific to a TRS-80
-* `./shared-trs80` shared VHDL code specified to a TRS-80
+* `./shared` shared VHDL code specified to a TRS-80
 * `./sims` - all simulation test benches
 * `./tools` - tools and scripts.
 
