@@ -98,9 +98,9 @@ begin
 	rom : entity work.TestRom
 	PORT MAP
 	(
-		clock => s_clock_80mhz,
-		addr => s_rom_addr,
-		dout => s_rom_dout
+		i_clock => s_clock_80mhz,
+		i_addr => s_rom_addr,
+		o_dout => s_rom_dout
 	);
 
 

@@ -6,15 +6,13 @@
 library ieee;
 use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.ALL;
-use std.textio.all;
-use ieee.std_logic_textio.all;
 
 entity TestRom is
 port
 (
-	clock : in std_logic;
-	addr : in std_logic_vector(9 downto 0);
-	dout : out std_logic_vector(7 downto 0)
+	i_clock : in std_logic;
+	i_addr : in std_logic_vector(9 downto 0);
+	o_dout : out std_logic_vector(7 downto 0)
 );
 end TestRom;
 
@@ -89,10 +87,10 @@ architecture behavior of TestRom is
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00");
 begin
-	process (clock)
+	process (i_clock)
 	begin
-		if rising_edge(clock) then
-			dout <= ram(to_integer(unsigned(addr)));
+		if rising_edge(i_clock) then
+			o_dout <= ram(to_integer(unsigned(i_addr)));
 		end if;
 	end process;
 end;

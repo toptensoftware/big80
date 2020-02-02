@@ -1,14 +1,19 @@
+TARGETBOARD = mimasv2
+DEPPATH = ../../../shared-trs80
+
+build: build-bit
+
+upload: upload-bit
+
 # Make script
-OUTDIR = bin
-include ../mimasv2.mk
+include ../../../fpgakit/fpgakit.mk
 
 TestRom.vhd: TestRom.asm
 	yaza TestRom.asm
-	truncate -s 1024 TestRom.bin
-	node ../../../fpgakit/tools/bin2vhdlrom/bin2vhdlrom TestRom.bin TestRom.vhd
+	node $(FPGAKIT)/tools/bin2vhdlrom/bin2vhdlrom --addrWidth:10 TestRom.bin TestRom.vhd
 
 capture: 
-	@node ../../../fpgakit/tools/reflector-client/logiccap \
+	@node $(FPGAKIT)/tools/reflector-client/logiccap \
 	--port:/dev/ttyACM1 \
 	--baud:115200 \
 	--sampleRate:80000000 \

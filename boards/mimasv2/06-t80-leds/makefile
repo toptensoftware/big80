@@ -1,9 +1,14 @@
+TARGETBOARD = mimasv2
+DEPPATH = ../../../shared-trs80
+
+build: build-bit
+
+upload: upload-bit
+
 # Make script
-OUTDIR = bin
-include ../mimasv2.mk
+include ../../../fpgakit/fpgakit.mk
 
 TestRom.vhd: TestRom.asm
 	yaza TestRom.asm
-	truncate -s 16384 TestRom.bin
-	node ../../../fpgakit/tools/bin2vhdlrom/bin2vhdlrom TestRom.bin TestRom.vhd
+	node ../../../fpgakit/tools/bin2vhdlrom/bin2vhdlrom --addrWidth:14 TestRom.bin TestRom.vhd
 

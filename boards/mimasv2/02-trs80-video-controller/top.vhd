@@ -91,9 +91,9 @@ begin
 	charrom : entity work.Trs80CharRom
 	port map
 	(
-		clock => s_clock_80mhz,
-		addr => s_char_rom_addr,
-		dout => s_char_rom_data
+		i_clock => s_clock_80mhz,
+		i_addr => s_char_rom_addr,
+		o_dout => s_char_rom_data
 	);
 
 	-- Fake Video RAM

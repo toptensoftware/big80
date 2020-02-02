@@ -393,9 +393,9 @@ begin
 	charrom : entity work.Trs80CharRom
 	port map
 	(
-		clock => s_clock_80mhz,
-		addr => s_char_rom_addr,
-		dout => s_char_rom_data
+		i_clock => s_clock_80mhz,
+		i_addr => s_char_rom_addr,
+		o_dout => s_char_rom_data
 	);
 
 	-- Video RAM (1K)
@@ -428,9 +428,9 @@ begin
 --	rom : entity work.TestRom
 	PORT MAP
 	(
-		clock => s_clock_80mhz,
-		addr => s_rom_addr_cpu,
-		dout => s_rom_dout_cpu
+		i_clock => s_clock_80mhz,
+		i_addr => s_rom_addr_cpu,
+		o_dout => s_rom_dout_cpu
 	);
 
 	-- PS2 Keyboard Controller
