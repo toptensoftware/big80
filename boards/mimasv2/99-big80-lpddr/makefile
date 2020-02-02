@@ -24,4 +24,3 @@ capture:
 	mig_port_rd_data[32] \
 	mig_port_wr_data[32] \
 	mig_port_wr_mask[4]	
-

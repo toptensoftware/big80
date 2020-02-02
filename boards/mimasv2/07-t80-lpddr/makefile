@@ -27,3 +27,5 @@ capture:
 	s_cpu_iorq_n \
 	s_cpu_rd_n \
 	s_cpu_wr_n \
+
+

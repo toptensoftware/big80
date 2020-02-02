@@ -342,6 +342,7 @@ begin
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_write => s_ram_write_cpu,
+		i_write_mask => "0",
 		i_addr => s_ram_addr_cpu,
 		i_data => s_ram_din_cpu,
 		o_data => s_ram_dout_cpu

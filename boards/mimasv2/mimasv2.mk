@@ -6,8 +6,7 @@ BUILDDIR ?= ./build
 OUTDIR ?= ./build
 BINFILE ?= $(OUTDIR)/$(PROJECTNAME).bin
 SOURCEFILES ?= *.vhd *.ucf //fpgakit/shared/SuppressBenignWarnings.vhd
-INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://fpgakit/shared --deppath://shared-trs80 --deppath:./coregen)
-OTHERBINDEPS ?=
+INPUTFILES ?= $(shell $(XILT) scandeps $(SOURCEFILES) --deppath://fpgakit/shared --deppath:./coregen --deppath://shared-trs80)
 
 # Build
 $(BINFILE): $(INPUTFILES)
@@ -29,5 +28,6 @@ upload: $(BINFILE)
 clean:
 	@rm -rf $(BUILDDIR)
 	@rm -rf $(OUTDIR)
+	@for p in $(CLEAN); do rm -rf $$p; done
 
 	

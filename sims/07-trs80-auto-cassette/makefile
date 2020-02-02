@@ -1,5 +1,10 @@
-SIMOPTS = --stop-time=100ms
+GHDLSIMOPTS = --stop-time=100us
+SIM=ghdl
+DEPPATH=../../shared-trs80
 
-include ../ghdl.mk
+build: build-$(SIM)
 
+view: view-$(SIM)
 
+# Make script
+include ../../fpgakit/fpgakit.mk
