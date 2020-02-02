@@ -88,11 +88,12 @@ architecture Behavioral of top is
 	signal s_video_ram_dout_cpu : std_logic_vector(7 downto 0);
 
 	-- RAM
-	signal s_ram_wait : std_logic;
-	signal s_ram_write : std_logic;
 	signal s_ram_addr : std_logic_vector(15 downto 0);
 	signal s_ram_din : std_logic_vector(7 downto 0);
 	signal s_ram_dout : std_logic_vector(7 downto 0);
+	signal s_ram_wait : std_logic;
+	signal s_ram_write_pulse : std_logic;
+	signal s_ram_write_ready : std_logic;
 
 	-- ROM
 	signal s_rom_addr_cpu : std_logic_vector(13 downto 0);
@@ -112,7 +113,6 @@ architecture Behavioral of top is
 	signal s_mem_rd : std_logic;
 	signal s_mem_wr : std_logic;
 	signal s_mem_rd_pulse : std_logic;
-	signal s_mem_wr_pulse : std_logic;
 	signal s_port_rd : std_logic;
 	signal s_port_wr : std_logic;
 	signal s_is_rom_range : std_logic;
@@ -497,15 +497,18 @@ begin
 	);
 
 	-- Edge detection for memory read/write
-	mem_wr_edge_detector : entity work.EdgeDetector
+	ram_wr_edge_detector : entity work.EdgeDetector
 	port map
 	( 
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_reset => s_reset,
-		i_signal => s_mem_wr,
-		o_pulse => s_mem_wr_pulse
+		i_signal => s_ram_write_ready,
+		o_pulse => s_ram_write_pulse
 	);
+
+	s_ram_write_ready <= s_mem_wr and s_is_ram_range and not s_ram_wait;
+
 
 	-- Decode I/O control signals from cpu
 	s_mem_rd <= '1' when (s_cpu_mreq_n = '0' and s_cpu_iorq_n = '1' and s_cpu_rd_n = '0') else '0';
@@ -545,7 +548,6 @@ begin
 	s_video_ram_din_cpu <= s_cpu_dout;
 
 	s_ram_addr <= s_cpu_addr;
-	s_ram_write <= s_mem_wr_pulse and s_is_ram_range;
 	s_ram_din <= s_cpu_dout;
 
 	s_cpu_wait_n <= not s_ram_wait;
@@ -853,8 +855,8 @@ begin
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_reset => s_reset,
-		i_wr => s_ram_write,
 		i_rd => '0',
+		i_wr => s_ram_write_pulse,
 		i_cs => s_is_ram_range,
 		i_addr => s_sri_addr,
 		i_data => s_ram_din,

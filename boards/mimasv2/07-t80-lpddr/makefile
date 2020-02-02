@@ -13,13 +13,7 @@ capture:
 	--baud:115200 \
 	--sampleRate:80000000 \
 	--autoview:150 \
-	s_calib_done \
-	s_is_ram_range \
-	s_ram_write \
-	s_ram_wait \
-	s_ram_addr[15] \
-	s_ram_din[8] \
-	s_ram_dout[8] \
+	s_pc[16] \
 	s_cpu_addr[16] \
 	s_cpu_din[8] \
 	s_cpu_dout[8] \
@@ -27,5 +21,6 @@ capture:
 	s_cpu_iorq_n \
 	s_cpu_rd_n \
 	s_cpu_wr_n \
-
-
+	s_cpu_wait_n \
+	s_ram_write_ready \
+	s_ram_write_pulse
