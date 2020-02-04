@@ -31,7 +31,7 @@ port
 ( 
     -- Control
     i_clock : in std_logic;                 -- Pixel Clock
-    i_clken : in std_logic;           -- Clock Enable
+    i_clken : in std_logic;                 -- Clock Enable
     i_reset : in std_logic;                 -- Reset (synchronous, active high)
     
     -- Video Timing
