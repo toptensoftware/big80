@@ -1,0 +1,24 @@
+                                ; Simple Test ROM
+0000: 31 00 F0                      ld SP,0xF000
+                                
+0003: 21 16 00                      ld HL,message
+0006: 06 17                         ld B,message_end - message
+0008: 0E 80                         ld C,0x80
+                                
+                                send_char:
+000A: ED 78                         in a,(c)
+000C: FE 07                         cp 7
+000E: 28 FA                         jr z, send_char;
+                                
+0010: ED A3                         outi
+0012: 20 F6                         jr nz, send_char
+                                
+0014: 18 FE                         jr $
+                                
+                                message:
+0016: 48 65 6C 6C 6F 20 57 6F       db "Hello World from Big80\n"
+001E: 72 6C 64 20 66 72 6F 6D 
+0026: 20 42 69 67 38 30 0A 
+                                message_end:
+
+002D:

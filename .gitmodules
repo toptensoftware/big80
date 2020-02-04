@@ -6,3 +6,4 @@
 [submodule "libSysCon"]
 	path = libSysCon
 	url = https://github.com/toptensoftware/libSysCon.git
+	branch = master
