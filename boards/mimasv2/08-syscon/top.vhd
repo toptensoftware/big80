@@ -9,7 +9,8 @@ port
 (
 	i_clock_100mhz : in std_logic;
 	i_button_b : in std_logic;
-	o_uart_tx : out std_logic
+	o_uart_tx : out std_logic;
+	i_uart_rx : in  std_logic
 );
 end top;
 
@@ -47,16 +48,19 @@ architecture Behavioral of top is
 	signal s_mem_rd_pulse : std_logic;
 	signal s_mem_wr_pulse : std_logic;
 	signal s_port_rd : std_logic;
+	signal s_port_rd_edge : std_logic;
 	signal s_port_wr : std_logic;
 	signal s_port_wr_edge : std_logic;
 	signal s_is_rom_range : std_logic;
 	signal s_is_ram_range : std_logic;
 
-	signal s_uart_write : std_logic;
-	signal s_uart_din : std_logic_vector(7 downto 0);
-	signal s_uart_count : std_logic_vector(2 downto 0);
+	signal s_uart_tx_write : std_logic;
+	signal s_uart_tx_din : std_logic_vector(7 downto 0);
+	signal s_uart_tx_count : std_logic_vector(7 downto 0);
 
-	--signal s_logic_capture : std_logic_vector(25 downto 0);
+	signal s_uart_rx_read : std_logic;
+	signal s_uart_rx_dout : std_logic_vector(7 downto 0);
+	signal s_uart_rx_count : std_logic_vector(7 downto 0);
 
 begin
 
@@ -184,7 +188,8 @@ begin
 							s_is_rom_range, s_rom_dout,
 							s_is_ram_range, s_ram_dout,
 						  s_port_rd,
-						    s_cpu_addr, s_uart_count
+						    s_cpu_addr, s_uart_tx_count, 
+							s_uart_rx_dout, s_uart_rx_count
 							)
 	begin
 
@@ -199,9 +204,21 @@ begin
 		end if;
 
 		if s_port_rd = '1' then
-			if s_cpu_addr(7 downto 0) = x"80" then
-				s_cpu_din <= "00000" & s_uart_count;
-			end if;
+			case s_cpu_addr(7 downto 0) is
+
+				when x"80" =>
+					s_cpu_din <= s_uart_tx_count;
+
+				when x"81" =>
+					s_cpu_din <= s_uart_rx_count;
+
+				when x"82" =>
+					s_cpu_din <= s_uart_rx_dout;
+
+				when others =>
+					s_cpu_din <= x"FF";
+
+			end case;
 		end if;
 
 	end process;
@@ -216,19 +233,35 @@ begin
 		o_pulse => s_port_wr_edge
 	);
 
+	port_rd_edge : entity work.EdgeDetector
+	port map
+	( 
+		i_clock => s_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_reset,
+		i_signal => s_port_rd,
+		o_pulse => s_port_rd_edge
+	);
+
 
 	-- Listen for port writes
 	port_handler : process(s_clock_80mhz)
 	begin
 		if rising_edge(s_clock_80mhz) then
 			if s_reset = '1' then
-				s_uart_write <= '0';
+				s_uart_tx_write <= '0';
+				s_uart_rx_read <= '0';
 			else
-				s_uart_write <= '0';
+				s_uart_tx_write <= '0';
+				s_uart_rx_read <= '0';
 
-				if s_clken_cpu = '1' and  s_port_wr_edge = '1' and s_cpu_addr(7 downto 0) = x"80" then
-					s_uart_din <= s_cpu_dout;
-					s_uart_write <= '1';
+				if s_clken_cpu = '1' and s_port_wr_edge = '1' and s_cpu_addr(7 downto 0) = x"80" then
+					s_uart_tx_din <= s_cpu_dout;
+					s_uart_tx_write <= '1';
+				end if;
+
+				if s_clken_cpu = '1' and s_port_rd_edge = '1' and s_cpu_addr(7 downto 0) = x"82" then
+					s_uart_rx_read <= '1';
 				end if;
 
 			end if;
@@ -236,30 +269,56 @@ begin
 	end process;
 
 	-- Uart transmitter
-	uart : entity work.UartTxBuffered
+	uart_tx : entity work.UartTxBuffered
 	generic map
 	(
 		p_clken_hz => 80_000_000,
 		p_baud => 115200,
-		p_addr_width => 3
+		p_addr_width => 8
 	)
 	port map
 	( 
 		i_clock => s_clock_80mhz,
 		i_clken => '1',
 		i_reset => s_reset,
-		i_write => s_uart_write,
-		i_din => s_uart_din,
+		i_write => s_uart_tx_write,
+		i_din => s_uart_tx_din,
 		o_uart_tx => o_uart_tx,
 		o_busy => open,
 		o_full => open,
 		o_empty => open,
 		o_underflow => open,
 		o_overflow => open,
-		o_count => s_uart_count
+		o_count => s_uart_tx_count
 	);
 
---	s_logic_capture <= s_uart_write & s_uart_din & s_port_wr & s_cpu_addr;
+	uart_rx : entity work.UartRxBuffered
+	generic map
+	(
+		p_clock_hz => 80_000_000,
+		p_baud => 115200,
+		p_sync => true,
+		p_debounce => true,
+		p_addr_width => 8
+	)
+	port map
+	( 
+		i_clock => s_clock_80mhz,
+		i_reset => s_reset,
+		i_uart_rx => i_uart_rx,
+		i_read => s_uart_rx_read,
+		o_dout => s_uart_rx_dout,
+		o_busy => open,
+		o_error => open,
+		o_full => open,
+		o_empty => open,
+		o_underflow => open,
+		o_overflow => open,
+		o_count => s_uart_rx_count
+	);
+
+
+--	s_logic_capture <= s_uart_tx_write & s_uart_tx_din & s_port_wr & s_cpu_addr;
 --
 --	cap : entity work.LogicCapture
 --	generic map

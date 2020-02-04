@@ -7,4 +7,7 @@ CONFIG VCCAUX = "3.3" ;
     # --- Clocking ---
     NET "i_clock_100mhz"                LOC = V10 | IOSTANDARD = LVCMOS33 | PERIOD = 100MHz ;
     NET "i_button_b"                    LOC = K18 | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST | PULLUP; #SW6
+
+    # --- UART ---
     NET "o_uart_tx"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
+    NET "i_uart_rx"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
