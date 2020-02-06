@@ -8,9 +8,13 @@ upload: upload-bit
 # Make script
 include ../../../fpgakit/fpgakit.mk
 
-TestRom.vhd: TestRom.asm
-	yaza --list TestRom.asm
-	node ../../../fpgakit/tools/bin2vhdlrom/bin2vhdlrom --addrWidth:14 TestRom.bin TestRom.vhd
+BOOTROMBIN = ../../../bootrom/bin/bootrom.bin
+
+BootRom.vhd: $(BOOTROMBIN)
+	node $(FPGAKIT)/tools/bin2vhdlrom/bin2vhdlrom \
+		--addrWidth:14 \
+		$(BOOTROMBIN) \
+ 		BootRom.vhd
 
 capture: 
 	@node $(FPGAKIT)/tools/reflector-client/logiccap \

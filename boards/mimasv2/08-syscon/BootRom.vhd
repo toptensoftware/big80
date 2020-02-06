@@ -7,59 +7,59 @@ library ieee;
 use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.ALL;
 
-entity TestRom is
+entity BootRom is
 port
 (
 	i_clock : in std_logic;
 	i_addr : in std_logic_vector(13 downto 0);
 	o_dout : out std_logic_vector(7 downto 0)
 );
-end TestRom;
+end BootRom;
 
---xilt:nowarn:Signal 'ram', unconnected in block 'TestRom', is tied to its initial value.
+--xilt:nowarn:Signal 'ram', unconnected in block 'BootRom', is tied to its initial value.
 
-architecture behavior of TestRom is
+architecture behavior of BootRom is
 	type mem_type is array(0 to 16383) of std_logic_vector(7 downto 0);
 	signal ram : mem_type := (
 
-	x"31", x"00", x"f0", x"21", x"16", x"00", x"06", x"17", x"0e", x"80", x"ed", x"78", x"fe", x"07", x"28", x"fa",
-	x"ed", x"a3", x"20", x"f6", x"18", x"fe", x"48", x"65", x"6c", x"6c", x"6f", x"20", x"57", x"6f", x"72", x"6c",
-	x"64", x"20", x"66", x"72", x"6f", x"6d", x"20", x"42", x"69", x"67", x"38", x"30", x"0a", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
-	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
+	x"c3", x"00", x"01", x"ff", x"ff", x"ff", x"ff", x"ff", x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ed", x"4d", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff", x"ff",
+	x"06", x"40", x"10", x"fe", x"31", x"00", x"ff", x"cd", x"44", x"02", x"cd", x"10", x"01", x"18", x"fe", x"ff",
+	x"21", x"37", x"01", x"e5", x"cd", x"1a", x"02", x"f1", x"3e", x"80", x"f5", x"33", x"21", x"00", x"f4", x"e5",
+	x"cd", x"67", x"01", x"f1", x"33", x"7d", x"47", x"b7", x"28", x"ee", x"c5", x"33", x"21", x"00", x"f4", x"e5",
+	x"cd", x"c8", x"01", x"f1", x"33", x"18", x"e1", x"48", x"65", x"6c", x"6c", x"6f", x"20", x"77", x"6f", x"72",
+	x"6c", x"64", x"20", x"66", x"72", x"6f", x"6d", x"20", x"42", x"69", x"67", x"38", x"30", x"0a", x"00", x"fd",
+	x"e5", x"fd", x"21", x"00", x"00", x"fd", x"39", x"fd", x"6e", x"04", x"fd", x"66", x"05", x"fd", x"46", x"06",
+	x"0e", x"82", x"ed", x"b2", x"fd", x"e1", x"c9", x"dd", x"e5", x"dd", x"21", x"00", x"00", x"dd", x"39", x"dd",
+	x"4e", x"04", x"dd", x"46", x"05", x"dd", x"56", x"06", x"dd", x"7e", x"06", x"b7", x"28", x"2e", x"db", x"81",
+	x"5f", x"dd", x"7e", x"06", x"93", x"30", x"03", x"dd", x"5e", x"06", x"7b", x"b7", x"28", x"1e", x"69", x"60",
+	x"c5", x"d5", x"7b", x"f5", x"33", x"e5", x"cd", x"4f", x"01", x"f1", x"33", x"d1", x"c1", x"79", x"83", x"4f",
+	x"30", x"01", x"04", x"dd", x"7e", x"06", x"93", x"dd", x"77", x"06", x"18", x"cc", x"7a", x"dd", x"96", x"06",
+	x"6f", x"dd", x"e1", x"c9", x"fd", x"21", x"00", x"00", x"fd", x"39", x"fd", x"6e", x"02", x"fd", x"66", x"03",
+	x"fd", x"46", x"04", x"0e", x"80", x"ed", x"b3", x"c9", x"dd", x"e5", x"dd", x"21", x"00", x"00", x"dd", x"39",
+	x"dd", x"4e", x"04", x"dd", x"46", x"05", x"dd", x"7e", x"06", x"b7", x"28", x"3b", x"db", x"80", x"5f", x"3e",
+	x"ff", x"93", x"67", x"dd", x"7e", x"06", x"94", x"30", x"03", x"dd", x"66", x"06", x"7c", x"b7", x"20", x"0a",
+	x"c5", x"2a", x"80", x"f4", x"cd", x"31", x"02", x"c1", x"18", x"dc", x"59", x"50", x"e5", x"c5", x"e5", x"33",
+	x"d5", x"cd", x"b4", x"01", x"f1", x"33", x"c1", x"e1", x"79", x"84", x"4f", x"30", x"01", x"04", x"dd", x"7e",
+	x"06", x"94", x"dd", x"77", x"06", x"18", x"bf", x"dd", x"e1", x"c9", x"c1", x"e1", x"e5", x"c5", x"e5", x"cd",
+	x"33", x"02", x"f1", x"65", x"d1", x"c1", x"c5", x"d5", x"e5", x"33", x"c5", x"cd", x"c8", x"01", x"f1", x"33",
+	x"c9", x"e9", x"c9", x"c1", x"e1", x"e5", x"c5", x"af", x"47", x"4f", x"ed", x"b1", x"21", x"ff", x"ff", x"ed",
+	x"42", x"c9", x"32", x"02", x"01", x"02", x"00", x"78", x"b1", x"28", x"08", x"11", x"80", x"f4", x"21", x"42",
+	x"02", x"ed", x"b0", x"c9", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",

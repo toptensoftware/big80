@@ -48,7 +48,7 @@ architecture Behavioral of top is
 	signal s_mem_rd_pulse : std_logic;
 	signal s_mem_wr_pulse : std_logic;
 	signal s_port_rd : std_logic;
-	signal s_port_rd_edge : std_logic;
+	signal s_port_rd_falling_edge : std_logic;
 	signal s_port_wr : std_logic;
 	signal s_port_wr_edge : std_logic;
 	signal s_is_rom_range : std_logic;
@@ -101,7 +101,7 @@ begin
 	);
 
 	-- Test Rom
-	rom : entity work.TestRom
+	rom : entity work.BootRom
 	PORT MAP
 	(
 		i_clock => s_clock_80mhz,
@@ -234,13 +234,18 @@ begin
 	);
 
 	port_rd_edge : entity work.EdgeDetector
+	generic map
+	(
+		p_falling_edge => true,
+		p_rising_edge => false
+	)
 	port map
 	( 
 		i_clock => s_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_reset => s_reset,
 		i_signal => s_port_rd,
-		o_pulse => s_port_rd_edge
+		o_pulse => s_port_rd_falling_edge
 	);
 
 
@@ -260,7 +265,7 @@ begin
 					s_uart_tx_write <= '1';
 				end if;
 
-				if s_clken_cpu = '1' and s_port_rd_edge = '1' and s_cpu_addr(7 downto 0) = x"82" then
+				if s_clken_cpu = '1' and s_port_rd_falling_edge = '1' and s_cpu_addr(7 downto 0) = x"82" then
 					s_uart_rx_read <= '1';
 				end if;
 
@@ -341,3 +346,7 @@ begin
 
 end Behavioral;
 
+
+--xilt:nowarn:~WARNING:Par:288 - The signal uart_.x/fifo
+--xilt:nowarn:WARNING:Par:283 - There are 18 loadless signals
+--xilt:nowarn:~WARNING:PhysDesignRules:367 - The signal <uart_.x/fifo

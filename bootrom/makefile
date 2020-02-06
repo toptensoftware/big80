@@ -21,7 +21,7 @@ SOURCES  := $(wildcard *.c)
 INCLUDES := $(wildcard *.h)
 INCLUDEPATH := ../libSysCon/libSysCon/ ../libSysCon/libFatFSBoot
 CRTOBJ   := ../libSysCon/lib/crt0.rel
-LIBS	 := 
+LIBS	 := ../libSysCon/lib/libSysCon.lib
 
 # Collect all obj files, crt must be first
 PROJOBJS := $(SOURCES:%.c=$(INTDIR)/%.rel) 
@@ -29,9 +29,6 @@ OBJS  	 := $(CRTOBJ) $(PROJOBJS)
 
 # Default
 all: $(OUTFILE)
-
-# Rebuild
-rebuild: clean all
 
 # Compile
 $(PROJOBJS): $(INTDIR)/%.rel : ./%.c $(INCLUDES)
@@ -43,8 +40,8 @@ $(OUTFILE): $(INTDIR) $(OUTDIR) $(OBJS) $(LIBS)
 	@echo Linking $(notdir $@)...
 	@$(SDCC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(INTDIR)/$(PROJNAME).ihx
 	@$(HEX2BIN) -b -s 0000 -e $(OUTEXT) $(INTDIR)/$(PROJNAME).ihx
+	$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
-	#$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 
 # Directories
 $(INTDIR):
