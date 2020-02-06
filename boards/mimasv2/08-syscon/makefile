@@ -1,5 +1,5 @@
 TARGETBOARD = mimasv2
-DEPPATH = ../../../shared-trs80
+DEPPATH = ../../../shared-trs80 ../../../libSysCon/shared-syscon
 
 build: build-bit
 

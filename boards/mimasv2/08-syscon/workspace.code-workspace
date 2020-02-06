@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../../shared-trs80"
+		},
+		{
+			"path": "/home/brad/Projects/big80/libSysCon/shared-syscon"
 		}
 	],
 	"settings": {}

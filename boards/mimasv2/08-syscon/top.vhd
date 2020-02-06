@@ -9,8 +9,19 @@ port
 (
 	i_clock_100mhz : in std_logic;
 	i_button_b : in std_logic;
+
 	o_uart_tx : out std_logic;
-	i_uart_rx : in  std_logic
+	i_uart_rx : in  std_logic;
+
+	o_sd_mosi : out std_logic;
+	i_sd_miso : in std_logic;
+	o_sd_ss_n : out std_logic;
+	o_sd_sclk : out std_logic;
+
+	o_leds : out std_logic_vector(7 downto 0);
+
+	o_seven_segment : out std_logic_vector(7 downto 0);
+	o_seven_segment_en : out std_logic_vector(2 downto 0)
 );
 end top;
 
@@ -61,6 +72,22 @@ architecture Behavioral of top is
 	signal s_uart_rx_read : std_logic;
 	signal s_uart_rx_dout : std_logic_vector(7 downto 0);
 	signal s_uart_rx_count : std_logic_vector(7 downto 0);
+
+	signal s_sd_status : std_logic_vector(7 downto 0);
+	signal s_sd_last_block_number : std_logic_vector(31 downto 0);
+	signal s_sd_op_write : std_logic;
+	signal s_sd_op_cmd : std_logic_vector(1 downto 0);
+	signal s_sd_op_block_number : std_logic_vector(31 downto 0);
+	signal s_sd_data_start : std_logic;
+	signal s_sd_data_cycle : std_logic;
+	signal s_sd_din : std_logic_vector(7 downto 0);
+	signal s_sd_dout : std_logic_vector(7 downto 0);
+
+	signal s_is_syscon_disk_port : std_logic;
+	signal s_syscon_disk_port_wr : std_logic;
+	signal s_syscon_disk_port_rd : std_logic;
+	signal s_syscon_disk_port_rd_falling_edge : std_logic;
+	signal s_syscon_disk_cpu_din : std_logic_vector(7 downto 0);
 
 begin
 
@@ -189,7 +216,9 @@ begin
 							s_is_ram_range, s_ram_dout,
 						  s_port_rd,
 						    s_cpu_addr, s_uart_tx_count, 
-							s_uart_rx_dout, s_uart_rx_count
+							s_uart_rx_dout, s_uart_rx_count,
+						    s_is_syscon_disk_port,
+							s_syscon_disk_cpu_din
 							)
 	begin
 
@@ -204,21 +233,25 @@ begin
 		end if;
 
 		if s_port_rd = '1' then
-			case s_cpu_addr(7 downto 0) is
+			if s_is_syscon_disk_port = '1' then 
+				s_cpu_din <= s_syscon_disk_cpu_din;
+			else
+				case s_cpu_addr(7 downto 0) is
 
-				when x"80" =>
-					s_cpu_din <= s_uart_tx_count;
+					when x"80" =>
+						s_cpu_din <= s_uart_tx_count;
 
-				when x"81" =>
-					s_cpu_din <= s_uart_rx_count;
+					when x"81" =>
+						s_cpu_din <= s_uart_rx_count;
 
-				when x"82" =>
-					s_cpu_din <= s_uart_rx_dout;
+					when x"82" =>
+						s_cpu_din <= s_uart_rx_dout;
 
-				when others =>
-					s_cpu_din <= x"FF";
+					when others =>
+						s_cpu_din <= x"FF";
 
-			end case;
+				end case;
+			end if;
 		end if;
 
 	end process;
@@ -321,6 +354,79 @@ begin
 		o_overflow => open,
 		o_count => s_uart_rx_count
 	);
+
+	o_leds <= s_sd_status;
+
+	-- Seven segment display driver
+	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
+	generic map
+	(
+		p_clock_hz => 80_000_000
+	)
+	port map
+	( 
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_data => s_sd_last_block_number(11 downto 0),
+		o_segments => o_seven_segment(7 downto 1),
+		o_segments_en => o_seven_segment_en
+	);
+	o_seven_segment(0) <= '1';
+
+
+	sdcard_controller : entity work.SDCardController
+	generic map
+	(
+		p_clock_div_800khz => 100,
+		p_clock_div_50mhz => 2
+	)
+	port map
+	(
+		i_reset => s_reset,
+		i_clock => s_clock_80mhz,
+		o_ss_n => o_sd_ss_n,
+		o_mosi => o_sd_mosi,
+		i_miso => i_sd_miso,
+		o_sclk => o_sd_sclk,
+		o_status => s_sd_status,
+		o_last_block_number => s_sd_last_block_number,
+		i_op_write => s_sd_op_write,
+		i_op_cmd => s_sd_op_cmd,
+		i_op_block_number => s_sd_op_block_number,
+		o_data_start => s_sd_data_start,
+		o_data_cycle => s_sd_data_cycle,
+		i_din => s_sd_din,
+		o_dout => s_sd_dout
+	);
+
+
+	s_is_syscon_disk_port <= '1' when s_cpu_addr(7 downto 4) = x"9" else '0';
+	s_syscon_disk_port_wr <= s_is_syscon_disk_port and s_port_wr_edge;
+	s_syscon_disk_port_rd <= s_is_syscon_disk_port and s_port_rd;
+	s_syscon_disk_port_rd_falling_edge <= s_is_syscon_disk_port and s_port_rd_falling_edge;
+
+	syscon_disk : entity work.SysConDiskController
+	port map
+	(
+		i_reset => s_reset,
+		i_clock => s_clock_80mhz,
+		i_clken_cpu => s_clken_cpu,
+		i_cpu_port_number => s_cpu_dout(2 downto 0),
+		i_cpu_port_wr => s_syscon_disk_port_wr,
+		i_cpu_port_rd => s_syscon_disk_port_rd,
+		i_cpu_port_rd_falling_edge => s_syscon_disk_port_rd_falling_edge,
+		o_cpu_din => s_syscon_disk_cpu_din,
+		i_cpu_dout => s_cpu_dout,
+		i_sd_status => s_sd_status,
+		o_sd_op_write => s_sd_op_write,
+		o_sd_op_cmd => s_sd_op_cmd,
+		o_sd_op_block_number => s_sd_op_block_number,
+		i_sd_data_start => s_sd_data_start,
+		i_sd_data_cycle => s_sd_data_cycle,
+		o_sd_din => s_sd_din,
+		i_sd_dout => s_sd_dout
+	);
+
 
 
 --	s_logic_capture <= s_uart_tx_write & s_uart_tx_din & s_port_wr & s_cpu_addr;

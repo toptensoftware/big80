@@ -25,8 +25,8 @@ OUTEXT   := bin
 OUTNAME  := $(PROJNAME).$(OUTEXT)
 OUTFILE  := $(OUTDIR)/$(OUTNAME)
 SOURCES  := $(wildcard *.c)
-INCLUDES := $(wildcard *.h)
-INCLUDEPATH := ../libSysCon/libSysCon/ ../libSysCon/libFatFSBoot
+INCLUDES := $(wildcard *.h) ../libSysCon/libSysCon/libSysCon.h
+INCLUDEPATH := ../libSysCon/libSysCon/
 CRTOBJ   := ../libSysCon/lib/crt0.rel
 LIBS	 := ../libSysCon/lib/libSysCon.lib
 
@@ -35,7 +35,7 @@ PROJOBJS := $(SOURCES:%.c=$(INTDIR)/%.rel)
 OBJS  	 := $(CRTOBJ) $(PROJOBJS)
 
 # Default
-all: $(OUTFILE)
+all: $(INTDIR) $(OUTDIR) libSysCon $(OUTFILE)
 
 # Compile
 $(PROJOBJS): $(INTDIR)/%.rel : ./%.c $(INCLUDES)
@@ -43,7 +43,7 @@ $(PROJOBJS): $(INTDIR)/%.rel : ./%.c $(INCLUDES)
 	$(SDCC) $(CFLAGS)  $(addprefix -I ,$(INCLUDEPATH)) -c $< -o $@
 
 # Link
-$(OUTFILE): $(INTDIR) $(OUTDIR) $(OBJS) $(LIBS) 
+$(OUTFILE): $(OBJS) $(LIBS)
 	@echo Linking $(notdir $@)...
 	@$(SDCC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(INTDIR)/$(PROJNAME).ihx
 	@$(HEX2BIN) -b -s 0000 -e $(OUTEXT) $(INTDIR)/$(PROJNAME).ihx
@@ -57,6 +57,12 @@ $(INTDIR):
 # Directories
 $(OUTDIR):
 	@mkdir -p $(OUTDIR)
+
+.PHONY: libSysCon
+
+libSysCon:
+	@echo Making $@
+	@$(MAKE) --no-print-directory -C ../libSysCon/libSysCon
 
 # Clean
 clean:
