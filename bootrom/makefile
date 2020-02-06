@@ -1,7 +1,14 @@
 # Tools
+ifeq ($(OS),Windows_NT)
+SDCC=sdcc
+SDAR=sdar
+SDASZ80=sdasz80
+else
 SDCCDIR=/opt/sdcc
 SDCC=$(SDCCDIR)/bin/sdcc
+SDAR=$(SDCCDIR)/bin/sdar
 SDASZ80=$(SDCCDIR)/bin/sdasz80
+endif
 HEX2BIN=../tools/hex2bin
 YAZD=yazd
 
@@ -40,7 +47,7 @@ $(OUTFILE): $(INTDIR) $(OUTDIR) $(OBJS) $(LIBS)
 	@echo Linking $(notdir $@)...
 	@$(SDCC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(INTDIR)/$(PROJNAME).ihx
 	@$(HEX2BIN) -b -s 0000 -e $(OUTEXT) $(INTDIR)/$(PROJNAME).ihx
-	$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
+	#$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
 
 # Directories
