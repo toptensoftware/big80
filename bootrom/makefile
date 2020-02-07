@@ -5,7 +5,7 @@ SDAR=sdar
 SDASZ80=sdasz80
 else
 SDCCDIR=/opt/sdcc
-SDCC=$(SDCCDIR)/bin/sdcc
+SDCC=sdcc-filter $(SDCCDIR)/bin/sdcc
 SDAR=$(SDCCDIR)/bin/sdar
 SDASZ80=$(SDCCDIR)/bin/sdasz80
 endif
@@ -40,7 +40,7 @@ all: $(INTDIR) $(OUTDIR) libSysCon $(OUTFILE)
 # Compile
 $(PROJOBJS): $(INTDIR)/%.rel : ./%.c $(INCLUDES)
 	@echo Compiling $(notdir $<)...
-	$(SDCC) $(CFLAGS)  $(addprefix -I ,$(INCLUDEPATH)) -c $< -o $@
+	@$(SDCC) $(CFLAGS)  $(addprefix -I ,$(INCLUDEPATH)) -c $< -o $@
 
 # Link
 $(OUTFILE): $(OBJS) $(LIBS)
@@ -50,6 +50,8 @@ $(OUTFILE): $(OBJS) $(LIBS)
 	#$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
 
+.PHONY: libSysCon
+
 # Directories
 $(INTDIR):
 	@mkdir -p $(INTDIR)
@@ -57,8 +59,6 @@ $(INTDIR):
 # Directories
 $(OUTDIR):
 	@mkdir -p $(OUTDIR)
-
-.PHONY: libSysCon
 
 libSysCon:
 	@echo Making $@

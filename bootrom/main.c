@@ -60,9 +60,6 @@ void main(void)
                 set_block_number(--block_number);
             }
         }
-
-        // Write it back
-        //uart_write(buf, recv);
     }
 }
 
