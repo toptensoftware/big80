@@ -13,6 +13,8 @@ port
 	o_uart_tx : out std_logic;
 	i_uart_rx : in  std_logic;
 
+	o_uart2_tx : out std_logic;
+
 	o_sd_mosi : out std_logic;
 	i_sd_miso : in std_logic;
 	o_sd_ss_n : out std_logic;
@@ -84,11 +86,12 @@ architecture Behavioral of top is
 	signal s_sd_dout : std_logic_vector(7 downto 0);
 
 	signal s_is_syscon_disk_port : std_logic;
-	signal s_syscon_disk_port_wr : std_logic;
+	signal s_syscon_disk_port_wr_pulse : std_logic;
 	signal s_syscon_disk_port_rd : std_logic;
 	signal s_syscon_disk_port_rd_falling_edge : std_logic;
 	signal s_syscon_disk_cpu_din : std_logic_vector(7 downto 0);
 
+--	signal s_logic_capture : std_logic_vector(69 downto 0);
 begin
 
 	-- Reset signal
@@ -367,7 +370,7 @@ begin
 	( 
 		i_clock => s_clock_80mhz,
 		i_reset => s_Reset,
-		i_data => s_sd_last_block_number(11 downto 0),
+		i_data => s_sd_op_block_number(11 downto 0),
 		o_segments => o_seven_segment(7 downto 1),
 		o_segments_en => o_seven_segment_en
 	);
@@ -401,7 +404,7 @@ begin
 
 
 	s_is_syscon_disk_port <= '1' when s_cpu_addr(7 downto 4) = x"9" else '0';
-	s_syscon_disk_port_wr <= s_is_syscon_disk_port and s_port_wr_edge;
+	s_syscon_disk_port_wr_pulse <= s_is_syscon_disk_port and s_port_wr_edge;
 	s_syscon_disk_port_rd <= s_is_syscon_disk_port and s_port_rd;
 	s_syscon_disk_port_rd_falling_edge <= s_is_syscon_disk_port and s_port_rd_falling_edge;
 
@@ -410,9 +413,8 @@ begin
 	(
 		i_reset => s_reset,
 		i_clock => s_clock_80mhz,
-		i_clken_cpu => s_clken_cpu,
-		i_cpu_port_number => s_cpu_dout(2 downto 0),
-		i_cpu_port_wr => s_syscon_disk_port_wr,
+		i_cpu_port_number => s_cpu_addr(2 downto 0),
+		i_cpu_port_wr_pulse => s_syscon_disk_port_wr_pulse,
 		i_cpu_port_rd => s_syscon_disk_port_rd,
 		i_cpu_port_rd_falling_edge => s_syscon_disk_port_rd_falling_edge,
 		o_cpu_din => s_syscon_disk_cpu_din,
@@ -429,26 +431,35 @@ begin
 
 
 
---	s_logic_capture <= s_uart_tx_write & s_uart_tx_din & s_port_wr & s_cpu_addr;
+	o_uart2_tx <= '1';
+--	s_logic_capture <= 
+--		s_cpu_dout(2 downto 0) & 
+--		s_syscon_disk_port_wr_pulse & 
+--		s_syscon_disk_port_rd & 
+--		s_syscon_disk_port_rd_falling_edge & 
+--		s_cpu_din & 
+--		s_cpu_dout & 
+--		s_cpu_addr &
+--		s_sd_op_block_number
+--		;
 --
 --	cap : entity work.LogicCapture
 --	generic map
 --	(
 --		p_clock_hz => 80_000_000,
 --		p_baud => 115200,
---		p_bit_width => 26,
---		p_addr_width => 12
+--		p_bit_width => 70,
+--		p_addr_width => 10
 --	)
 --	port map
 --	( 
 --		i_clock => s_clock_80mhz,
 --		i_clken => s_clken_cpu,
 --		i_reset => s_reset,
---		i_trigger => '1',
+--		i_trigger => s_syscon_disk_port_wr_pulse,
 --		i_signals => s_logic_capture,
---		o_uart_tx => o_uart_tx
+--		o_uart_tx => o_uart2_tx
 --	);
---
 
 end Behavioral;
 

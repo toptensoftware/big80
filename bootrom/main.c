@@ -4,6 +4,7 @@
 char buf[128];
 
 uint32_t block_number = 0;
+uint8_t start_fill_byte = 0;
 
 void show_sd_status()
 {
@@ -17,6 +18,14 @@ void set_block_number(uint32_t val)
     SdSetBlockNumberPort = (val >> 8) & 0xFF;
     SdSetBlockNumberPort = (val >> 16) & 0xFF;
     SdSetBlockNumberPort = (val >> 24) & 0xFF;
+    sprintf(buf, "block number: %4x\n", (int)val);
+    uart_write_sz(buf);
+}
+
+void set_start_fill_byte(uint8_t val)
+{
+    sprintf(buf, "start fill with: %2x\n", val);
+    uart_write_sz(buf);
 }
 
 // Main Entry Point
@@ -36,28 +45,74 @@ void main(void)
         {
             if (buf[0] == 'r')
             {
+                // Invoke command
                 SdCommandPort = SD_COMMAND_READ;
-                show_sd_status();
+
+                // Wait for it
+                while (SdStatusPort & SD_STATUS_BUSY)
+                    ;
+
+                // Dump it
+                sprintf(buf, "\nBlock %4x", (int)block_number);
+                uart_write_sz(buf);
+                for (int i=0; i<512; i++)
+                {
+                    if ((i % 16) == 0)
+                        uart_write_sz("\n");
+                    sprintf(buf, "%2x ", (int)SdDataPort);
+                    uart_write_sz(buf);
+                }
+                
+                continue;
             }
 
             if (buf[0] == 'w')
             {
+                // Reset buffer
+                SdCommandPort = SD_COMMAND_NOP;
+
+                // Fill buffer
+                for (int i=0; i<512; i++)
+                {
+                    SdDataPort = (uint8_t)(start_fill_byte + i);
+                }
+
                 SdCommandPort = SD_COMMAND_WRITE;
-                show_sd_status();
+
+                // Wait for it
+                while (SdStatusPort & SD_STATUS_BUSY)
+                    ;
+
+                sprintf(buf, "Filled block %4x starting with value %2x", (int)block_number, (int)start_fill_byte);
+                uart_write_sz(buf);
+                continue;
             }
 
             if (buf[0] == 's')
             {
                 show_sd_status();
+                continue;
             }
 
             if (buf[0] == 'n')
             {
                 set_block_number(++block_number);
+                continue;
             }
-            if (buf[0] == 's')
+            if (buf[0] == 'p')
             {
                 set_block_number(--block_number);
+                continue;
+            }
+            if (buf[0] == 'N')
+            {
+                set_start_fill_byte(++start_fill_byte);
+                continue;
+            }
+            if (buf[0] == 'P')
+            {
+                set_start_fill_byte(--start_fill_byte);
+                continue;
             }
         }
     }

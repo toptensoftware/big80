@@ -18,11 +18,15 @@ BootRom.vhd: $(BOOTROMBIN)
 
 capture: 
 	@node $(FPGAKIT)/tools/reflector-client/logiccap \
-	--port:/dev/ttyACM1 \
+	--port:/dev/ttyUSB0 \
 	--baud:115200 \
 	--sampleRate:1774000 \
 	--autoview:150 \
-	s_uart_write \
-	s_uart_din[8] \
-	s_port_wr \
-	s_cpu_addr[16]
+	s_cpu_port_number[3] \
+	s_cpu_port_wr_pulse \
+	s_cpu_port_rd \
+	s_cpu_port_rd_falling_edge \
+	s_cpu_din[8] \
+	s_cpu_dout[8] \
+	s_cpu_addr[16] \
+	s_sd_op_block_number[32]

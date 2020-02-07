@@ -12,6 +12,8 @@ CONFIG VCCAUX = "3.3" ;
     NET "o_uart_tx"                    LOC = B8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
     NET "i_uart_rx"                    LOC = A8      |  IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;
 
+    NET "o_uart2_tx"                   LOC = R11     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #Pin 1
+
     # --- SD Card ---
     NET "i_sd_miso"                    LOC = K14     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #MISO
     NET "o_sd_ss_n"                    LOC = L13     | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ; #CS
