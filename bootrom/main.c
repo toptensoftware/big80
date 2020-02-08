@@ -1,38 +1,57 @@
 #include <libSysCon.h>
+#include <ff.h>
+#include <diskio.h>
 #include <stdio.h>
 
 char buf[128];
 
-uint32_t block_number = 0;
-uint8_t start_fill_byte = 0;
-
-void show_sd_status()
-{
-    sprintf(buf, "status: %x\n", (int)SdStatusPort);
-    uart_write_sz(buf);
-}
-
-void set_block_number(uint32_t val)
-{
-    SdSetBlockNumberPort = val & 0xFF;
-    SdSetBlockNumberPort = (val >> 8) & 0xFF;
-    SdSetBlockNumberPort = (val >> 16) & 0xFF;
-    SdSetBlockNumberPort = (val >> 24) & 0xFF;
-    sprintf(buf, "block number: %4x\n", (int)val);
-    uart_write_sz(buf);
-}
-
-void set_start_fill_byte(uint8_t val)
-{
-    sprintf(buf, "start fill with: %2x\n", val);
-    uart_write_sz(buf);
-}
+FATFS g_fs;
 
 // Main Entry Point
 void main(void) 
 {
     // Hello!
     uart_write_sz("Hello world from Big80\n");
+
+    FRESULT r = f_mount(&g_fs, "0", 1);
+//    sprintf(buf, "f_mount returned %i\n", r);
+//    uart_write_sz(buf);
+
+    DIR d;
+    r = f_opendir (&d, "0:/");
+//    sprintf(buf, "f_opendir returned %i\n", r);
+//    uart_write_sz(buf);
+
+    while (1)
+    {
+        FILINFO fno;
+        r = f_readdir(&d, &fno);
+//        sprintf(buf, "f_readdir returned %i\n", r);
+//        uart_write_sz(buf);
+        if (!fno.fname[0])
+            break;
+
+
+        sprintf(buf, "%5i %s\n", (int)fno.fsize, fno.fname);
+        uart_write_sz(buf);
+    }
+
+    f_closedir(&d);
+
+/*
+    FIL f;
+    f_open(&f, "0:/big80.sys", FA_CREATE_NEW);
+    f_close(&f);
+    f_lseek(&f, 0);
+    f_read(&f, 0, 0, 0);
+    f_write(&f, 0, 0, 0);
+    f_unlink("");
+    f_rename("","");
+    f_mkdir("");    
+    */
+
+
+/*
     show_sd_status();
 
     // Echo
@@ -116,5 +135,6 @@ void main(void)
             }
         }
     }
+*/
 }
 

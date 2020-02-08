@@ -26,9 +26,9 @@ OUTNAME  := $(PROJNAME).$(OUTEXT)
 OUTFILE  := $(OUTDIR)/$(OUTNAME)
 SOURCES  := $(wildcard *.c)
 INCLUDES := $(wildcard *.h) ../libSysCon/libSysCon/libSysCon.h
-INCLUDEPATH := ../libSysCon/libSysCon/
+INCLUDEPATH := ../libSysCon/libSysCon/ ../libSysCon/libFatFS/
 CRTOBJ   := ../libSysCon/lib/crt0.rel
-LIBS	 := ../libSysCon/lib/libSysCon.lib
+LIBS	 := ../libSysCon/lib/libSysCon.lib ../libSysCon/lib/libFatFS.lib
 
 # Collect all obj files, crt must be first
 PROJOBJS := $(SOURCES:%.c=$(INTDIR)/%.rel) 
@@ -49,6 +49,7 @@ $(OUTFILE): $(OBJS) $(LIBS)
 	@$(HEX2BIN) -b -s 0000 -e $(OUTEXT) $(INTDIR)/$(PROJNAME).ihx
 	#$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
+	cp $(OUTFILE) ~/sf_downloads/
 
 .PHONY: libSysCon
 
