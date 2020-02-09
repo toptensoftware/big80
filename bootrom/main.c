@@ -3,7 +3,7 @@
 #include <diskio.h>
 #include <stdio.h>
 
-char buf[128];
+char buf[512];
 
 FATFS g_fs;
 
@@ -13,128 +13,46 @@ void main(void)
     // Hello!
     uart_write_sz("Hello world from Big80\n");
 
+    // Mount SD Card
+    uart_write_sz("Mounting SD card...");
     FRESULT r = f_mount(&g_fs, "0", 1);
-//    sprintf(buf, "f_mount returned %i\n", r);
-//    uart_write_sz(buf);
-
-    DIR d;
-    r = f_opendir (&d, "0:/");
-//    sprintf(buf, "f_opendir returned %i\n", r);
-//    uart_write_sz(buf);
-
-    while (1)
+    if (r != 0)
     {
-        FILINFO fno;
-        r = f_readdir(&d, &fno);
-//        sprintf(buf, "f_readdir returned %i\n", r);
-//        uart_write_sz(buf);
-        if (!fno.fname[0])
-            break;
-
-
-        sprintf(buf, "%5i %s\n", (int)fno.fsize, fno.fname);
+        sprintf(buf, " FAILED (%i)\n", r);
         uart_write_sz(buf);
+        return;
     }
+    uart_write_sz(" OK\n");
 
-    f_closedir(&d);
-
-/*
     FIL f;
-    f_open(&f, "0:/big80.sys", FA_CREATE_NEW);
-    f_close(&f);
-    f_lseek(&f, 0);
-    f_read(&f, 0, 0, 0);
-    f_write(&f, 0, 0, 0);
-    f_unlink("");
-    f_rename("","");
-    f_mkdir("");    
-    */
 
-
-/*
-    show_sd_status();
-
-    // Echo
-    while (1)
+    // Open ROM image
+    uart_write_sz("Opening model1.rom...");
+    r = f_open(&f, "0:/model1.rom", FA_OPEN_EXISTING | FA_READ);
+    if (r != 0)
     {
-        // Read serial
-        uint8_t recv = uart_read(buf, sizeof(buf));
-
-        if (recv > 0)
-        {
-            if (buf[0] == 'r')
-            {
-                // Invoke command
-                SdCommandPort = SD_COMMAND_READ;
-
-                // Wait for it
-                while (SdStatusPort & SD_STATUS_BUSY)
-                    ;
-
-                // Dump it
-                sprintf(buf, "\nBlock %4x", (int)block_number);
-                uart_write_sz(buf);
-                for (int i=0; i<512; i++)
-                {
-                    if ((i % 16) == 0)
-                        uart_write_sz("\n");
-                    sprintf(buf, "%2x ", (int)SdDataPort);
-                    uart_write_sz(buf);
-                }
-                
-                continue;
-            }
-
-            if (buf[0] == 'w')
-            {
-                // Reset buffer
-                SdCommandPort = SD_COMMAND_NOP;
-
-                // Fill buffer
-                for (int i=0; i<512; i++)
-                {
-                    SdDataPort = (uint8_t)(start_fill_byte + i);
-                }
-
-                SdCommandPort = SD_COMMAND_WRITE;
-
-                // Wait for it
-                while (SdStatusPort & SD_STATUS_BUSY)
-                    ;
-
-                sprintf(buf, "Filled block %4x starting with value %2x", (int)block_number, (int)start_fill_byte);
-                uart_write_sz(buf);
-                continue;
-            }
-
-            if (buf[0] == 's')
-            {
-                show_sd_status();
-                continue;
-            }
-
-            if (buf[0] == 'n')
-            {
-                set_block_number(++block_number);
-                continue;
-            }
-            if (buf[0] == 'p')
-            {
-                set_block_number(--block_number);
-                continue;
-            }
-            if (buf[0] == 'N')
-            {
-                set_start_fill_byte(++start_fill_byte);
-                continue;
-            }
-            if (buf[0] == 'P')
-            {
-                set_start_fill_byte(--start_fill_byte);
-                continue;
-            }
-        }
+        sprintf(buf, " FAILED (%i)\n", r);
+        uart_write_sz(buf);
+        return;
     }
-*/
+    uart_write_sz(" OK\n");
+
+    // Map our hi-address range (0x8000-0xFFFF) to the RAM that will be used for the
+    // TRS80's 0x0000->0x7FFF address range and read the TRS-80 ROM image from SD Card
+    ApmHiBankPage = 0x00;
+    UINT bytes_read = 0;
+    f_read(&f, (BYTE*)0x8000, f_size(&f), &bytes_read);
+    f_close(&f);
+    sprintf(buf, "ROM image loaded (%i bytes).\n", (int)(bytes_read));
+    uart_write_sz(buf);
+    ApmHiBankPage = 0x03;       
+
+    // Request exit hijack mode and jump to TRS80 ROM start (0x0000)
+    __asm
+    ld      a,#ICFLAG_EXIT_HIJACK_MODE
+    out     (_InterruptControllerPort),a
+    ld      HL, #0
+    jp      (HL)
+    __endasm;
 }
 

@@ -17,9 +17,7 @@
 --xilt:require:./T80/T80se.vhd
 
 
---xilt:nowarn:WARNING:Par:288 - The signal cpu/u0/Regs/Mram_RegsL11_RAMD_D1_O has no load.  PAR will not attempt to route this signal.
---xilt:nowarn:WARNING:Par:288 - The signal cpu/u0/Regs/Mram_RegsH11_RAMD_D1_O has no load.  PAR will not attempt to route this signal.
+--xilt:nowarn:~WARNING:Par:288 - The signal (.+)/u0/Regs/Mram_Regs.11_RAMD_D._O has no load
+--xilt:nowarn:~WARNING:PhysDesignRules:367 - The signal <(?:.+)/u0/Regs/Mram_Regs.11_RAMD_D._O> is
 --xilt:nowarn:WARNING:Par:283 - There are 2 loadless signals in this design. This design will cause Bitgen to issue DRC warnings.
---xilt:nowarn:WARNING:PhysDesignRules:367 - The signal <cpu/u0/Regs/Mram_RegsL11_RAMD_D1_O> is
---xilt:nowarn:WARNING:PhysDesignRules:367 - The signal <cpu/u0/Regs/Mram_RegsH11_RAMD_D1_O> is
  

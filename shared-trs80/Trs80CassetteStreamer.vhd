@@ -174,16 +174,16 @@ begin
 		i_clken_a => '1',
 		i_write_a  => '0',
 		i_addr_a => s_ram_read_addr,
-		i_data_a => (others => '0'),
-		o_data_a => s_ram_read_data,
+		i_din_a => (others => '0'),
+		o_dout_a => s_ram_read_data,
 
 		-- Write port
 		i_clock_b => i_clock,
 		i_clken_b => '1',
 		i_write_b => s_ram_write,
 		i_addr_b => s_ram_write_addr,
-		i_data_b => s_ram_write_data,
-		o_data_b => open
+		i_din_b => s_ram_write_data,
+		o_dout_b => open
 	);
 
 	-- RAM write depends on record/playback

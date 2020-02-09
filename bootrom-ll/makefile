@@ -15,7 +15,7 @@ YAZD=yazd
 # Build Flags
 COMMONFLAGS=-mz80 --stack-auto
 CFLAGS=$(COMMONFLAGS) --std-c99 --disable-warning 85 --disable-warning 110 --disable-warning 126
-LINKFLAGS=$(COMMONFLAGS) --code-loc 0x110 --data-loc 0x7000 --no-std-crt0
+LINKFLAGS=$(COMMONFLAGS) --code-loc 0x110 --data-loc 0xF400 --no-std-crt0
 
 # Project config
 PROJNAME := $(notdir $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST)))))
