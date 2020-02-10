@@ -146,8 +146,8 @@ architecture behavior of Trs80Model1Core is
 	signal s_is_lobank_port : std_logic;
 	signal s_is_hibank_port : std_logic;
 	signal s_is_syscon_enable_port : std_logic;
-	signal s_hibank_page : std_logic_vector(1 downto 0);
 	signal s_lobank_page : std_logic_vector(1 downto 0);
+	signal s_hibank_page : std_logic_vector(1 downto 0);
 	--signal s_syscon_video_mapped : std_logic;
 
 	-- Syscon Firmware
@@ -204,7 +204,6 @@ architecture behavior of Trs80Model1Core is
 
 	-- Cassette Player
 	signal s_is_cas_port : std_logic;
-	signal s_selected_tape : std_logic_vector(11 downto 0);
 	signal s_recording : std_logic;
 	signal s_playing_or_recording : std_logic;
 	signal s_cas_prev_audio_in : std_logic_vector(1 downto 0);
@@ -339,10 +338,11 @@ begin
 	-- Address Decoder
 	cpu_addr_decoder : process(
 			s_cpu_addr, 
-			s_hijacked, 
-			s_syscon_firmware_mapped, 
+			s_hijacked,
+			s_syscon_firmware_mapped,
 			s_lobank_page, 
-			s_hibank_page)
+			s_hibank_page
+			)
 	begin
 		s_is_syscon_firmware_range <= '0';
 --		s_is_syscon_vram_range <= '0';
@@ -352,7 +352,7 @@ begin
 		s_is_keyboard_range <= '0';
 
 		if s_hijacked = '1' then
-			if s_syscon_firmware_mapped = '1' and s_cpu_addr(15) = '0' and s_cpu_addr(14 downto 12) /= "111" then
+			if s_syscon_firmware_mapped = '1' and s_cpu_addr(15) = '0' and (s_cpu_addr(14 downto 12) /= "111") then
 				-- 0x0000 -> 0x6FFF
 				s_is_syscon_firmware_range <= '1';
 --			elsif s_syscon_video_mapped = '1' and s_cpu_addr(15 downto 10) = "111111" then
@@ -403,7 +403,8 @@ begin
 						    s_is_syscon_disk_port, s_syscon_disk_cpu_din,
 							s_is_syscon_options_port, s_options,
 							s_is_syscon_ic_port , s_syscon_ic_cpu_din,
-							s_is_hibank_port, s_is_lobank_port, s_is_syscon_enable_port,
+							s_is_syscon_enable_port,
+							s_is_hibank_port, s_is_lobank_port,
 							s_hibank_page, s_lobank_page,
 							--s_syscon_video_mapped, 
 							s_syscon_firmware_mapped
@@ -448,12 +449,13 @@ begin
 				s_cpu_din <= s_syscon_serial_cpu_din;
 			elsif s_is_syscon_options_port = '1' then
 				s_cpu_din <= "00" & s_options;
-			elsif s_is_hibank_port = '1' then
-				s_cpu_din <= "000000" & s_hibank_page;
 			elsif s_is_lobank_port = '1' then
 				s_cpu_din <= "000000" & s_lobank_page;
+			elsif s_is_hibank_port = '1' then
+				s_cpu_din <= "000000" & s_hibank_page;
 			elsif s_is_syscon_enable_port = '1' then
-				s_cpu_din <= "000000" & s_is_syscon_firmware_range & '0'; --s_is_syscon_video_range;
+--				s_cpu_din <= "000000" & s_syscon_firmware_mapped & s_syscon_video_mapped;
+				s_cpu_din <= "000000" & s_syscon_firmware_mapped & '0';
 			end if;
 
 		end if;
@@ -498,8 +500,8 @@ begin
 	begin
 		if rising_edge(i_clock_80mhz) then
 			if i_reset = '1' then
-				s_hibank_page <= "10";
-				s_lobank_page <= "11";
+				s_lobank_page <= "10";
+				s_hibank_page <= "11";
 				--s_syscon_video_mapped <= '0';
 				s_syscon_firmware_mapped <= '1';
 			elsif s_clken_cpu = '1' then
@@ -880,7 +882,6 @@ begin
 		s_sd_op_cmd_a <= (others => '0');
 		s_sd_op_block_number_a <= (others => '0');
 		s_sd_din_a <= (others => '0');
-		s_selected_tape <= (others => '0');
 		s_recording <= '0';
 		s_playing_or_recording <= '0';
 		s_cas_audio_in_edge <= '0';
@@ -918,7 +919,7 @@ begin
 			i_sd_dcycle => s_sd_data_cycle_a,
 			i_sd_data => s_sd_dout_a,
 			o_sd_data => s_sd_din_a,
-			o_display => s_selected_tape,
+			o_display => open,
 			o_audio => s_cas_audio_in,
 			i_audio => s_cas_audio_out(0)
 		);

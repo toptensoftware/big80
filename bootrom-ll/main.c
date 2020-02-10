@@ -3,6 +3,8 @@
 
 char buf[128];
 
+uint8_t dbuf[512];
+
 uint32_t block_number = 0;
 uint8_t start_fill_byte = 0;
 
@@ -42,7 +44,7 @@ void main(void)
             if (buf[0] == 'r')
             {
                 // Invoke read command
-                sd_read_command(block_number);
+                sd_read(block_number, dbuf);
 
                 // Dump it
                 sprintf(buf, "\nBlock %4x", (int)block_number);
@@ -51,7 +53,7 @@ void main(void)
                 {
                     if ((i % 16) == 0)
                         uart_write_sz("\n");
-                    sprintf(buf, "%2x ", (int)SdDataPort);
+                    sprintf(buf, "%2x ", (int)dbuf[i]);
                     uart_write_sz(buf);
                 }
                 
@@ -66,10 +68,10 @@ void main(void)
                 // Fill buffer
                 for (int i=0; i<512; i++)
                 {
-                    SdDataPort = (uint8_t)(start_fill_byte + i);
+                    dbuf[i] = (char)(uint8_t)(start_fill_byte + i);
                 }
 
-                sd_write_command(block_number);
+                sd_write(block_number, dbuf);
 
                 sprintf(buf, "Filled block %4x starting with value %2x", (int)block_number, (int)start_fill_byte);
                 uart_write_sz(buf);

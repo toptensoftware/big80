@@ -27,8 +27,8 @@ void main(void)
     FIL f;
 
     // Open ROM image
-    uart_write_sz("Opening model1.rom...");
-    r = f_open(&f, "0:/model1.rom", FA_OPEN_EXISTING | FA_READ);
+    uart_write_sz("Opening level2-a.rom...");
+    r = f_open(&f, "0:/level2-a.rom", FA_OPEN_EXISTING | FA_READ);
     if (r != 0)
     {
         sprintf(buf, " FAILED (%i)\n", r);
@@ -55,4 +55,3 @@ void main(void)
     jp      (HL)
     __endasm;
 }
-
