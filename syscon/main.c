@@ -36,7 +36,7 @@ void main(void)
     // Open big80.sys
     FIL f;
     uart_write_sz("Opening level2-a.rom...");
-    r = f_open(&f, "0:/level2-a.sys", FA_OPEN_EXISTING | FA_READ);
+    r = f_open(&f, "0:/level2-a.rom", FA_OPEN_EXISTING | FA_READ);
     if (r != 0)
     {
         sprintf(g_szTemp, " FAILED (%i)\n", r);
@@ -53,7 +53,7 @@ void main(void)
     f_close(&f);
     ApmHiBankPage = 0x03;       
 
-    sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", (int)(bytes_read));
+    sprintf(g_szTemp, "level2-a.rom loaded (%u bytes).\n", bytes_read);
     uart_write_sz(g_szTemp);
 
     uart_write_sz("Jumping to TRS-80 ROM...");

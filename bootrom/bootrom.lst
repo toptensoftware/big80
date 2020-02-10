@@ -10597,15 +10597,24 @@
 514A: 13                                DB      13h
 
                                         ; --- START PROC L514B ---
-514B: 01 02 00                   L514B: LD      BC,0002h
-514E: 78                                LD      A,B
-514F: B1                                OR      C
-5150: 28 08                             JR      Z,L515A
-5152: 11 B8 72                          LD      DE,72B8h
-5155: 21 49 51                          LD      HL,5149h
-5158: ED B0                             LDIR
-                                        ; --- START PROC L515A ---
-515A: C9                         L515A: RET
+514B: 21 00 70                   L514B: LD      HL,7000h
+514E: AF                                XOR     A
+514F: 77                                LD      (HL),A
+5150: 01 B7 02                          LD      BC,02B7h
+5153: 78                                LD      A,B
+5154: B1                                OR      C
+5155: 28 05                             JR      Z,L515C
+5157: 11 01 70                          LD      DE,7001h
+515A: ED B0                             LDIR
+515C: 01 02 00                   L515C: LD      BC,0002h
+515F: 78                                LD      A,B
+5160: B1                                OR      C
+5161: 28 08                             JR      Z,L516B
+5163: 11 B8 72                          LD      DE,72B8h
+5166: 21 49 51                          LD      HL,5149h
+5169: ED B0                             LDIR
+                                        ; --- START PROC L516B ---
+516B: C9                         L516B: RET
 
 
 references to external address 72B5h:
@@ -10616,7 +10625,7 @@ references to external address 72B5h:
 references to external address 72B8h:
         128D LD HL,(72B8h)
         1308 LD HL,(72B8h)
-        5152 LD DE,72B8h
+        5163 LD DE,72B8h
 
 references to external address 0FFF0h:
         0311 LD DE,0FFF0h
@@ -10741,7 +10750,7 @@ possible references to internal address 0002:
         4645 LD IY,0002h
         4661 LD IY,0002h
         4A37 LD HL,0002h
-        514B LD BC,0002h
+        515C LD BC,0002h
 
 possible references to internal address 0003:
         20E1 LD HL,0003h
@@ -11177,6 +11186,9 @@ possible references to internal address 02AE:
 possible references to internal address 02B3:
         0169 LD HL,02B3h
 
+possible references to internal address 02B7:
+        5150 LD BC,02B7h
+
 possible references to internal address 02C8:
         017D LD HL,02C8h
 
@@ -11230,7 +11242,7 @@ possible references to internal address 5021:
         3DC2 LD HL,5021h
 
 possible references to internal address 5149:
-        5155 LD HL,5149h
+        5166 LD HL,5149h
 
 possible references to external address 5252h:
         4841 LD HL,5252h
@@ -11245,6 +11257,10 @@ possible references to external address 7000h:
         01A1 LD HL,7000h
         024E LD HL,7000h
         025A LD HL,7000h
+        514B LD HL,7000h
+
+possible references to external address 7001h:
+        5157 LD DE,7001h
 
 possible references to external address 7080h:
         0135 LD HL,7080h
@@ -11266,7 +11282,7 @@ possible references to external address 72B7h:
         3B66 LD IY,72B7h
 
 possible references to external address 72B8h:
-        5152 LD DE,72B8h
+        5163 LD DE,72B8h
         ----------
         128D LD HL,(72B8h)
         1308 LD HL,(72B8h)
@@ -11429,13 +11445,13 @@ Procedures (66):
   L4A53  04E6            1          3
   L4F39  017E            3          1
   L50B7  0092            1          0
-  L514B  0010            1          1
-  L515A  0001            1          0
+  L514B  0021            1          1
+  L516B  0001            1          0
 
 Call Graph:
 L0000 - Entry Point
   L514B
-    L515A
+    L516B
   L0112
     L1331
       L1415
