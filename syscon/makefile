@@ -15,7 +15,7 @@ YAZD=yazd
 # Build Flags
 COMMONFLAGS=-mz80 --stack-auto
 CFLAGS=$(COMMONFLAGS) --std-c99 --disable-warning 85 --disable-warning 110 --disable-warning 126
-LINKFLAGS=$(COMMONFLAGS) --code-loc 0x110 --data-loc 0x7000 --no-std-crt0
+LINKFLAGS=$(COMMONFLAGS) --code-loc 0x110 --data-loc 0xF000 --no-std-crt0
 
 # Project config
 PROJNAME := $(notdir $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST)))))
@@ -23,7 +23,7 @@ INTDIR   := ./build
 OUTDIR   := ./bin
 OUTEXT   := bin
 OUTNAME  := $(PROJNAME).$(OUTEXT)
-OUTFILE  := $(OUTDIR)/$(OUTNAME)
+OUTFILE  := $(OUTDIR)/big80.sys
 SOURCES  := $(wildcard *.c)
 INCLUDES := $(wildcard *.h) ../libSysCon/libSysCon/libSysCon.h
 INCLUDEPATH := ../libSysCon/libSysCon/ ../libSysCon/libFatFS/
@@ -40,16 +40,16 @@ all: $(INTDIR) $(OUTDIR) libSysCon $(OUTFILE)
 # Compile
 $(PROJOBJS): $(INTDIR)/%.rel : ./%.c $(INCLUDES)
 	@echo Compiling $(notdir $<)...
-	$(SDCC) $(CFLAGS)  $(addprefix -I ,$(INCLUDEPATH)) -c $< -o $@
+	@$(SDCC) $(CFLAGS)  $(addprefix -I ,$(INCLUDEPATH)) -c $< -o $@
 
 # Link
 $(OUTFILE): $(OBJS) $(LIBS)
 	@echo Linking $(notdir $@)...
 	@$(SDCC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(INTDIR)/$(PROJNAME).ihx
 	@$(HEX2BIN) -b -s 0000 -e $(OUTEXT) $(INTDIR)/$(PROJNAME).ihx
-	@$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
+	#@$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
-	#cp $(OUTFILE) ~/sf_downloads/
+	cp $(OUTFILE) ~/sf_downloads/
 
 .PHONY: libSysCon
 

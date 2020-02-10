@@ -20,7 +20,7 @@ void nmi_handler() __naked
 void main(void) 
 {
     // Hello!
-    uart_write_sz("\nHello world from Big80\n");
+    uart_write_sz("...landed in big80.sys!\n");
 
     // Mount SD Card
     uart_write_sz("Mounting SD card...");
@@ -35,8 +35,8 @@ void main(void)
 
     // Open big80.sys
     FIL f;
-    uart_write_sz("Opening big80.sys...");
-    r = f_open(&f, "0:/big80.sys", FA_OPEN_EXISTING | FA_READ);
+    uart_write_sz("Opening level2-a.rom...");
+    r = f_open(&f, "0:/level2-a.sys", FA_OPEN_EXISTING | FA_READ);
     if (r != 0)
     {
         sprintf(g_szTemp, " FAILED (%i)\n", r);
@@ -47,27 +47,17 @@ void main(void)
 
     // Map our hi-address range (0x8000-0xFFFF) to the RAM that will be used for the
     // TRS80's 0x0000->0x7FFF address range and read the TRS-80 ROM image from SD Card
-    ApmHiBankPage = 0x02;
-    uint32_t totalBytes = 0;
-    while (1)
-    {
-        UINT bytes_read = 0;
-        f_read(&f, (BYTE*)0x8000, 0x8000, &bytes_read);
-        totalBytes += bytes_read;
-        ApmHiBankPage++;
-        if (bytes_read != 0x8000)
-            break;
-    }
+    ApmHiBankPage = 0x00;
+    UINT bytes_read = 0;
+    f_read(&f, (BYTE*)0x8000, f_size(&f), &bytes_read);
     f_close(&f);
     ApmHiBankPage = 0x03;       
 
-    sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", (int)(totalBytes));
+    sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", (int)(bytes_read));
     uart_write_sz(g_szTemp);
 
-    // Jump to big80.sys
-    uart_write_sz("Jumping to big80.sys...\n");
-    thunkStart();
-/*
+    uart_write_sz("Jumping to TRS-80 ROM...");
+
     // Request exit hijack mode and jump to TRS80 ROM start (0x0000)
     __asm
     ld      a,#ICFLAG_EXIT_HIJACK_MODE
@@ -75,30 +65,4 @@ void main(void)
     ld      HL, #0
     jp      (HL)
     __endasm;
-*/
-}
-
-
-void thunkStart()
-{
-	__asm
-
-	; Copy the thunk routine to high memory
-	ld		HL,#90$
-	ld		DE,#0xFFF0
-	ld		BC,#99$ - #90$
-	ldir	
-
-    ; Jump to thunk
-    jp      0xFFF0
-
-90$:
-	; Kick out the bootrom firmware (ie: this code)
-	ld		A,#0
-	out		(_ApmSysConEnable),A
-
-    ; Jump to big80.sys entry point
-    jp      0x0000
-99$:
-	__endasm;
 }
