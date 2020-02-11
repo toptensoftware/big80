@@ -15,6 +15,7 @@ BOOTROMBIN = ../../../bootrom/bin/bootrom.bin
 BootRom.vhd: $(BOOTROMBIN)
 	node $(FPGAKIT)/tools/bin2vhdlrom/bin2vhdlrom \
 		--addrWidth:15 \
+		--writeable \
 		$(BOOTROMBIN) \
 		BootRom.vhd
 

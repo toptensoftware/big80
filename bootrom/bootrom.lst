@@ -285,7 +285,7 @@
 0130: 33                                INC     SP
 0131: 21 71 02                          LD      HL,0271h
 0134: E5                                PUSH    HL
-0135: 21 80 70                          LD      HL,7080h
+0135: 21 80 60                          LD      HL,6080h
 0138: E5                                PUSH    HL
 0139: CD 63 0F                          CALL    L0F63
 013C: F1                                POP     AF
@@ -299,13 +299,13 @@
 0146: C5                                PUSH    BC
 0147: 21 A0 02                          LD      HL,02A0h
 014A: E5                                PUSH    HL
-014B: 21 00 70                          LD      HL,7000h
+014B: 21 00 60                          LD      HL,6000h
 014E: E5                                PUSH    HL
 014F: CD 10 11                          CALL    L1110
 0152: 21 06 00                          LD      HL,0006h
 0155: 39                                ADD     HL,SP
 0156: F9                                LD      SP,HL
-0157: 21 00 70                          LD      HL,7000h
+0157: 21 00 60                          LD      HL,6000h
 015A: E5                                PUSH    HL
 015B: CD 31 13                          CALL    L1331
 015E: F1                                POP     AF
@@ -343,13 +343,13 @@
 0190: C5                                PUSH    BC
 0191: 21 A0 02                          LD      HL,02A0h
 0194: E5                                PUSH    HL
-0195: 21 00 70                          LD      HL,7000h
+0195: 21 00 60                          LD      HL,6000h
 0198: E5                                PUSH    HL
 0199: CD 10 11                          CALL    L1110
 019C: 21 06 00                          LD      HL,0006h
 019F: 39                                ADD     HL,SP
 01A0: F9                                LD      SP,HL
-01A1: 21 00 70                          LD      HL,7000h
+01A1: 21 00 60                          LD      HL,6000h
 01A4: E5                                PUSH    HL
 01A5: CD 31 13                          CALL    L1331
 01A8: F1                                POP     AF
@@ -427,13 +427,13 @@
 0249: C5                                PUSH    BC
 024A: 21 D5 02                          LD      HL,02D5h
 024D: E5                                PUSH    HL
-024E: 21 00 70                          LD      HL,7000h
+024E: 21 00 60                          LD      HL,6000h
 0251: E5                                PUSH    HL
 0252: CD 10 11                          CALL    L1110
 0255: 21 06 00                          LD      HL,0006h
 0258: 39                                ADD     HL,SP
 0259: F9                                LD      SP,HL
-025A: 21 00 70                          LD      HL,7000h
+025A: 21 00 60                          LD      HL,6000h
 025D: E5                                PUSH    HL
 025E: CD 31 13                          CALL    L1331
 0261: 21 F5 02                          LD      HL,02F5h
@@ -2061,7 +2061,7 @@
 0F8A: 2E 0B                             LD      L,0Bh
 0F8C: C3 0D 10                          JP      L100D
 
-0F8F: 01 B3 72                   L0F8F: LD      BC,72B3h
+0F8F: 01 B3 62                   L0F8F: LD      BC,62B3h
 0F92: DD 6E FE                          LD      L,(IX-02h)
 0F95: DD 66 FF                          LD      H,(IX-01h)
 0F98: 29                                ADD     HL,HL
@@ -2533,7 +2533,7 @@
 1289: DB 91                      L1289: IN      A,(91h)
 128B: 0F                                RRCA
 128C: D0                                RET     NC
-128D: 2A B8 72                          LD      HL,(72B8h)
+128D: 2A B8 62                          LD      HL,(62B8h)
 1290: CD 03 3E                          CALL    L3E03
 1293: 18 F4                             JR      L1289
 
@@ -2603,7 +2603,7 @@
 1304: B7                                OR      A
 1305: 20 0A                             JR      NZ,L1311
 1307: C5                                PUSH    BC
-1308: 2A B8 72                          LD      HL,(72B8h)
+1308: 2A B8 62                          LD      HL,(62B8h)
 130B: CD 03 3E                          CALL    L3E03
 130E: C1                                POP     BC
 130F: 18 DC                             JR      L12ED
@@ -3693,7 +3693,7 @@
 1B38: 2E 0B                             LD      L,0Bh
 1B3A: C3 F8 22                          JP      L22F8
 
-1B3D: 01 B3 72                   L1B3D: LD      BC,72B3h
+1B3D: 01 B3 62                   L1B3D: LD      BC,62B3h
 1B40: DD 6E FE                          LD      L,(IX-02h)
 1B43: DD 66 FF                          LD      H,(IX-01h)
 1B46: 29                                ADD     HL,HL
@@ -4679,10 +4679,10 @@
 22C8: DD 7E E1                          LD      A,(IX-1Fh)
 22CB: CE 00                             ADC     A,00h
 22CD: 47                                LD      B,A
-22CE: 2A B5 72                          LD      HL,(72B5h)
+22CE: 2A B5 62                          LD      HL,(62B5h)
 22D1: 23                                INC     HL
-22D2: 22 B5 72                          LD      (72B5h),HL
-22D5: FD 21 B5 72                       LD      IY,72B5h
+22D2: 22 B5 62                          LD      (62B5h),HL
+22D5: FD 21 B5 62                       LD      IY,62B5h
 22D9: FD 7E 00                          LD      A,(IY+00h)
 22DC: 02                                LD      (BC),A
 22DD: 03                                INC     BC
@@ -7684,7 +7684,7 @@
 3B63: E5                                PUSH    HL
 3B64: 18 09                             JR      L3B6F
 
-3B66: FD 21 B7 72                L3B66: LD      IY,72B7h
+3B66: FD 21 B7 62                L3B66: LD      IY,62B7h
 3B6A: FD 6E 00                          LD      L,(IY+00h)
 3B6D: 26 00                             LD      H,00h
 3B6F: DD F9                      L3B6F: LD      SP,IX
@@ -10597,35 +10597,35 @@
 514A: 13                                DB      13h
 
                                         ; --- START PROC L514B ---
-514B: 21 00 70                   L514B: LD      HL,7000h
+514B: 21 00 60                   L514B: LD      HL,6000h
 514E: AF                                XOR     A
 514F: 77                                LD      (HL),A
 5150: 01 B7 02                          LD      BC,02B7h
 5153: 78                                LD      A,B
 5154: B1                                OR      C
 5155: 28 05                             JR      Z,L515C
-5157: 11 01 70                          LD      DE,7001h
+5157: 11 01 60                          LD      DE,6001h
 515A: ED B0                             LDIR
 515C: 01 02 00                   L515C: LD      BC,0002h
 515F: 78                                LD      A,B
 5160: B1                                OR      C
 5161: 28 08                             JR      Z,L516B
-5163: 11 B8 72                          LD      DE,72B8h
+5163: 11 B8 62                          LD      DE,62B8h
 5166: 21 49 51                          LD      HL,5149h
 5169: ED B0                             LDIR
                                         ; --- START PROC L516B ---
 516B: C9                         L516B: RET
 
 
-references to external address 72B5h:
-        22CE LD HL,(72B5h)
-        22D2 LD (72B5h),HL
-        22D5 LD IY,72B5h
+references to external address 62B5h:
+        22CE LD HL,(62B5h)
+        22D2 LD (62B5h),HL
+        22D5 LD IY,62B5h
 
-references to external address 72B8h:
-        128D LD HL,(72B8h)
-        1308 LD HL,(72B8h)
-        5163 LD DE,72B8h
+references to external address 62B8h:
+        128D LD HL,(62B8h)
+        1308 LD HL,(62B8h)
+        5163 LD DE,62B8h
 
 references to external address 0FFF0h:
         0311 LD DE,0FFF0h
@@ -11247,45 +11247,45 @@ possible references to internal address 5149:
 possible references to external address 5252h:
         4841 LD HL,5252h
 
+possible references to external address 6000h:
+        014B LD HL,6000h
+        0157 LD HL,6000h
+        0195 LD HL,6000h
+        01A1 LD HL,6000h
+        024E LD HL,6000h
+        025A LD HL,6000h
+        514B LD HL,6000h
+
+possible references to external address 6001h:
+        5157 LD DE,6001h
+
+possible references to external address 6080h:
+        0135 LD HL,6080h
+
 possible references to external address 6141h:
         485A LD HL,6141h
 
-possible references to external address 7000h:
-        014B LD HL,7000h
-        0157 LD HL,7000h
-        0195 LD HL,7000h
-        01A1 LD HL,7000h
-        024E LD HL,7000h
-        025A LD HL,7000h
-        514B LD HL,7000h
+possible references to external address 62B3h:
+        0F8F LD BC,62B3h
+        1B3D LD BC,62B3h
 
-possible references to external address 7001h:
-        5157 LD DE,7001h
+possible references to external address 62B5h:
+        22D5 LD IY,62B5h
+        ----------
+        22CE LD HL,(62B5h)
+        22D2 LD (62B5h),HL
 
-possible references to external address 7080h:
-        0135 LD HL,7080h
+possible references to external address 62B7h:
+        3B66 LD IY,62B7h
+
+possible references to external address 62B8h:
+        5163 LD DE,62B8h
+        ----------
+        128D LD HL,(62B8h)
+        1308 LD HL,(62B8h)
 
 possible references to external address 7272h:
         485E LD HL,7272h
-
-possible references to external address 72B3h:
-        0F8F LD BC,72B3h
-        1B3D LD BC,72B3h
-
-possible references to external address 72B5h:
-        22D5 LD IY,72B5h
-        ----------
-        22CE LD HL,(72B5h)
-        22D2 LD (72B5h),HL
-
-possible references to external address 72B7h:
-        3B66 LD IY,72B7h
-
-possible references to external address 72B8h:
-        5163 LD DE,72B8h
-        ----------
-        128D LD HL,(72B8h)
-        1308 LD HL,(72B8h)
 
 possible references to external address 8000h:
         0104 LD SP,8000h

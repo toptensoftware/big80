@@ -12,6 +12,8 @@ port
 (
 	i_clock : in std_logic;
 	i_addr : in std_logic_vector(14 downto 0);
+    i_write : in std_logic;
+	i_din : in std_logic_vector(7 downto 0);
 	o_dout : out std_logic_vector(7 downto 0)
 );
 end BootRom;
@@ -41,14 +43,14 @@ architecture behavior of BootRom is
 	x"06", x"40", x"10", x"fe", x"31", x"00", x"80", x"cd", x"4b", x"51", x"cd", x"12", x"01", x"18", x"fe", x"ff",
 	x"ed", x"45", x"dd", x"e5", x"dd", x"21", x"00", x"00", x"dd", x"39", x"21", x"d2", x"fd", x"39", x"f9", x"21",
 	x"73", x"02", x"e5", x"cd", x"31", x"13", x"21", x"8c", x"02", x"e3", x"cd", x"31", x"13", x"26", x"01", x"e3",
-	x"33", x"21", x"71", x"02", x"e5", x"21", x"80", x"70", x"e5", x"cd", x"63", x"0f", x"f1", x"f1", x"33", x"4d",
-	x"79", x"b7", x"28", x"1e", x"06", x"00", x"c5", x"21", x"a0", x"02", x"e5", x"21", x"00", x"70", x"e5", x"cd",
-	x"10", x"11", x"21", x"06", x"00", x"39", x"f9", x"21", x"00", x"70", x"e5", x"cd", x"31", x"13", x"f1", x"c3",
+	x"33", x"21", x"71", x"02", x"e5", x"21", x"80", x"60", x"e5", x"cd", x"63", x"0f", x"f1", x"f1", x"33", x"4d",
+	x"79", x"b7", x"28", x"1e", x"06", x"00", x"c5", x"21", x"a0", x"02", x"e5", x"21", x"00", x"60", x"e5", x"cd",
+	x"10", x"11", x"21", x"06", x"00", x"39", x"f9", x"21", x"00", x"60", x"e5", x"cd", x"31", x"13", x"f1", x"c3",
 	x"6c", x"02", x"21", x"ae", x"02", x"e5", x"cd", x"31", x"13", x"21", x"b3", x"02", x"e3", x"cd", x"31", x"13",
 	x"f1", x"21", x"00", x"00", x"39", x"eb", x"4b", x"42", x"d5", x"3e", x"01", x"f5", x"33", x"21", x"c8", x"02",
 	x"e5", x"c5", x"cd", x"a1", x"09", x"f1", x"f1", x"33", x"7d", x"d1", x"b7", x"28", x"1f", x"4f", x"06", x"00",
-	x"c5", x"21", x"a0", x"02", x"e5", x"21", x"00", x"70", x"e5", x"cd", x"10", x"11", x"21", x"06", x"00", x"39",
-	x"f9", x"21", x"00", x"70", x"e5", x"cd", x"31", x"13", x"f1", x"c3", x"6c", x"02", x"d5", x"21", x"ae", x"02",
+	x"c5", x"21", x"a0", x"02", x"e5", x"21", x"00", x"60", x"e5", x"cd", x"10", x"11", x"21", x"06", x"00", x"39",
+	x"f9", x"21", x"00", x"60", x"e5", x"cd", x"31", x"13", x"f1", x"c3", x"6c", x"02", x"d5", x"21", x"ae", x"02",
 	x"e5", x"cd", x"31", x"13", x"f1", x"d1", x"3e", x"02", x"d3", x"a1", x"af", x"dd", x"77", x"fc", x"dd", x"77",
 	x"fd", x"dd", x"77", x"fe", x"dd", x"77", x"ff", x"dd", x"73", x"f6", x"dd", x"72", x"f7", x"af", x"dd", x"77",
 	x"f4", x"dd", x"77", x"f5", x"21", x"22", x"02", x"39", x"dd", x"4e", x"f6", x"dd", x"46", x"f7", x"d5", x"e5",
@@ -59,7 +61,7 @@ architecture behavior of BootRom is
 	x"7e", x"ff", x"dd", x"8e", x"fb", x"dd", x"77", x"ff", x"db", x"a1", x"3c", x"d3", x"a1", x"dd", x"7e", x"f4",
 	x"b7", x"20", x"07", x"dd", x"7e", x"f5", x"d6", x"80", x"28", x"93", x"d5", x"cd", x"ab", x"17", x"f1", x"3e",
 	x"03", x"d3", x"a1", x"dd", x"4e", x"fc", x"dd", x"46", x"fd", x"c5", x"21", x"d5", x"02", x"e5", x"21", x"00",
-	x"70", x"e5", x"cd", x"10", x"11", x"21", x"06", x"00", x"39", x"f9", x"21", x"00", x"70", x"e5", x"cd", x"31",
+	x"60", x"e5", x"cd", x"10", x"11", x"21", x"06", x"00", x"39", x"f9", x"21", x"00", x"60", x"e5", x"cd", x"31",
 	x"13", x"21", x"f5", x"02", x"e3", x"cd", x"31", x"13", x"f1", x"cd", x"0e", x"03", x"dd", x"f9", x"dd", x"e1",
 	x"c9", x"30", x"00", x"0a", x"48", x"65", x"6c", x"6c", x"6f", x"20", x"77", x"6f", x"72", x"6c", x"64", x"20",
 	x"66", x"72", x"6f", x"6d", x"20", x"42", x"69", x"67", x"38", x"30", x"0a", x"00", x"4d", x"6f", x"75", x"6e",
@@ -271,7 +273,7 @@ architecture behavior of BootRom is
 	x"dd", x"e1", x"c9", x"cd", x"24", x"14", x"f5", x"f5", x"f5", x"dd", x"7e", x"06", x"dd", x"77", x"fa", x"dd",
 	x"7e", x"07", x"dd", x"77", x"fb", x"21", x"00", x"00", x"39", x"e5", x"cd", x"9f", x"3a", x"f1", x"dd", x"75",
 	x"fe", x"dd", x"74", x"ff", x"dd", x"cb", x"ff", x"7e", x"28", x"05", x"2e", x"0b", x"c3", x"0d", x"10", x"01",
-	x"b3", x"72", x"dd", x"6e", x"fe", x"dd", x"66", x"ff", x"29", x"09", x"dd", x"75", x"fe", x"dd", x"74", x"ff",
+	x"b3", x"62", x"dd", x"6e", x"fe", x"dd", x"66", x"ff", x"29", x"09", x"dd", x"75", x"fe", x"dd", x"74", x"ff",
 	x"4e", x"23", x"46", x"59", x"78", x"57", x"b1", x"28", x"02", x"af", x"12", x"dd", x"7e", x"05", x"dd", x"b6",
 	x"04", x"28", x"08", x"dd", x"4e", x"04", x"dd", x"46", x"05", x"af", x"02", x"dd", x"6e", x"fe", x"dd", x"66",
 	x"ff", x"dd", x"7e", x"04", x"77", x"23", x"dd", x"7e", x"05", x"77", x"dd", x"7e", x"08", x"b7", x"20", x"03",
@@ -318,7 +320,7 @@ architecture behavior of BootRom is
 	x"11", x"00", x"00", x"dd", x"7e", x"fc", x"b1", x"6f", x"dd", x"7e", x"fd", x"b0", x"67", x"dd", x"7e", x"fe",
 	x"b3", x"5f", x"dd", x"7e", x"ff", x"b2", x"57", x"dd", x"f9", x"dd", x"e1", x"c9", x"fd", x"21", x"02", x"00",
 	x"fd", x"39", x"fd", x"6e", x"02", x"fd", x"66", x"03", x"e5", x"fd", x"6e", x"00", x"fd", x"66", x"01", x"e5",
-	x"cd", x"48", x"13", x"f1", x"f1", x"3e", x"01", x"d3", x"91", x"db", x"91", x"0f", x"d0", x"2a", x"b8", x"72",
+	x"cd", x"48", x"13", x"f1", x"f1", x"3e", x"01", x"d3", x"91", x"db", x"91", x"0f", x"d0", x"2a", x"b8", x"62",
 	x"cd", x"03", x"3e", x"18", x"f4", x"21", x"02", x"00", x"39", x"7e", x"23", x"66", x"6f", x"01", x"92", x"00",
 	x"ed", x"b2", x"ed", x"b2", x"c9", x"fd", x"21", x"02", x"00", x"fd", x"39", x"fd", x"6e", x"02", x"fd", x"66",
 	x"03", x"e5", x"fd", x"6e", x"00", x"fd", x"66", x"01", x"e5", x"cd", x"6c", x"12", x"f1", x"f1", x"21", x"06",
@@ -326,7 +328,7 @@ architecture behavior of BootRom is
 	x"39", x"fd", x"6e", x"02", x"fd", x"66", x"03", x"fd", x"46", x"04", x"0e", x"80", x"ed", x"b3", x"c9", x"dd",
 	x"e5", x"dd", x"21", x"00", x"00", x"dd", x"39", x"dd", x"4e", x"04", x"dd", x"46", x"05", x"dd", x"7e", x"06",
 	x"b7", x"28", x"3b", x"db", x"80", x"5f", x"3e", x"ff", x"93", x"67", x"dd", x"7e", x"06", x"94", x"30", x"03",
-	x"dd", x"66", x"06", x"7c", x"b7", x"20", x"0a", x"c5", x"2a", x"b8", x"72", x"cd", x"03", x"3e", x"c1", x"18",
+	x"dd", x"66", x"06", x"7c", x"b7", x"20", x"0a", x"c5", x"2a", x"b8", x"62", x"cd", x"03", x"3e", x"c1", x"18",
 	x"dc", x"59", x"50", x"e5", x"c5", x"e5", x"33", x"d5", x"cd", x"cb", x"12", x"f1", x"33", x"c1", x"e1", x"79",
 	x"84", x"4f", x"30", x"01", x"04", x"dd", x"7e", x"06", x"94", x"dd", x"77", x"06", x"18", x"bf", x"dd", x"e1",
 	x"c9", x"c1", x"e1", x"e5", x"c5", x"e5", x"cd", x"15", x"14", x"f1", x"65", x"d1", x"c1", x"c5", x"d5", x"e5",
@@ -457,7 +459,7 @@ architecture behavior of BootRom is
 	x"dd", x"e1", x"c9", x"cd", x"24", x"14", x"21", x"dc", x"ff", x"39", x"f9", x"dd", x"7e", x"06", x"dd", x"77",
 	x"fc", x"dd", x"7e", x"07", x"dd", x"77", x"fd", x"dd", x"6e", x"fc", x"dd", x"66", x"fd", x"af", x"77", x"23",
 	x"77", x"dd", x"6e", x"04", x"dd", x"66", x"05", x"e5", x"cd", x"9f", x"3a", x"f1", x"dd", x"75", x"fe", x"dd",
-	x"74", x"ff", x"dd", x"cb", x"ff", x"7e", x"28", x"05", x"2e", x"0b", x"c3", x"f8", x"22", x"01", x"b3", x"72",
+	x"74", x"ff", x"dd", x"cb", x"ff", x"7e", x"28", x"05", x"2e", x"0b", x"c3", x"f8", x"22", x"01", x"b3", x"62",
 	x"dd", x"6e", x"fe", x"dd", x"66", x"ff", x"29", x"09", x"7e", x"dd", x"77", x"e0", x"23", x"7e", x"dd", x"77",
 	x"e1", x"dd", x"b6", x"e0", x"20", x"05", x"2e", x"0c", x"c3", x"f8", x"22", x"dd", x"6e", x"fc", x"dd", x"66",
 	x"fd", x"dd", x"7e", x"e0", x"77", x"23", x"dd", x"7e", x"e1", x"77", x"dd", x"7e", x"08", x"e6", x"fe", x"dd",
@@ -579,7 +581,7 @@ architecture behavior of BootRom is
 	x"e7", x"ce", x"01", x"47", x"c5", x"cd", x"cc", x"11", x"f1", x"4d", x"44", x"dd", x"6e", x"fb", x"dd", x"66",
 	x"fc", x"71", x"23", x"70", x"23", x"73", x"23", x"72", x"dd", x"7e", x"f8", x"dd", x"6e", x"e0", x"dd", x"66",
 	x"e1", x"77", x"dd", x"7e", x"e0", x"c6", x"05", x"4f", x"dd", x"7e", x"e1", x"ce", x"00", x"47", x"2a", x"b5",
-	x"72", x"23", x"22", x"b5", x"72", x"fd", x"21", x"b5", x"72", x"fd", x"7e", x"00", x"02", x"03", x"fd", x"7e",
+	x"62", x"23", x"22", x"b5", x"62", x"fd", x"21", x"b5", x"62", x"fd", x"7e", x"00", x"02", x"03", x"fd", x"7e",
 	x"01", x"02", x"dd", x"7e", x"e0", x"c6", x"13", x"4f", x"dd", x"7e", x"e1", x"ce", x"00", x"47", x"af", x"02",
 	x"03", x"02", x"03", x"02", x"03", x"02", x"2e", x"00", x"dd", x"f9", x"dd", x"e1", x"c9", x"d1", x"c1", x"c5",
 	x"d5", x"21", x"06", x"00", x"39", x"5e", x"23", x"56", x"21", x"04", x"00", x"39", x"7e", x"02", x"03", x"1b",
@@ -972,7 +974,7 @@ architecture behavior of BootRom is
 	x"d0", x"dd", x"77", x"fc", x"78", x"ce", x"ff", x"dd", x"77", x"fd", x"dd", x"7e", x"fc", x"d6", x"01", x"dd",
 	x"7e", x"fd", x"17", x"3f", x"1f", x"de", x"80", x"30", x"19", x"dd", x"7e", x"fc", x"dd", x"77", x"f6", x"dd",
 	x"7e", x"fd", x"dd", x"77", x"f7", x"c1", x"e1", x"e5", x"c5", x"dd", x"7e", x"fa", x"77", x"23", x"dd", x"7e",
-	x"fb", x"77", x"e1", x"e5", x"18", x"09", x"fd", x"21", x"b7", x"72", x"fd", x"6e", x"00", x"26", x"00", x"dd",
+	x"fb", x"77", x"e1", x"e5", x"18", x"09", x"fd", x"21", x"b7", x"62", x"fd", x"6e", x"00", x"26", x"00", x"dd",
 	x"f9", x"dd", x"e1", x"c9", x"cd", x"24", x"14", x"f5", x"f5", x"f5", x"3b", x"dd", x"4e", x"04", x"dd", x"46",
 	x"05", x"0a", x"dd", x"77", x"f9", x"03", x"0a", x"dd", x"77", x"fa", x"0b", x"c5", x"21", x"00", x"00", x"e5",
 	x"21", x"00", x"00", x"e5", x"c5", x"cd", x"19", x"43", x"f1", x"f1", x"f1", x"c1", x"7d", x"b7", x"c2", x"4c",
@@ -1322,9 +1324,9 @@ architecture behavior of BootRom is
 	x"5f", x"7a", x"dd", x"9e", x"0b", x"57", x"dd", x"7e", x"04", x"f6", x"01", x"dd", x"77", x"04", x"dd", x"7e",
 	x"05", x"dd", x"77", x"05", x"dd", x"7e", x"06", x"dd", x"77", x"06", x"dd", x"7e", x"07", x"dd", x"77", x"07",
 	x"dd", x"35", x"ff", x"dd", x"7e", x"ff", x"b7", x"20", x"91", x"dd", x"6e", x"04", x"dd", x"66", x"05", x"dd",
-	x"5e", x"06", x"dd", x"56", x"07", x"33", x"dd", x"e1", x"c9", x"5c", x"13", x"21", x"00", x"70", x"af", x"77",
-	x"01", x"b7", x"02", x"78", x"b1", x"28", x"05", x"11", x"01", x"70", x"ed", x"b0", x"01", x"02", x"00", x"78",
-	x"b1", x"28", x"08", x"11", x"b8", x"72", x"21", x"49", x"51", x"ed", x"b0", x"c9", x"00", x"00", x"00", x"00",
+	x"5e", x"06", x"dd", x"56", x"07", x"33", x"dd", x"e1", x"c9", x"5c", x"13", x"21", x"00", x"60", x"af", x"77",
+	x"01", x"b7", x"02", x"78", x"b1", x"28", x"05", x"11", x"01", x"60", x"ed", x"b0", x"01", x"02", x"00", x"78",
+	x"b1", x"28", x"08", x"11", x"b8", x"62", x"21", x"49", x"51", x"ed", x"b0", x"c9", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
 	x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00", x"00",
@@ -2074,6 +2076,9 @@ begin
 	process (i_clock)
 	begin
 		if rising_edge(i_clock) then
+            if i_write = '1' then
+                ram(to_integer(unsigned(i_addr))) <= i_din;
+            end if;
 			o_dout <= ram(to_integer(unsigned(i_addr)));
 		end if;
 	end process;

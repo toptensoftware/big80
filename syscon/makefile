@@ -47,9 +47,11 @@ $(OUTFILE): $(OBJS) $(LIBS)
 	@echo Linking $(notdir $@)...
 	@$(SDCC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(INTDIR)/$(PROJNAME).ihx
 	@$(HEX2BIN) -b -s 0000 -e $(OUTEXT) $(INTDIR)/$(PROJNAME).ihx
-	@$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
+	#@$(YAZD) $(INTDIR)/$(PROJNAME).$(OUTEXT) --entry:0 --lst > $(PROJNAME).lst
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
 	cp $(OUTFILE) ~/sf_downloads/
+	mcopy -o -i ~/sf_downloads/test.img@@1M $@ ::
+	@echo "Done!"
 
 .PHONY: libSysCon
 

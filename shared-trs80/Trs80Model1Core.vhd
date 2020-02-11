@@ -143,18 +143,18 @@ architecture behavior of Trs80Model1Core is
 	signal s_port_rd_falling_edge : std_logic;
 
 	-- Address mapping
-	signal s_is_lobank_port : std_logic;
 	signal s_is_hibank_port : std_logic;
 	signal s_is_syscon_enable_port : std_logic;
-	signal s_lobank_page : std_logic_vector(1 downto 0);
 	signal s_hibank_page : std_logic_vector(1 downto 0);
 	--signal s_syscon_video_mapped : std_logic;
 
-	-- Syscon Firmware
-	signal s_syscon_firmware_mapped : std_logic;
-	signal s_is_syscon_firmware_range : std_logic;
-	signal s_syscon_firmware_addr_cpu : std_logic_vector(14 downto 0);
-	signal s_syscon_firmware_dout_cpu : std_logic_vector(7 downto 0);
+	-- Boot ROM.  (Actually it's a writeable RAM but hey... )
+	signal s_bootmode : std_logic := '1';
+	signal s_is_bootrom_range : std_logic;
+	signal s_bootrom_addr : std_logic_vector(14 downto 0);
+	signal s_bootrom_dout : std_logic_vector(7 downto 0);
+	signal s_bootrom_din : std_logic_vector(7 downto 0);
+	signal s_bootrom_write : std_logic;
 
 	-- Interrupt Controller
 	signal s_is_syscon_ic_port : std_logic;
@@ -339,12 +339,11 @@ begin
 	cpu_addr_decoder : process(
 			s_cpu_addr, 
 			s_hijacked,
-			s_syscon_firmware_mapped,
-			s_lobank_page, 
+			s_bootmode,
 			s_hibank_page
 			)
 	begin
-		s_is_syscon_firmware_range <= '0';
+		s_is_bootrom_range <= '0';
 --		s_is_syscon_vram_range <= '0';
 		s_is_rom_range <= '0';
 		s_is_vram_range <= '0';
@@ -352,9 +351,9 @@ begin
 		s_is_keyboard_range <= '0';
 
 		if s_hijacked = '1' then
-			if s_syscon_firmware_mapped = '1' and s_cpu_addr(15) = '0' and (s_cpu_addr(14 downto 12) /= "111") then
+			if s_bootmode = '1' and s_cpu_addr(15) = '0' then
 				-- 0x0000 -> 0x6FFF
-				s_is_syscon_firmware_range <= '1';
+				s_is_bootrom_range <= '1';
 --			elsif s_syscon_video_mapped = '1' and s_cpu_addr(15 downto 10) = "111111" then
 --				s_is_syscon_video_range <= '1';
 			else
@@ -362,7 +361,7 @@ begin
 			end if;
 
 			if s_cpu_addr(15) = '0' then
-				o_ram_addr(16 downto 15) <= s_lobank_page;
+				o_ram_addr(16 downto 15) <= "10";
 			else
 				o_ram_addr(16 downto 15) <= s_hibank_page;
 			end if;
@@ -392,7 +391,7 @@ begin
 	cpu_din_multiplexer : process(
 						s_hijacked,
 						s_mem_rd, 
-							s_is_syscon_firmware_range, s_syscon_firmware_dout_cpu, 
+							s_is_bootrom_range, s_bootrom_dout, 
 							s_is_ram_range, i_ram_dout, 
 							s_is_vram_range, s_video_ram_dout_cpu,
 							s_is_keyboard_Range, s_key_dout_cpu,
@@ -404,10 +403,9 @@ begin
 							s_is_syscon_options_port, s_options,
 							s_is_syscon_ic_port , s_syscon_ic_cpu_din,
 							s_is_syscon_enable_port,
-							s_is_hibank_port, s_is_lobank_port,
-							s_hibank_page, s_lobank_page,
+							s_is_hibank_port, s_hibank_page,
 							--s_syscon_video_mapped, 
-							s_syscon_firmware_mapped
+							s_bootmode
 							)
 	begin
 
@@ -415,8 +413,8 @@ begin
 
 		if s_mem_rd = '1' then
 
-			if s_is_syscon_firmware_range = '1' then
-				s_cpu_din <= s_syscon_firmware_dout_cpu;
+			if s_is_bootrom_range = '1' then
+				s_cpu_din <= s_bootrom_dout;
 			elsif s_is_ram_range = '1' then
 				s_cpu_din <= i_ram_dout;
 			elsif s_is_keyboard_range = '1' then
@@ -449,13 +447,11 @@ begin
 				s_cpu_din <= s_syscon_serial_cpu_din;
 			elsif s_is_syscon_options_port = '1' then
 				s_cpu_din <= "00" & s_options;
-			elsif s_is_lobank_port = '1' then
-				s_cpu_din <= "000000" & s_lobank_page;
 			elsif s_is_hibank_port = '1' then
 				s_cpu_din <= "000000" & s_hibank_page;
 			elsif s_is_syscon_enable_port = '1' then
---				s_cpu_din <= "000000" & s_syscon_firmware_mapped & s_syscon_video_mapped;
-				s_cpu_din <= "000000" & s_syscon_firmware_mapped & '0';
+--				s_cpu_din <= "000000" & s_bootmode & s_syscon_video_mapped;
+				s_cpu_din <= "000000" & s_bootmode & '0';
 			end if;
 
 		end if;
@@ -492,7 +488,6 @@ begin
 
 	------------------------- Address Mapping -------------------------
 
-	s_is_lobank_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A0" else '0';
 	s_is_hibank_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A1" else '0';
 	s_is_syscon_enable_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A2" else '0';
 
@@ -500,16 +495,12 @@ begin
 	begin
 		if rising_edge(i_clock_80mhz) then
 			if i_reset = '1' then
-				s_lobank_page <= "10";
 				s_hibank_page <= "11";
 				--s_syscon_video_mapped <= '0';
-				s_syscon_firmware_mapped <= '1';
+				s_bootmode <= '1';
 			elsif s_clken_cpu = '1' then
 
 				if s_port_wr = '1' then
-					if s_is_lobank_port = '1' then
-						s_lobank_page <= s_cpu_dout(1 downto 0);
-					end if;
 
 					if s_is_hibank_port = '1' then
 						s_hibank_page <= s_cpu_dout(1 downto 0);
@@ -517,7 +508,7 @@ begin
 
 					if s_is_syscon_enable_port = '1' then
 						--s_syscon_video_mapped <= s_cpu_dout(0);
-						s_syscon_firmware_mapped <= s_cpu_dout(1);
+						s_bootmode <= s_cpu_dout(1);
 					end if;
 
 				end if;
@@ -679,14 +670,20 @@ begin
 
 	------------------------- ROM -------------------------
 
-	s_syscon_firmware_addr_cpu <= s_cpu_addr(14 downto 0);
+	-- Boot ROM is read-only from  0x0000 -> 0x5fff
+	--             read-write from 0x6000 -> 0x7fff
+	s_bootrom_addr <= s_cpu_addr(14 downto 0);
+	s_bootrom_din <= s_cpu_dout;
+	s_bootrom_write <= s_mem_wr and s_is_bootrom_range and s_cpu_addr(14) and s_cpu_addr(13);
 
-	syscon_firmware : entity work.BootRom
+	bootrom : entity work.BootRom
 	PORT MAP
 	(
 		i_clock => i_clock_80mhz,
-		i_addr => s_syscon_firmware_addr_cpu,
-		o_dout => s_syscon_firmware_dout_cpu
+		i_write => s_bootrom_write,
+		i_addr => s_bootrom_addr,
+		o_dout => s_bootrom_dout,
+		i_din => s_bootrom_din
 	);
 
 	

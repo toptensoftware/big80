@@ -67,15 +67,6 @@ void main(void)
     // Jump to big80.sys
     uart_write_sz("Jumping to big80.sys...\n");
     thunkStart();
-/*
-    // Request exit hijack mode and jump to TRS80 ROM start (0x0000)
-    __asm
-    ld      a,#ICFLAG_EXIT_HIJACK_MODE
-    out     (_InterruptControllerPort),a
-    ld      HL, #0
-    jp      (HL)
-    __endasm;
-*/
 }
 
 
