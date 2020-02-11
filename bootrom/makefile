@@ -51,6 +51,7 @@ $(OUTFILE): $(OBJS) $(LIBS)
 	@mv $(INTDIR)/$(PROJNAME).$(OUTEXT) $(OUTFILE)
 	cp $(OUTFILE) ~/sf_downloads/
 	mcopy -o -i ~/sf_downloads/test.img@@1M $@ ::
+	mdir -i ~/sf_downloads/test.img@@1M
 	@echo "Done!"
 
 

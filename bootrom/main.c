@@ -1,10 +1,13 @@
+#include <stdio.h>
 #include <libSysCon.h>
 #include <ff.h>
 #include <diskio.h>
-#include <stdio.h>
 
 char g_szTemp[128];
 FATFS g_fs;
+
+__at(0xFC00) char top_of_stack[];
+
 
 void thunkStart();
 
@@ -45,23 +48,22 @@ void main(void)
     }
     uart_write_sz(" OK\n");
 
-    // Map our hi-address range (0x8000-0xFFFF) to the RAM that will be used for the
-    // TRS80's 0x0000->0x7FFF address range and read the TRS-80 ROM image from SD Card
-    ApmHiBankPage = 0x02;
+    // Map page bank to the syscon memory (starting at bank 64 after trs80 64k address space)
+    ApmEnable = APM_ENABLE_BOOTROM | APM_ENABLE_PAGEBANK;
+    ApmPageBank = 64;
     uint32_t totalBytes = 0;
     while (1)
     {
         UINT bytes_read = 0;
-        f_read(&f, (BYTE*)0x8000, 0x8000, &bytes_read);
+        FRESULT err = f_read(&f, (BYTE*)banked_page, sizeof(banked_page), &bytes_read);
         totalBytes += bytes_read;
-        ApmHiBankPage++;
-        if (bytes_read != 0x8000)
+        ApmPageBank++;
+        if (bytes_read != sizeof(banked_page))
             break;
     }
     f_close(&f);
-    ApmHiBankPage = 0x03;       
 
-    sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", (int)(totalBytes));
+    sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", totalBytes);
     uart_write_sz(g_szTemp);
 
     // Jump to big80.sys
@@ -86,7 +88,7 @@ void thunkStart()
 90$:
 	; Kick out the bootrom firmware (ie: this code)
 	ld		A,#0
-	out		(_ApmSysConEnable),A
+	out		(_ApmEnable),A
 
     ; Jump to big80.sys entry point
     jp      0x0000

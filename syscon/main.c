@@ -1,20 +1,14 @@
+#include <stdio.h>
+#include <stdbool.h>
 #include <libSysCon.h>
 #include <ff.h>
 #include <diskio.h>
-#include <stdio.h>
 
 char g_szTemp[128];
 FATFS g_fs;
 
-void thunkStart();
-
-// NMI handler is a no-op while booting
-void nmi_handler() __naked
-{
-    __asm
-    retn
-    __endasm;
-}
+// Required by crt0 to set top of stack on entry
+__at(0xFC00) char top_of_stack[];
 
 // Main Entry Point
 void main(void) 
@@ -45,24 +39,39 @@ void main(void)
     }
     uart_write_sz(" OK\n");
 
-    // Map our hi-address range (0x8000-0xFFFF) to the RAM that will be used for the
-    // TRS80's 0x0000->0x7FFF address range and read the TRS-80 ROM image from SD Card
-    ApmHiBankPage = 0x00;
-    UINT bytes_read = 0;
-    f_read(&f, (BYTE*)0x8000, f_size(&f), &bytes_read);
+    // Map page bank to trs80 ram area (bank 0)
+    ApmEnable = APM_ENABLE_PAGEBANK;
+    ApmPageBank = 0;
+    uint16_t totalBytes = 0;
+    while (1)
+    {
+        UINT bytes_read = 0;
+        f_read(&f, (BYTE*)banked_page, sizeof(banked_page), &bytes_read);
+        totalBytes += bytes_read;
+        ApmPageBank++;
+        if (bytes_read != sizeof(banked_page))
+            break;
+    }
     f_close(&f);
-    ApmHiBankPage = 0x03;       
+    ApmEnable = 0;   
 
-    sprintf(g_szTemp, "level2-a.rom loaded (%u bytes).\n", bytes_read);
+    sprintf(g_szTemp, "level2-a.rom loaded (%u bytes).\n", totalBytes);
     uart_write_sz(g_szTemp);
 
-    uart_write_sz("Jumping to TRS-80 ROM...");
+    uart_write_sz("Entering serial echo and jumping to TRS-80 ROM...\n");
 
-    // Request exit hijack mode and jump to TRS80 ROM start (0x0000)
-    __asm
-    ld      a,#ICFLAG_EXIT_HIJACK_MODE
-    out     (_InterruptControllerPort),a
-    ld      HL, #0
-    jp      (HL)
-    __endasm;
+    // Setup yield proc to return external machine and wake again on NMI
+    yield = YieldNmiProc;
+
+    // Run our infinite echo loop
+    while (true)
+    {
+        uint8_t len = uart_read(g_szTemp, sizeof(g_szTemp));
+        if (len)
+        {
+            uart_write_sz("R:");
+            uart_write(g_szTemp, len);
+        }
+    }
+
 }

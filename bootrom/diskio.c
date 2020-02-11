@@ -1,6 +1,7 @@
 #include <libSysCon.h>
 #include <ff.h>
 #include <diskio.h>
+#include <stdio.h>
 
 DSTATUS disk_initialize (BYTE pdrv)
 {

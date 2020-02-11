@@ -84,7 +84,6 @@ architecture behavior of Trs80Model1Core is
 	signal s_reset : std_logic;
 	signal s_reset_n : std_logic;
 	signal s_soft_reset : integer range 0 to 15 := 0;
-	signal s_soft_reset_request : std_logic;
 	signal s_clken_40mhz : std_logic;
 	signal s_clken_cpu_normal : std_logic;
 	signal s_clken_cpu : std_logic;
@@ -143,13 +142,14 @@ architecture behavior of Trs80Model1Core is
 	signal s_port_rd_falling_edge : std_logic;
 
 	-- Address mapping
-	signal s_is_hibank_port : std_logic;
-	signal s_is_syscon_enable_port : std_logic;
-	signal s_hibank_page : std_logic_vector(1 downto 0);
+	signal s_is_apm_pagebank_port : std_logic;
+	signal s_is_apm_enable_port : std_logic;
+	signal s_apm_pagebank_enabled : std_logic;
+	signal s_apm_bootmode : std_logic := '1';
+	signal s_apm_pagebank : std_logic_vector(7 downto 0);
 	--signal s_syscon_video_mapped : std_logic;
 
 	-- Boot ROM.  (Actually it's a writeable RAM but hey... )
-	signal s_bootmode : std_logic := '1';
 	signal s_is_bootrom_range : std_logic;
 	signal s_bootrom_addr : std_logic_vector(14 downto 0);
 	signal s_bootrom_dout : std_logic_vector(7 downto 0);
@@ -252,7 +252,7 @@ begin
 	soft_reset : process(i_clock_80mhz)
 	begin		
 		if rising_edge(i_clock_80mhz) then
-			if (s_key_extended_press = '1' and s_key_scancode = "0110111") or s_soft_reset_request = '1' then
+			if (s_key_extended_press = '1' and s_key_scancode = "0110111") then
 				s_soft_reset <= 15;
 			end if;
 			if s_soft_reset /= 0 then
@@ -318,7 +318,7 @@ begin
 		WR_n => s_cpu_wr_n,
 		WAIT_n => s_cpu_wait_n,
 		INT_n => '1',
-		NMI_n => '1',
+		NMI_n => s_cpu_nmi_n,
 		BUSRQ_n => '1',
 		M1_n => s_cpu_m1_n,
 		RFSH_n => open,
@@ -339,8 +339,9 @@ begin
 	cpu_addr_decoder : process(
 			s_cpu_addr, 
 			s_hijacked,
-			s_bootmode,
-			s_hibank_page
+			s_apm_bootmode,
+			s_apm_pagebank,
+			s_apm_pagebank_enabled
 			)
 	begin
 		s_is_bootrom_range <= '0';
@@ -351,7 +352,7 @@ begin
 		s_is_keyboard_range <= '0';
 
 		if s_hijacked = '1' then
-			if s_bootmode = '1' and s_cpu_addr(15) = '0' then
+			if s_apm_bootmode = '1' and s_cpu_addr(15) = '0' then
 				-- 0x0000 -> 0x6FFF
 				s_is_bootrom_range <= '1';
 --			elsif s_syscon_video_mapped = '1' and s_cpu_addr(15 downto 10) = "111111" then
@@ -360,15 +361,14 @@ begin
 				s_is_ram_range <= '1';
 			end if;
 
-			if s_cpu_addr(15) = '0' then
-				o_ram_addr(16 downto 15) <= "10";
+			if s_cpu_addr(15 downto 10) = "111111" then
+				o_ram_addr <= s_apm_pagebank(6 downto 0) & s_cpu_addr(9 downto 0);
 			else
-				o_ram_addr(16 downto 15) <= s_hibank_page;
+				o_ram_addr <= '1' & s_cpu_addr;
 			end if;
 		else
 
-			o_ram_addr(16) <= '0';
-			o_ram_addr(15) <= s_cpu_addr(15);
+			o_ram_addr <= '0' & s_cpu_addr;
 
 			if s_cpu_addr(15 downto 14) /= "00" then
 				-- RAM 0x4000 -> 0x7FFF
@@ -402,10 +402,10 @@ begin
 						    s_is_syscon_disk_port, s_syscon_disk_cpu_din,
 							s_is_syscon_options_port, s_options,
 							s_is_syscon_ic_port , s_syscon_ic_cpu_din,
-							s_is_syscon_enable_port,
-							s_is_hibank_port, s_hibank_page,
+							s_is_apm_enable_port,
+							s_is_apm_pagebank_port, s_apm_pagebank, s_apm_pagebank_enabled,
 							--s_syscon_video_mapped, 
-							s_bootmode
+							s_apm_bootmode
 							)
 	begin
 
@@ -447,11 +447,11 @@ begin
 				s_cpu_din <= s_syscon_serial_cpu_din;
 			elsif s_is_syscon_options_port = '1' then
 				s_cpu_din <= "00" & s_options;
-			elsif s_is_hibank_port = '1' then
-				s_cpu_din <= "000000" & s_hibank_page;
-			elsif s_is_syscon_enable_port = '1' then
---				s_cpu_din <= "000000" & s_bootmode & s_syscon_video_mapped;
-				s_cpu_din <= "000000" & s_bootmode & '0';
+			elsif s_is_apm_pagebank_port = '1' then
+				s_cpu_din <= s_apm_pagebank;
+			elsif s_is_apm_enable_port = '1' then
+--				s_cpu_din <= "00000" & s_apm_pagebank_enabled & s_apm_bootmode & s_syscon_video_mapped;
+				s_cpu_din <= "00000" & s_apm_pagebank_enabled & s_apm_bootmode & '0';
 			end if;
 
 		end if;
@@ -488,27 +488,28 @@ begin
 
 	------------------------- Address Mapping -------------------------
 
-	s_is_hibank_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A1" else '0';
-	s_is_syscon_enable_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A2" else '0';
+	s_is_apm_pagebank_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A1" else '0';
+	s_is_apm_enable_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A2" else '0';
 
 	addr_map : process(i_clock_80mhz)
 	begin
 		if rising_edge(i_clock_80mhz) then
 			if i_reset = '1' then
-				s_hibank_page <= "11";
-				--s_syscon_video_mapped <= '0';
-				s_bootmode <= '1';
+				s_apm_pagebank <= (others => '0');
+				s_apm_pagebank_enabled <= '0';
+				s_apm_bootmode <= '1';
 			elsif s_clken_cpu = '1' then
 
 				if s_port_wr = '1' then
 
-					if s_is_hibank_port = '1' then
-						s_hibank_page <= s_cpu_dout(1 downto 0);
+					if s_is_apm_pagebank_port = '1' then
+						s_apm_pagebank <= s_cpu_dout;
 					end if;
 
-					if s_is_syscon_enable_port = '1' then
+					if s_is_apm_enable_port = '1' then
 						--s_syscon_video_mapped <= s_cpu_dout(0);
-						s_bootmode <= s_cpu_dout(1);
+						s_apm_bootmode <= s_cpu_dout(1);
+						s_apm_pagebank_enabled <= s_cpu_dout(2);
 					end if;
 
 				end if;
@@ -540,7 +541,6 @@ begin
 		o_hijacked => s_hijacked,
 		o_nmi_n => s_cpu_nmi_n,
 		o_is_ic_port => s_is_syscon_ic_port,
-		o_soft_reset => s_soft_reset_request,
 		o_cpu_din => s_syscon_ic_cpu_din
 	);
 
@@ -691,7 +691,6 @@ begin
 	------------------------- RAM -------------------------
 
 	o_ram_din <= s_cpu_dout;
-	o_ram_addr(14 downto 0) <= s_cpu_addr(14 downto 0);
 	o_ram_cs <= s_is_ram_range;
 	s_ram_write_ready <= s_mem_wr and s_is_ram_range and not i_ram_wait and not s_is_rom_range;
 
