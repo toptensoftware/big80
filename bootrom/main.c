@@ -6,18 +6,7 @@
 char g_szTemp[128];
 FATFS g_fs;
 
-__at(0xFC00) char top_of_stack[];
-
-
 void thunkStart();
-
-// NMI handler is a no-op while booting
-void nmi_handler() __naked
-{
-    __asm
-    retn
-    __endasm;
-}
 
 // Main Entry Point
 void main(void) 
