@@ -4,6 +4,10 @@
 #include <ff.h>
 #include <diskio.h>
 
+void uart_interrupts();
+void uart_init();
+
+
 char g_szTemp[128];
 FATFS g_fs;
 
@@ -57,9 +61,25 @@ void main(void)
 
     sprintf(g_szTemp, "level2-a.rom loaded (%u bytes).\n", totalBytes);
     uart_write_sz(g_szTemp);
+    uart_write_sz("Starting interrupt loop\n");
 
-    uart_write_sz("Entering serial echo and jumping to TRS-80 ROM...\n");
+    uart_init();
 
+    // Main processing loop
+    while (true)
+    {
+        // Run all active fibers
+        run_fibers();
+
+        // Yield
+        yield_from_nmi();
+
+        // Process all interrupts
+        uart_read_isr();
+        uart_write_isr();
+    }
+
+/*
     // Setup yield proc to return external machine and wake again on NMI
     yield = YieldNmiProc;
 
@@ -73,5 +93,7 @@ void main(void)
             uart_write(g_szTemp, len);
         }
     }
-
+*/
 }
+
+
