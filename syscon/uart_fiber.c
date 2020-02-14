@@ -183,16 +183,18 @@ void cmd_push(uint8_t argc, const char** argv)
         uart_read_wait(&blockSize, 1);
 
         // Read the data
-        uart_read_wait(buf, blockSize & 0x7F);
+        uart_read_wait(buf, blockSize);
 
         // Read the checksum
         uint8_t checksumSent;
         uart_read_wait(&checksumSent, 1);
 
         // Check it
-        if (calculateChecksum(buf, blockSize) != checksumSent)
+        uint8_t checksumData = calculateChecksum(buf, blockSize);
+        if (checksumData != checksumSent)
         {
-            uart_write_sz("!checksum\n");
+            sprintf(g_szTemp, "!checksum:%2x!=%2x\n", (int)checksumSent, (int)checksumData);
+            uart_write_sz(g_szTemp);
             f_close(&f);
             return;
         }
@@ -234,11 +236,14 @@ void cmd_push(uint8_t argc, const char** argv)
         return;
     }
 
-    // Rename the file
+    // Replace file
+    f_unlink(pszFileName);
     err = f_rename("0:\\receive.tmp", pszFileName);
     if (err)
     {
-        uart_write_sz("!f_rename\n");
+        sprintf(g_szTemp, "!f_rename(\"%s\")=%i\n", pszFileName, err);
+        uart_write_sz(g_szTemp);
+        return;
     }
 
     // Ack the EOT
