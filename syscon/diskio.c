@@ -30,7 +30,13 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
-	return RES_PARERR;
+    while (count)
+    {
+        sd_write(sector++, buff);
+        buff += 512;
+        count--;
+    }
+	return 0;
 }
 
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)

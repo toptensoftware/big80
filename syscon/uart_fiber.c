@@ -1,6 +1,87 @@
 #include <libSysCon.h>
+#include <stdio.h>
+#include <string.h>
+#include <ff.h>
 
+extern char g_szTemp[];
 char g_szUartBuf[32];
+char g_szLineBuf[128];
+uint8_t g_iLineBufPos = 0;
+
+void cmd_push(uint8_t argc, const char** argv);
+
+
+typedef struct _CMD
+{
+    const char* pszCmd;
+    void (*fn)(uint8_t, const char**);
+} CMD;
+
+CMD g_commands[] = {
+    { "push", cmd_push },
+    { NULL, NULL },
+};
+
+#define CHAR_ACK ((char)0x06)
+#define CHAR_EOT ((char)0x04)
+#define CHAR_NULL ((char)0x00)
+
+void uart_write_char(char ch)
+{
+    uart_write(&ch, 1);
+}
+
+
+void on_uart_line()
+{
+    char* argv[4];
+    uint8_t argc = 0;
+
+    char* p = g_szLineBuf;
+    while (*p)
+    {
+        if (*p == ' ' || *p == '\t')
+        {
+            p++;
+        }
+        else
+        {
+            if (argc < sizeof(argv) / sizeof(argv[0]))
+            {
+                argv[argc++] = p;
+                while (*p != '\0' && *p != ' ' && *p != '\t')
+                    p++;
+                *p = '\0';
+                p++;
+            }
+            else
+            {
+                uart_write_sz("!too many args\n");
+                return;
+            }
+        }
+    }
+
+    if (argc == 0)
+    {
+        uart_write_char(CHAR_ACK);
+        return;
+    }
+
+    // Find a command handler
+    CMD* pCmd = g_commands;
+    while (pCmd->pszCmd)
+    {
+        if (strcmp(pCmd->pszCmd, argv[0])==0)
+        {
+            pCmd->fn(argc, argv);
+            return;
+        }
+        pCmd++;
+    }
+
+    uart_write_sz("!unknown command\n");
+}
 
 void uart_fiber_proc()
 {
@@ -8,10 +89,43 @@ void uart_fiber_proc()
     while (true)
     {
         uint8_t len = uart_read(g_szUartBuf, sizeof(g_szUartBuf));
-        if (len)
+        char* p = g_szUartBuf;
+        bool bWasCR = false;
+        while (len)
         {
-            uart_write_sz("R:");
-            uart_write(g_szUartBuf, len);
+            // Ignore \n after \r
+            if (bWasCR && *p == '\n')
+            {
+                p++;
+                len--;
+                continue;
+            }
+
+            if (*p == '\r' || *p == '\n')
+            {
+                if (g_iLineBufPos < sizeof(g_szLineBuf))
+                {
+                    g_szLineBuf[g_iLineBufPos] = '\0';
+                    on_uart_line();
+                }
+                else
+                {
+                    uart_write_sz("!Line too long\n");
+                }
+
+                g_iLineBufPos = 0;
+            }
+            else
+            {
+                if (g_iLineBufPos < sizeof(g_szLineBuf))
+                {
+                    g_szLineBuf[g_iLineBufPos++] = *p;
+                }
+            }
+
+            bWasCR = *p == '\r';
+            p++;
+            len--;
         }
     }
 }
@@ -24,6 +138,110 @@ void uart_init()
     uart_write_init_isr();
 
     // Start fiber
-    create_fiber(uart_fiber_proc, 512);
+    create_fiber(uart_fiber_proc, 1024);
+}
+
+
+uint8_t calculateChecksum(uint8_t* p, uint8_t length)
+{
+    uint8_t checksum = 0;
+    for (uint8_t i=0; i<length; i++)
+    {
+        checksum += *p++;
+    }
+    return checksum;
+}
+
+
+
+void cmd_push(uint8_t argc, const char** argv)
+{
+    // Capture filename and size
+    const char* pszFileName = argv[1];
+    long size = atol(argv[2]);
+
+    char buf[128];
+
+    // Create a temp file
+    FIL f;
+    FRESULT err = f_open(&f, "0:/receive.tmp", FA_WRITE | FA_CREATE_ALWAYS);
+    if (err)
+    {
+        uart_write_sz("!f_open\n");
+        return;
+    }
+
+    // Read blocks
+    long  received = 0;
+    while (received < size)
+    {
+        // Read for data block
+        uart_write_char(CHAR_ACK);
+
+        // Read block length
+        uint8_t blockSize;
+        uart_read_wait(&blockSize, 1);
+
+        // Read the data
+        uart_read_wait(buf, blockSize & 0x7F);
+
+        // Read the checksum
+        uint8_t checksumSent;
+        uart_read_wait(&checksumSent, 1);
+
+        // Check it
+        if (calculateChecksum(buf, blockSize) != checksumSent)
+        {
+            uart_write_sz("!checksum\n");
+            f_close(&f);
+            return;
+        }
+
+        // Write it to the file
+        UINT unused;
+        err = f_write(&f, buf, blockSize, &unused);
+        if (err)
+        {
+            uart_write_sz("!f_write\n");
+            f_close(&f);
+            return;
+        }
+
+        // Update received count
+        received += blockSize;
+    }
+
+    // Close the file
+    f_close(&f);
+
+    // Check size
+    if (received != size)
+    {
+        uart_write_sz("!length mismatch\n");
+        return;
+    }
+
+    // Ack the last block
+    uart_write_char(CHAR_ACK);
+
+    // Read the eot
+    char chEot;
+    uart_read_wait(&chEot, 1);
+
+    if (chEot != CHAR_EOT)
+    {
+        uart_write_sz("!expected eot\n");
+        return;
+    }
+
+    // Rename the file
+    err = f_rename("0:\\receive.tmp", pszFileName);
+    if (err)
+    {
+        uart_write_sz("!f_rename\n");
+    }
+
+    // Ack the EOT
+    uart_write_char(CHAR_ACK);
 }
 

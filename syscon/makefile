@@ -7,11 +7,11 @@ LIBS	 	:= ../libSysCon/lib/libSysCon.lib ../libSysCon/lib/libFatFS.lib
 ASMSOURCES  := ./crt0.s ./heap.s
 MAKEDEPS 	:= ../libSysCon/libSysCon
 OUTDIR		:= ./bin
-YAZDFLAGS 	:= --entry:0 --entry:0x66
+YAZDFLAGS 	:= --entry:0 --entry:0x66 --entry:0x3b6
 BINFILE     := big80.sys
 
 # Default
-all: makedeps binfile yazd upload
+all: makedeps binfile upload
 
 include ../libSysCon/sdcc.mk
 
@@ -22,5 +22,5 @@ upload: ~/sf_downloads/big80.sys
 	@echo Uploading...
 	@cp $< $@
 	@mcopy -o -i ~/sf_downloads/test.img@@1M $< ::
-	@#mdir -i ~/sf_downloads/test.img@@1M
+	@mdir -i ~/sf_downloads/test.img@@1M
 	@echo "Done!"
