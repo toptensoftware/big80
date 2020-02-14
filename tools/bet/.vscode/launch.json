@@ -10,8 +10,7 @@
             "name": "Launch Program",
             "program": "${workspaceFolder}\\bet.js",
             "args": [
-                "push",
-                "big80.txt",
+                "reset",
             ]
         }
     ]

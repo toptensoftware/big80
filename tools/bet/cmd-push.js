@@ -2,6 +2,17 @@ let SerialConversation = require('./serial-conversation');
 let fs = require('fs');
 let path = require('path');
 
+function showHelp()
+{
+    console.log("Transfers a local file to the FPGA's SD card");
+    console.log();
+    console.log("Usage: bet push [options] localFile [remoteFile]");
+    console.log();
+    console.log("Options:");
+    console.log("  --port:<name>      serial port to connect to");
+    console.log("  --baud:<value>     serial baud rate")
+}
+
 
 // Handle for `push` command
 async function cmd_push(args)
@@ -30,7 +41,13 @@ async function cmd_push(args)
                     case "baud":
                         options.baud = Number(parts[1]);
                         break;
+
+                    case "help":
+                        showHelp();
+                        return;
         
+                    default:
+                        throw new Error(`Unknown switch: ${parts[0]}`)
                 }
             }
             else

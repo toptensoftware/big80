@@ -10,6 +10,7 @@ function showHelp()
     console.log();
     console.log("Commands:");
     console.log("  push      push a file to FPGA SD card");
+    console.log("  reset     soft reset the machine")
     console.log();
     console.log("For more help on a command, use bet <command> --help");
 }
@@ -24,6 +25,10 @@ switch (process.argv[2])
 {
     case "push":
         require('./cmd-push')(process.argv.slice(2));
+        break;
+
+    case "reset":
+        require('./cmd-reset')(process.argv.slice(2));
         break;
 
     case "help":
