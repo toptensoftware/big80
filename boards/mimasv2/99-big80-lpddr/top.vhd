@@ -70,6 +70,7 @@ architecture Behavioral of top is
 
 	-- RAM
 	signal s_ram_cs : std_logic;
+	signal s_ram_rd : std_logic;
 	signal s_ram_wr : std_logic;
 	signal s_ram_din : std_logic_vector(7 downto 0);
 	signal s_ram_dout : std_logic_vector(7 downto 0);
@@ -135,18 +136,12 @@ begin
 
 	-- Simple RAM Interface
 	sri : entity work.SimpleRamInterface
-	generic map
-	(
-		p_auto_read => true
-	)
 	port map
 	( 
 		i_clock => s_clock_80mhz,
-		i_clken => s_clken_cpu,
 		i_reset => s_reset,
-		i_rd => '0',
+		i_rd => s_ram_rd,
 		i_wr => s_ram_wr,
-		i_cs => s_ram_cs,
 		i_addr => s_sri_addr,
 		i_data => s_ram_din,
 		o_data => s_ram_dout,
@@ -178,7 +173,7 @@ begin
 		o_ram_addr => s_ram_addr,
 		o_ram_din => s_ram_din,
 		i_ram_dout => s_ram_dout,
-		o_ram_rd => open,
+		o_ram_rd => s_ram_rd,
 		o_ram_wr => s_ram_wr,
 		i_ram_wait => s_ram_wait,
 		o_horz_sync => o_horz_sync,

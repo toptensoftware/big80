@@ -50,6 +50,7 @@ void main(void)
         if (bytes_read != sizeof(banked_page))
             break;
     }
+    ApmEnable = APM_ENABLE_BOOTROM;
     f_close(&f);
 
     sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", totalBytes);

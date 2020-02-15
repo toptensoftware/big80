@@ -9,6 +9,7 @@ char g_szLineBuf[128];
 uint8_t g_iLineBufPos = 0;
 
 void cmd_push(uint8_t argc, const char** argv);
+void cmd_reset(uint8_t argc, const char** argv);
 
 
 typedef struct _CMD
@@ -19,6 +20,7 @@ typedef struct _CMD
 
 CMD g_commands[] = {
     { "push", cmd_push },
+    { "reset", cmd_reset },
     { NULL, NULL },
 };
 
@@ -250,3 +252,7 @@ void cmd_push(uint8_t argc, const char** argv)
     uart_write_char(CHAR_ACK);
 }
 
+void cmd_reset(uint8_t argc, const char** argv)
+{
+    ApmEnable = APM_ENABLE_RESET;
+}

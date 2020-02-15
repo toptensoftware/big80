@@ -80,10 +80,15 @@ end Trs80Model1Core;
  
 architecture behavior of Trs80Model1Core is 
 
+	signal s_logic_capture : std_logic_vector(39 downto 0);
+	signal s_pc : std_logic_vector(15 downto 0);
+	signal s_logic_capture_trigger : std_logic;
+
 	-- Clocking
 	signal s_reset : std_logic;
 	signal s_reset_n : std_logic;
 	signal s_soft_reset : integer range 0 to 15 := 0;
+	signal s_soft_reset_request : std_logic;
 	signal s_clken_40mhz : std_logic;
 	signal s_clken_cpu_normal : std_logic;
 	signal s_clken_cpu : std_logic;
@@ -136,6 +141,8 @@ architecture behavior of Trs80Model1Core is
 	-- Memory/Port Mapping
 	signal s_mem_rd : std_logic;
 	signal s_mem_wr : std_logic;
+	signal s_mem_rd_rising_edge : std_logic;
+	signal s_mem_wr_rising_edge : std_logic;
 	signal s_port_rd : std_logic;
 	signal s_port_wr : std_logic;
 	signal s_port_wr_rising_edge : std_logic;
@@ -173,7 +180,6 @@ architecture behavior of Trs80Model1Core is
 
 	-- RAM
 	signal s_is_ram_range : std_logic;
-	signal s_ram_write_ready : std_logic;
 
 	-- Video Controller
 	signal s_blank : std_logic;
@@ -203,6 +209,7 @@ architecture behavior of Trs80Model1Core is
 	signal s_media_keys : std_logic_vector(2 downto 0);
 
 	-- Cassette Player
+	signal s_clken_cassette : std_logic;
 	signal s_is_cas_port : std_logic;
 	signal s_recording : std_logic;
 	signal s_playing_or_recording : std_logic;
@@ -242,6 +249,8 @@ architecture behavior of Trs80Model1Core is
 	signal s_syscon_disk_cpu_din : std_logic_vector(7 downto 0);
 begin
 
+	
+	
 	------------------------- Clocking -------------------------
 
 	-- Reset signal
@@ -252,7 +261,10 @@ begin
 	soft_reset : process(i_clock_80mhz)
 	begin		
 		if rising_edge(i_clock_80mhz) then
-			if (s_key_extended_press = '1' and s_key_scancode = "0110111") then
+			if s_key_extended_press = '1' and s_key_scancode = "0110111" then
+				s_soft_reset <= 15;
+			end if;
+			if s_soft_reset_request = '1' then
 				s_soft_reset <= 15;
 			end if;
 			if s_soft_reset /= 0 then
@@ -290,11 +302,14 @@ begin
 
 	s_clken_cpu <= 
 		'0' when i_switch_run = '0' else 
+		s_clken_40mhz when s_hijacked = '1' else
 		s_clken_40mhz when s_turbo_mode = '1' else
 		s_clken_cpu_normal;
 	o_clken_cpu <= s_clken_cpu;
 	s_turbo_mode <= s_cas_motor and s_option_turbo_tape;
 
+	
+	
 	------------------------- CPU -------------------------
 
 	cpu : entity work.T80se 
@@ -327,7 +342,7 @@ begin
 	);
 
 	-- Generate wait
-	s_cpu_wait_n <= not (i_ram_wait and s_is_ram_range);
+	s_cpu_wait_n <= not i_ram_wait;
 
 	-- Decode I/O control signals from cpu
 	s_mem_rd <= '1' when (s_cpu_mreq_n = '0' and s_cpu_iorq_n = '1' and s_cpu_rd_n = '0') else '0';
@@ -361,7 +376,7 @@ begin
 				s_is_ram_range <= '1';
 			end if;
 
-			if s_cpu_addr(15 downto 10) = "111111" then
+			if s_cpu_addr(15 downto 10) = "111111" and s_apm_pagebank_enabled='1' then
 				o_ram_addr <= s_apm_pagebank(6 downto 0) & s_cpu_addr(9 downto 0);
 			else
 				o_ram_addr <= '1' & s_cpu_addr;
@@ -458,6 +473,28 @@ begin
 
 	end process;
 
+	-- Detect mem write rising edges
+	mem_wr_rising_edge : entity work.EdgeDetector
+	port map
+	( 
+		i_clock => i_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		i_signal => s_mem_wr,
+		o_pulse => s_mem_wr_rising_edge
+	);
+
+	-- Detect mem read rising edges
+	mem_rd_rising_edge : entity work.EdgeDetector
+	port map
+	( 
+		i_clock => i_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		i_signal => s_mem_rd,
+		o_pulse => s_mem_rd_rising_edge
+	);
+
 	-- Detect port write rising edges
 	port_wr_rising_edge : entity work.EdgeDetector
 	port map
@@ -486,6 +523,7 @@ begin
 	);
 
 
+	
 	------------------------- Address Mapping -------------------------
 
 	s_is_apm_pagebank_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A1" else '0';
@@ -494,10 +532,11 @@ begin
 	addr_map : process(i_clock_80mhz)
 	begin
 		if rising_edge(i_clock_80mhz) then
-			if i_reset = '1' then
+			if s_reset = '1' then
 				s_apm_pagebank <= (others => '0');
 				s_apm_pagebank_enabled <= '0';
 				s_apm_bootmode <= '1';
+				s_soft_reset_request <= '0';
 			elsif s_clken_cpu = '1' then
 
 				if s_port_wr = '1' then
@@ -510,6 +549,7 @@ begin
 						--s_syscon_video_mapped <= s_cpu_dout(0);
 						s_apm_bootmode <= s_cpu_dout(1);
 						s_apm_pagebank_enabled <= s_cpu_dout(2);
+						s_soft_reset_request <= s_cpu_dout(7);
 					end if;
 
 				end if;
@@ -518,6 +558,7 @@ begin
 	end process;
 
 
+	
 	------------------------- SysCon Interrupt Controller -------------------------
 
 	interrupt_controller : entity work.SysConInterruptController
@@ -527,7 +568,7 @@ begin
 	)
 	port map
 	(
-		i_reset => i_reset,
+		i_reset => s_reset,
 		i_clock => i_clock_80mhz,
 		i_clken => s_clken_cpu,
 		i_cpu_port_wr => s_port_wr,
@@ -544,6 +585,8 @@ begin
 		o_cpu_din => s_syscon_ic_cpu_din
 	);
 
+	
+	
 	------------------------- Options -------------------------
 
 	s_is_syscon_options_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"00" else '0';
@@ -583,8 +626,6 @@ begin
 	)
 	port map
 	(
-		o_uart_debug => o_uart_debug,
-
 		i_reset => s_reset,
 		i_clock => i_clock_80mhz,
 
@@ -613,6 +654,8 @@ begin
 		i_din_b => s_sd_din_b,
 		o_dout_b => s_sd_dout_b
 	);
+
+
 
 	------------------------- Audio Output -------------------------
 
@@ -692,20 +735,8 @@ begin
 
 	o_ram_din <= s_cpu_dout;
 	o_ram_cs <= s_is_ram_range;
-	s_ram_write_ready <= s_mem_wr and s_is_ram_range and not i_ram_wait and not s_is_rom_range;
-
-	-- Edge detection for memory read/write
-	ram_wr_edge_detector : entity work.EdgeDetector
-	port map
-	( 
-		i_clock => i_clock_80mhz,
-		i_clken => s_clken_cpu,
-		i_reset => s_reset,
-		i_signal => s_ram_write_ready,
-		o_pulse => o_ram_wr
-	);
-
-	o_ram_rd <= s_is_ram_range and s_clken_cpu and s_mem_rd;
+	o_ram_wr <= s_is_ram_range and s_mem_wr_rising_edge and not s_is_rom_range;
+	o_ram_rd <= s_is_ram_range and s_mem_rd_rising_edge;
 
 
 
@@ -881,6 +912,7 @@ begin
 		s_recording <= '0';
 		s_playing_or_recording <= '0';
 		s_cas_audio_in_edge <= '0';
+		s_clken_cassette <= '0';
 	end generate;
 
 	with_cassette_player : if p_enable_cassette_player generate
@@ -889,6 +921,9 @@ begin
 		s_button_start <= s_cas_auto_start or (s_media_key_play and not s_playing_or_recording);
 		s_button_stop <= s_cas_auto_stop or (s_media_key_play and s_playing_or_recording);
 		s_button_record <= s_cas_auto_record;
+
+		-- Disable cassette play/record when in hijacked mode
+		s_clken_cassette <= s_clken_cpu and not s_hijacked;
 
 		-- Cassette Player
 		player : entity work.Trs80CassettePlayer
@@ -899,7 +934,7 @@ begin
 		port map
 		(
 			i_clock => i_clock_80mhz,
-			i_clken => s_clken_cpu,
+			i_clken => s_clken_cassette,
 			i_reset => s_Reset,
 			i_button_start => s_button_start,
 			i_button_record => s_button_record,
@@ -1073,5 +1108,56 @@ begin
 		o_sd_din => s_sd_din_b,
 		i_sd_dout => s_sd_dout_b
 	);
+
+
+
+	------------------------- Logic Capture -------------------------
+
+	capture_pc : process(i_clock_80mhz)
+	begin
+		if rising_edge(i_clock_80mhz) then
+			if s_reset = '1' then
+				s_pc <= (others => '0');
+			elsif s_clken_cpu = '1' then
+				if s_cpu_m1_n = '0' then
+					s_pc <= s_cpu_addr;
+				end if;
+			end if;
+		end if;
+	end process;
+
+	s_logic_capture_trigger <= s_reset_n; -- '1' when s_pc = x"031A" else '0';
+
+	s_logic_capture <= 
+		s_cpu_addr &
+		s_cpu_din &
+		s_cpu_dout &
+		s_mem_rd &
+		s_mem_wr &
+		s_port_rd &
+		s_port_wr &
+		s_cpu_wait_n &
+		s_cpu_nmi_n &
+		s_cpu_m1_n &
+		s_hijacked;
+
+	e_LogicCapture : entity work.LogicCapture
+	generic map
+	(
+		p_clock_hz => 80_000_000,
+		p_baud => 115200,
+		p_bit_width => 40,
+		p_addr_width => 11
+	)
+	port map
+	(
+		i_clock => i_clock_80mhz,
+		i_clken => s_clken_cpu,
+		i_reset => s_reset,
+		i_trigger => s_logic_capture_trigger,
+		i_signals => s_logic_capture,
+		o_uart_tx => o_uart_debug
+	);
+
 
 end;

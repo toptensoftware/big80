@@ -26,16 +26,16 @@ capture:
 	--baud:115200 \
 	--sampleRate:1774000 \
 	--autoview:150 \
-	s_arb_request[2] \
-	s_arb_granted[2] \
-	s_sd_status[8] \
-	s_op_write \
-	s_op_cmd[2] \
-	s_data_start \
-	s_data_cycle \
-	s_din[8] \
-	s_dout[8] \
-	s_din_b[8] \
-	s_dout_b[8]
+	s_cpu_addr[16] \
+	s_cpu_din[8] \
+	s_cpu_dout[8] \
+	s_mem_rd \
+	s_mem_wr \
+	s_port_rd \
+	s_port_wr \
+	s_cpu_wait_n \
+	s_cpu_nmi_n \
+	s_cpu_m1_n \
+	s_hijacked
 
 

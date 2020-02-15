@@ -11,7 +11,7 @@ YAZDFLAGS 	:= --entry:0 --entry:0x66 --entry:0x3b6
 BINFILE     := big80.sys
 
 # Default
-all: makedeps binfile upload
+all: makedeps binfile yazd upload
 
 include ../libSysCon/sdcc.mk
 

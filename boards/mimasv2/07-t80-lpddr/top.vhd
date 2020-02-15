@@ -38,8 +38,10 @@ architecture Behavioral of top is
 	signal s_ram_din : std_logic_vector(7 downto 0);
 	signal s_ram_dout : std_logic_vector(7 downto 0);
 	signal s_ram_wait : std_logic;
-	signal s_ram_write_pulse : std_logic;
-	signal s_ram_write_ready : std_logic;
+	signal s_ram_rd : std_logic;
+	signal s_ram_wr : std_logic;
+	signal s_ram_rd_pulse : std_logic;
+	signal s_ram_wr_pulse : std_logic;
 
 	-- ROM
 	signal s_rom_addr : std_logic_vector(9 downto 0);
@@ -72,7 +74,7 @@ architecture Behavioral of top is
 	signal s_calib_done : std_logic;
 
 	-- Debug
-	signal s_logic_capture : std_logic_vector(54 downto 0);
+	signal s_logic_capture : std_logic_vector(41 downto 0);
 	signal s_logic_trigger : std_logic;
 	signal s_pc : std_logic_vector(15 downto 0);
 	signal s_m1_n : std_logic;
@@ -81,10 +83,12 @@ begin
 
 	-- Logic Capture
 	s_logic_capture <= 
-		s_pc & s_cpu_addr & s_cpu_din & s_cpu_dout 
+		s_cpu_addr & s_cpu_din & s_cpu_dout 
 		& s_cpu_mreq_n & s_cpu_iorq_n 
 		& s_cpu_rd_n & s_cpu_wr_n & s_cpu_wait_n
-		& s_ram_write_ready & s_ram_write_pulse
+		& s_ram_wr & s_ram_wr_pulse
+		& s_ram_rd & s_ram_rd_pulse
+		& s_clken_cpu
 		;
 	s_logic_trigger <= s_calib_done;
 
@@ -92,13 +96,13 @@ begin
 	generic map
 	(
 		p_clock_hz => 80_000_000,
-		p_bit_width => 55,
-		p_addr_width => 11
+		p_bit_width => 42,
+		p_addr_width => 12
 	)
 	port map
 	( 
 		i_clock => s_clock_80mhz,
-		i_clken => s_clken_cpu,
+		i_clken => '1',
 		i_reset => s_reset,
 		i_trigger => s_logic_trigger,
 		i_signals => s_logic_capture,
@@ -145,7 +149,7 @@ begin
 	clock_div_cpu_1774 : entity work.ClockDivider
 	generic map
 	(
-		p_period => 2
+		p_period => 45
 	)
 	port map
 	(
@@ -194,18 +198,30 @@ begin
 		BUSAK_n => open
 	);
 
-	-- Edge detection for memory read/write
+	-- Edge detection for memory write
 	ram_wr_edge_detector : entity work.EdgeDetector
 	port map
 	( 
 		i_clock => s_clock_80mhz,
-		i_clken => s_clken_cpu,
+		i_clken => '1',
 		i_reset => s_reset,
-		i_signal => s_ram_write_ready,
-		o_pulse => s_ram_write_pulse
+		i_signal => s_ram_wr,
+		o_pulse => s_ram_wr_pulse
 	);
 
-	s_ram_write_ready <= s_mem_wr and s_is_ram_range and not s_ram_wait;
+	-- Edge detection for memory read
+	ram_rd_edge_detector : entity work.EdgeDetector
+	port map
+	( 
+		i_clock => s_clock_80mhz,
+		i_clken => '1',
+		i_reset => s_reset,
+		i_signal => s_ram_rd,
+		o_pulse => s_ram_rd_pulse
+	);
+
+	s_ram_wr <= s_mem_wr and s_is_ram_range;
+	s_ram_rd <= s_mem_rd and s_is_ram_range;
 
 	-- Decode I/O control signals from cpu
 	s_mem_rd <= '1' when (s_cpu_mreq_n = '0' and s_cpu_iorq_n = '1' and s_cpu_rd_n = '0') else '0';
@@ -314,18 +330,12 @@ begin
 	);
 
 	sri : entity work.SimpleRamInterface
-	generic map
-	(
-		p_auto_read => true
-	)
 	port map
 	( 
 		i_clock => s_clock_80mhz,
-		i_clken => s_clken_cpu,
 		i_reset => s_reset,
-		i_rd => '0',
-		i_wr => s_ram_write_pulse,
-		i_cs => s_is_ram_range,
+		i_rd => s_ram_rd_pulse,
+		i_wr => s_ram_wr_pulse,
 		i_addr => s_ram_addr,
 		i_data => s_ram_din,
 		o_data => s_ram_dout,

@@ -18,7 +18,6 @@ capture:
 	--baud:115200 \
 	--sampleRate:80000000 \
 	--autoview:150 \
-	s_pc[16] \
 	s_cpu_addr[16] \
 	s_cpu_din[8] \
 	s_cpu_dout[8] \
@@ -27,5 +26,8 @@ capture:
 	s_cpu_rd_n \
 	s_cpu_wr_n \
 	s_cpu_wait_n \
-	s_ram_write_ready \
-	s_ram_write_pulse
+	s_ram_wr \
+	s_ram_wr_pulse \
+	s_ram_rd \
+	s_ram_rd_pulse \
+	s_clken_cpu
