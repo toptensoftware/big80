@@ -96,6 +96,7 @@ void main(void)
 // Main UI Fiber
 void ui_fiber_proc()
 {
+    uart_write_sz("ui_fiber_proc()\n");
 
     // Display blank screen
     video_clear();

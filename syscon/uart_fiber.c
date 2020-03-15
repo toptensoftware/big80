@@ -87,7 +87,8 @@ void on_uart_line()
 
 void uart_fiber_proc()
 {
-    // UART Echo
+    uart_write_sz("uart_fiber_proc()\n");
+
     while (true)
     {
         uint8_t len = uart_read(g_szUartBuf, sizeof(g_szUartBuf));
