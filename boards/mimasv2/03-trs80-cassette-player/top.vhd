@@ -143,8 +143,8 @@ begin
 		o_last_block_number => open,
 		o_data_start => open,
 		o_data_cycle => s_sd_dcycle,
-		i_data => s_sd_din,
-		o_data => s_sd_dout
+		i_din => s_sd_din,
+		o_dout => s_sd_dout
 	);
 
 	-- Debounce buttons

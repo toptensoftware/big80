@@ -22,8 +22,7 @@ port
     i_reset : in std_logic;                         -- Reset (synchronous, active high)
         
     -- Generated keyboard event
-    i_key_scancode : in std_logic_vector(6 downto 0);  -- Input scan code
-    i_key_extended : in std_logic;                  -- 0 for normal key, 1 for extended key
+    i_key_scancode : in std_logic_vector(7 downto 0);  -- Input scan code
     i_key_released : in std_logic;                   -- 0 if press, 1 if release
 	i_key_available : in std_logic;                -- Assert for one clock cycle on event
 	
@@ -32,7 +31,14 @@ port
 
 	-- CPU interface
 	i_addr : in std_logic_vector(7 downto 0);		-- Lowest 8 bits of memory address being read
-	o_data : out std_logic_vector(7 downto 0)	    -- Output byte
+	o_data : out std_logic_vector(7 downto 0);	    -- Output byte
+
+	-- Is the current key a trs80 key
+	o_is_other_key : out std_logic;
+	o_modifiers : out std_logic_vector(1 downto 0);
+
+	-- Suppress all keys because syscon has keyboard captured
+	i_suppress_all_keys : in std_logic
 );
 end Trs80KeyMemoryMap;
  
@@ -55,11 +61,13 @@ begin
 		i_clock => i_clock,
 		i_reset => i_reset,
 		i_key_scancode => i_key_scancode,
-		i_key_extended => i_key_extended,
 		i_key_released => i_key_released,
 		i_key_available => i_key_available,
 		i_typing_mode => i_typing_mode,
-		o_key_switches => s_key_switches
+		o_key_switches => s_key_switches,
+		o_is_other_key => o_is_other_key,
+		o_modifiers => o_modifiers,
+		i_suppress_all_keys => i_suppress_all_keys
 	);
 
 	-- Select either zeros or key state from key switches depending on 

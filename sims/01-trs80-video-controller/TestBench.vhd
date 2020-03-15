@@ -102,8 +102,8 @@ begin
         i_horz_pos => s_horz_pos,
         i_vert_pos => s_vert_pos,
         i_wide_mode => '0',
-        o_video_ram_addr => s_video_ram_addr,
-        i_video_ram_data => s_video_ram_data,
+        o_vram_addr => s_video_ram_addr,
+        i_vram_data => s_video_ram_data,
         o_char_rom_addr => s_char_rom_addr,
         i_char_rom_data => s_char_rom_data,
         o_pixel => s_pixel

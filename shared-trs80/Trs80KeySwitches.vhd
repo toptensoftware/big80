@@ -19,17 +19,19 @@ entity Trs80KeySwitches is
 port
 (
     -- Control
-    i_clock : in std_logic;                         -- Clock
-    i_reset : in std_logic;                         -- Reset (synchronous, active high)
+    i_clock : in std_logic;                         	-- Clock
+    i_reset : in std_logic;                         	-- Reset (synchronous, active high)
         
     -- Generated keyboard event
-    i_key_scancode : in std_logic_vector(6 downto 0);  -- Input scan code
-    i_key_extended : in std_logic;                  -- 0 for normal key, 1 for extended key
-    i_key_released : in std_logic;                   -- 0 if press, 1 if release
-	i_key_available : in std_logic;                 -- Assert for one clock cycle on event
+    i_key_scancode : in std_logic_vector(7 downto 0);  	-- Input scan code
+    i_key_released : in std_logic;                   	-- 0 if press, 1 if release
+	i_key_available : in std_logic;                 	-- Assert for one clock cycle on event
 	
-	i_typing_mode : in std_logic;					-- typing mode?
-	o_key_switches : out std_logic_vector(63 downto 0)		-- '1' for each key currently pressed
+	i_typing_mode : in std_logic;						-- typing mode?
+	o_key_switches : out std_logic_vector(63 downto 0);	-- '1' for each key currently pressed
+	o_is_other_key : out std_logic;						-- '1' if current key is used by trs80
+	o_modifiers : out std_logic_vector(1 downto 0);
+	i_suppress_all_keys : in std_logic
 );
 end Trs80KeySwitches;
  
@@ -53,12 +55,18 @@ architecture behavior of Trs80KeySwitches is
 	signal s_tm_shift : std_logic;
 begin
 
+	-- Is the current key a trs80 key
+	o_is_other_key <= '1' when s_VirtualKey = vk_none else '0';
+
+	-- Forward state of modifier keys
+	o_modifiers(0) <= s_shift;
+	o_modifiers(1) <= s_VKSwitches(vk_ctrl_l) or s_VKSwitches(vk_ctrl_r);
+
 	-- Map scan codes to virtual key codes
 	keymap : entity work.Trs80VirtualKeyMap
 	port map
 	(
 		i_key_scancode => i_key_scancode,
-		i_key_extended => i_key_extended,
 		o_virtual_key => s_VirtualKey
 	);
 
@@ -69,6 +77,8 @@ begin
 	begin
 		if rising_edge(i_clock) then
 			if i_reset = '1' then
+				s_VKSwitches <= (others => '0');
+			elsif i_suppress_all_keys = '1' then
 				s_VKSwitches <= (others => '0');
 			elsif i_key_available = '1' then 
 				s_VKSwitches(s_VirtualKey) <= not i_key_released;

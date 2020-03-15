@@ -17,8 +17,7 @@ entity Trs80VirtualKeyMap is
 port
 (
 	-- Input
-    i_key_scancode : in std_logic_vector(6 downto 0);  -- Input scan code
-    i_key_extended : in std_logic;                  -- 0 for normal key, 1 for extended key
+    i_key_scancode : in std_logic_vector(7 downto 0);  -- Input scan code
 	
 	-- Output
 	o_virtual_key : out integer range 0 to vk_none
@@ -27,10 +26,10 @@ end Trs80VirtualKeyMap;
  
 architecture behavior of Trs80VirtualKeyMap is 
 begin
-	process(i_key_scancode, i_key_extended)
+	process(i_key_scancode)
 	begin
 		
-		case (i_key_extended & i_key_scancode) is
+		case (i_key_scancode) is
 		
 			when x"1c" => o_virtual_key <= vk_A;
 			when x"32" => o_virtual_key <= vk_B;

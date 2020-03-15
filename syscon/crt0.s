@@ -63,13 +63,6 @@
 
 init:
 
-
-	; Small delay.  Not sure why, but helps boot work after
-	; FPGA direct programming
-	ld      B,#0x40
-1$:
-	djnz	1$
-
 	;; Set stack pointer
 	ld	sp,#0xFC00
 

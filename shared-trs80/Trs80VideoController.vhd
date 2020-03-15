@@ -42,8 +42,8 @@ port
     i_wide_mode : in std_logic;
 
     -- Video RAM Access
-    o_video_ram_addr : out std_logic_vector(9 downto 0);
-    i_video_ram_data : in std_logic_vector(7 downto 0);
+    o_vram_addr : out std_logic_vector(9 downto 0);
+    i_vram_data : in std_logic_vector(7 downto 0);
 
     -- Character ROM Access
     o_char_rom_addr : out std_logic_vector(10 downto 0);
@@ -75,14 +75,14 @@ begin
 
     -- Pixel cycle -2
     -- Calculate the video ram address
-    o_video_ram_addr <= 
+    o_vram_addr <= 
         std_logic_vector(to_unsigned(s_line_num, 4)) & 
         s_char_num_bits(5 downto 1) & (s_char_num_bits(0) and not i_wide_mode);
 
     -- Pixel cycle -1
     -- Calculate character rom address
     s_line_pix_std_logic <= std_logic_vector(to_unsigned(s_line_pix, 4));
-    o_char_rom_addr <= i_video_ram_data(6 downto 0) & s_line_pix_std_logic;
+    o_char_rom_addr <= i_vram_data(6 downto 0) & s_line_pix_std_logic;
 
     -- Select pixels from character ROM or graphics generator?
     s_pixel_bits <= i_char_rom_data 
@@ -101,13 +101,13 @@ begin
 
                 -- Remember if this character is graphic's character or not
                 -- for the next cycle
-                s_use_graphic_bits <= i_video_ram_data(7);
+                s_use_graphic_bits <= i_vram_data(7);
 
                 -- Generate graphics characters
                 case s_line_pix_std_logic(3 downto 2) is
-                    when "00" => s_graphic_bits <= i_video_ram_data(1 downto 0);
-                    when "01" => s_graphic_bits <= i_video_ram_data(3 downto 2);
-                    when "10" => s_graphic_bits <= i_video_ram_data(5 downto 4);
+                    when "00" => s_graphic_bits <= i_vram_data(1 downto 0);
+                    when "01" => s_graphic_bits <= i_vram_data(3 downto 2);
+                    when "10" => s_graphic_bits <= i_vram_data(5 downto 4);
                     when others => s_graphic_bits <= "00";
                 end case;
             end if;

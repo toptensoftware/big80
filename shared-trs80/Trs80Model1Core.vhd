@@ -152,9 +152,9 @@ architecture behavior of Trs80Model1Core is
 	signal s_is_apm_pagebank_port : std_logic;
 	signal s_is_apm_enable_port : std_logic;
 	signal s_apm_pagebank_enabled : std_logic;
+	signal s_apm_videobank_enabled : std_logic;
 	signal s_apm_bootmode : std_logic := '1';
 	signal s_apm_pagebank : std_logic_vector(7 downto 0);
-	--signal s_syscon_video_mapped : std_logic;
 
 	-- Boot ROM.  (Actually it's a writeable RAM but hey... )
 	signal s_is_bootrom_range : std_logic;
@@ -166,14 +166,14 @@ architecture behavior of Trs80Model1Core is
 	-- Interrupt Controller
 	signal s_is_syscon_ic_port : std_logic;
 	signal s_syscon_ic_cpu_din : std_logic_vector(7 downto 0);
-	signal s_irqs : std_logic_vector(2 downto 0);
+	signal s_irqs : std_logic_vector(3 downto 0);
 
 	-- Video RAM
 	signal s_is_vram_range : std_logic;
-	signal s_video_ram_write_cpu : std_logic;
-	signal s_video_ram_addr_cpu : std_logic_vector(9 downto 0);
-	signal s_video_ram_din_cpu : std_logic_vector(7 downto 0);
-	signal s_video_ram_dout_cpu : std_logic_vector(7 downto 0);
+	signal s_vram_write_cpu : std_logic;
+	signal s_vram_addr_cpu : std_logic_vector(9 downto 0);
+	signal s_vram_din_cpu : std_logic_vector(7 downto 0);
+	signal s_vram_dout_cpu : std_logic_vector(7 downto 0);
 
 	-- ROM
 	signal s_is_rom_range : std_logic;
@@ -183,26 +183,36 @@ architecture behavior of Trs80Model1Core is
 
 	-- Video Controller
 	signal s_blank : std_logic;
-	signal s_hpos : integer range -2048 to 2047;
-	signal s_vpos : integer range -2048 to 2047;
-	signal s_video_ram_addr : std_logic_vector(9 downto 0);
-	signal s_video_ram_data : std_logic_vector(7 downto 0);
+	signal s_horz_pos : integer range -2048 to 2047;
+	signal s_vert_pos : integer range -2048 to 2047;
+	signal s_vram_addr : std_logic_vector(9 downto 0);
+	signal s_vram_data : std_logic_vector(7 downto 0);
 	signal s_char_rom_addr : std_logic_vector(10 downto 0);
 	signal s_char_rom_data : std_logic_vector(5 downto 0);
 	signal s_pixel : std_logic;
 	signal s_line_rep : integer range 0 to 2;
+	signal s_trs80_red : std_logic_vector(2 downto 0);
+	signal s_trs80_green : std_logic_vector(2 downto 0);
+	signal s_trs80_blue : std_logic_vector(2 downto 1);
 
 	-- Keyboard Controller
 	signal s_is_keyboard_range : std_logic;
-	signal s_key_scancode : std_logic_vector(6 downto 0);
-	signal s_key_extended : std_logic;
+	signal s_key_scancode : std_logic_vector(7 downto 0);
 	signal s_key_release : std_logic;
 	signal s_key_available : std_logic;
 	signal s_key_switches : std_logic_vector(63 downto 0);
 	signal s_key_dout_cpu : std_logic_vector(7 downto 0);
 
+	-- Syscon Keyboard
+	signal s_is_other_key : std_logic;
+	signal s_key_modifiers : std_logic_vector(1 downto 0);
+	signal s_all_keys : std_logic;
+	signal s_is_syscon_keyboard_port : std_logic;
+	signal s_syscon_keyboard_port_rd_falling_edge : std_logic;
+	signal s_syscon_keyboard_cpu_din : std_logic_vector(7 downto 0);
+
 	-- Media Keys
-	signal s_key_extended_press : std_logic;
+	signal s_key_press : std_logic;
 	signal s_media_key_play : std_logic;
 	signal s_media_key_next : std_logic;
 	signal s_media_key_prev : std_logic;
@@ -247,6 +257,31 @@ architecture behavior of Trs80Model1Core is
 	signal s_syscon_disk_port_wr_rising_edge : std_logic;
 	signal s_syscon_disk_port_rd_falling_edge : std_logic;
 	signal s_syscon_disk_cpu_din : std_logic_vector(7 downto 0);
+
+	-- SysCon Video
+	signal s_is_syscon_vram_char_range : std_logic;
+	signal s_syscon_vram_char_write_cpu : std_logic;
+	signal s_syscon_vram_char_addr_cpu : std_logic_vector(8 downto 0);
+	signal s_syscon_vram_char_din_cpu : std_logic_vector(7 downto 0);
+	signal s_syscon_vram_char_dout_cpu : std_logic_vector(7 downto 0);
+
+	signal s_is_syscon_vram_color_range : std_logic;
+	signal s_syscon_vram_color_write_cpu : std_logic;
+	signal s_syscon_vram_color_addr_cpu : std_logic_vector(8 downto 0);
+	signal s_syscon_vram_color_din_cpu : std_logic_vector(7 downto 0);
+	signal s_syscon_vram_color_dout_cpu : std_logic_vector(7 downto 0);
+
+	signal s_syscon_vram_addr : std_logic_vector(8 downto 0);
+	signal s_syscon_vram_char : std_logic_vector(7 downto 0);
+	signal s_syscon_vram_color : std_logic_vector(7 downto 0);
+
+	signal s_syscon_red : std_logic_vector(1 downto 0);
+	signal s_syscon_green : std_logic_vector(1 downto 0);
+	signal s_syscon_blue : std_logic_vector(1 downto 0);
+	signal s_syscon_transparent  : std_logic;
+	signal s_syscon_show_video : std_logic;
+	signal s_syscon_show_pixel  : std_logic;
+
 begin
 
 	
@@ -261,7 +296,7 @@ begin
 	soft_reset : process(i_clock_80mhz)
 	begin		
 		if rising_edge(i_clock_80mhz) then
-			if s_key_extended_press = '1' and s_key_scancode = "0110111" then
+			if s_key_press = '1' and s_key_scancode = "10110111" then
 				s_soft_reset <= 15;
 			end if;
 			if s_soft_reset_request = '1' then
@@ -356,11 +391,13 @@ begin
 			s_hijacked,
 			s_apm_bootmode,
 			s_apm_pagebank,
-			s_apm_pagebank_enabled
+			s_apm_pagebank_enabled,
+			s_apm_videobank_enabled
 			)
 	begin
 		s_is_bootrom_range <= '0';
---		s_is_syscon_vram_range <= '0';
+		s_is_syscon_vram_char_range <= '0';
+		s_is_syscon_vram_color_range <= '0';
 		s_is_rom_range <= '0';
 		s_is_vram_range <= '0';
 		s_is_ram_range <= '0';
@@ -370,8 +407,10 @@ begin
 			if s_apm_bootmode = '1' and s_cpu_addr(15) = '0' then
 				-- 0x0000 -> 0x6FFF
 				s_is_bootrom_range <= '1';
---			elsif s_syscon_video_mapped = '1' and s_cpu_addr(15 downto 10) = "111111" then
---				s_is_syscon_video_range <= '1';
+			elsif s_apm_videobank_enabled = '1' and s_cpu_addr(15 downto 10) = "111111" then
+				-- SysCon video at 0xFC00
+				s_is_syscon_vram_char_range <= not s_cpu_addr(9);
+				s_is_syscon_vram_color_range <= s_cpu_addr(9);
 			else
 				s_is_ram_range <= '1';
 			end if;
@@ -408,8 +447,10 @@ begin
 						s_mem_rd, 
 							s_is_bootrom_range, s_bootrom_dout, 
 							s_is_ram_range, i_ram_dout, 
-							s_is_vram_range, s_video_ram_dout_cpu,
+							s_is_vram_range, s_vram_dout_cpu,
 							s_is_keyboard_Range, s_key_dout_cpu,
+							s_is_syscon_vram_char_range, s_syscon_vram_char_dout_cpu,
+							s_is_syscon_vram_color_range, s_syscon_vram_color_dout_cpu,
 						s_port_rd,
 							s_is_cas_port, s_cas_audio_in, s_cas_audio_in_edge,
 							s_is_trisstick_port, s_psx_buttons,
@@ -418,9 +459,12 @@ begin
 							s_is_syscon_options_port, s_options,
 							s_is_syscon_ic_port , s_syscon_ic_cpu_din,
 							s_is_apm_enable_port,
-							s_is_apm_pagebank_port, s_apm_pagebank, s_apm_pagebank_enabled,
-							--s_syscon_video_mapped, 
-							s_apm_bootmode
+							s_is_apm_pagebank_port, 
+							s_syscon_show_video, s_apm_pagebank, s_apm_pagebank_enabled, s_apm_videobank_enabled,
+							s_apm_bootmode,
+							s_all_keys,
+							s_is_syscon_keyboard_port,
+							s_syscon_keyboard_cpu_din
 							)
 	begin
 
@@ -435,7 +479,11 @@ begin
 			elsif s_is_keyboard_range = '1' then
 				s_cpu_din <= s_key_dout_cpu;
 			elsif s_is_vram_range = '1' then
-				s_cpu_din <= s_video_ram_dout_cpu;
+				s_cpu_din <= s_vram_dout_cpu;
+			elsif s_is_syscon_vram_char_range = '1' then
+				s_cpu_din <= s_syscon_vram_char_dout_cpu;
+			elsif s_is_syscon_vram_color_range = '1' then
+				s_cpu_din <= s_syscon_vram_color_dout_cpu;
 			end if;
 
 		elsif s_port_rd = '1' then
@@ -465,8 +513,9 @@ begin
 			elsif s_is_apm_pagebank_port = '1' then
 				s_cpu_din <= s_apm_pagebank;
 			elsif s_is_apm_enable_port = '1' then
---				s_cpu_din <= "00000" & s_apm_pagebank_enabled & s_apm_bootmode & s_syscon_video_mapped;
-				s_cpu_din <= "00000" & s_apm_pagebank_enabled & s_apm_bootmode & '0';
+				s_cpu_din <= "000" & s_all_keys & s_syscon_show_video & s_apm_pagebank_enabled & s_apm_bootmode & s_apm_videobank_enabled;
+			elsif s_is_syscon_keyboard_port = '1' then
+				s_cpu_din <= s_syscon_keyboard_cpu_din;
 			end if;
 
 		end if;
@@ -537,6 +586,8 @@ begin
 				s_apm_pagebank_enabled <= '0';
 				s_apm_bootmode <= '1';
 				s_soft_reset_request <= '0';
+				s_syscon_show_video <= '0';
+				s_all_keys <= '0';
 			elsif s_clken_cpu = '1' then
 
 				if s_port_wr = '1' then
@@ -546,9 +597,11 @@ begin
 					end if;
 
 					if s_is_apm_enable_port = '1' then
-						--s_syscon_video_mapped <= s_cpu_dout(0);
+						s_apm_videobank_enabled <= s_cpu_dout(0);
 						s_apm_bootmode <= s_cpu_dout(1);
 						s_apm_pagebank_enabled <= s_cpu_dout(2);
+						s_syscon_show_video <= s_cpu_dout(3);
+						s_all_keys <= s_cpu_dout(4);
 						s_soft_reset_request <= s_cpu_dout(7);
 					end if;
 
@@ -564,7 +617,7 @@ begin
 	interrupt_controller : entity work.SysConInterruptController
 	generic map
 	(
-		p_irq_count => 3
+		p_irq_count => 4
 	)
 	port map
 	(
@@ -681,9 +734,9 @@ begin
 
 	------------------------- Video RAM -------------------------
 
-	s_video_ram_addr_cpu <= s_cpu_addr(9 downto 0);
-	s_video_ram_write_cpu <= s_mem_wr and s_is_vram_range;
-	s_video_ram_din_cpu <= s_cpu_dout;
+	s_vram_addr_cpu <= s_cpu_addr(9 downto 0);
+	s_vram_write_cpu <= s_mem_wr and s_is_vram_range;
+	s_vram_din_cpu <= s_cpu_dout;
 
 	vram : entity work.RamDualPortInferred	
 	GENERIC MAP
@@ -695,18 +748,18 @@ begin
 		-- Read/Write port for CPU
 		i_clock_a => i_clock_80mhz,
 		i_clken_a => s_clken_cpu,
-		i_write_a => s_video_ram_write_cpu,
-		i_addr_a => s_video_ram_addr_cpu,
-		i_din_a => s_video_ram_din_cpu,
-		o_dout_a => s_video_ram_dout_cpu,
+		i_write_a => s_vram_write_cpu,
+		i_addr_a => s_vram_addr_cpu,
+		i_din_a => s_vram_din_cpu,
+		o_dout_a => s_vram_dout_cpu,
 
 		-- Read only port for video controller
 		i_clock_b => i_clock_80mhz,
 		i_clken_b => s_clken_40mhz,
 		i_write_b => '0',
-		i_addr_b => s_video_ram_addr,
+		i_addr_b => s_vram_addr,
 		i_din_b => (others => '0'),
-		o_dout_b => s_video_ram_data
+		o_dout_b => s_vram_data
 	);
 
 
@@ -742,13 +795,19 @@ begin
 
 	------------------------- Video Controller -------------------------
 
+	-- Combine trs80 and sys-con video
+	s_syscon_show_pixel <= s_syscon_show_video and not s_syscon_transparent;
+	o_red <= s_trs80_red when s_syscon_show_pixel = '0' else s_syscon_red & '0';
+	o_green <= s_trs80_green when s_syscon_show_pixel = '0' else s_syscon_green & '0';
+	o_blue <= s_trs80_blue when s_syscon_show_pixel = '0' else s_syscon_blue;
+
 	without_video : if not p_enable_video_controller generate
 		o_vert_sync <= '0';
 		o_horz_sync <= '0';
-		o_red <= (others => '0');
-		o_green <= (others => '0');
-		o_blue <= (others => '0');
-		s_video_ram_addr <= (others => '0');
+		s_trs80_red <= (others => '0');
+		s_trs80_green <= (others => '0');
+		s_trs80_blue <= (others => '0');
+		s_vram_addr <= (others => '0');
 	end generate;
 
 	with_video : if p_enable_video_controller generate
@@ -762,8 +821,8 @@ begin
 			i_reset => s_reset,
 			o_vert_sync => o_vert_sync,
 			o_horz_sync => o_horz_sync,
-			o_horz_pos => s_hpos,
-			o_vert_pos => s_vpos,
+			o_horz_pos => s_horz_pos,
+			o_vert_pos => s_vert_pos,
 			o_blank => s_blank
 		);
 
@@ -779,11 +838,11 @@ begin
 			i_clock => i_clock_80mhz,
 			i_clken => s_clken_40mhz,
 			i_reset => s_reset,
-			i_horz_pos => s_hpos,
-			i_vert_pos => s_vpos,
+			i_horz_pos => s_horz_pos,
+			i_vert_pos => s_vert_pos,
 			i_wide_mode => s_wide_video_mode,
-			o_video_ram_addr => s_video_ram_addr,
-			i_video_ram_data => s_video_ram_data,
+			o_vram_addr => s_vram_addr,
+			i_vram_data => s_vram_data,
 			o_char_rom_addr => s_char_rom_addr,
 			i_char_rom_data => s_char_rom_data,
 			o_pixel => s_pixel,
@@ -794,32 +853,32 @@ begin
 		color_gen : process(s_pixel, s_option_green_screen, s_option_no_scan_lines, s_line_rep)
 		begin
 			if s_option_green_screen = '1' then
-				o_red <= "000";
+				s_trs80_red <= "000";
 				if s_option_no_scan_lines = '0' then
 					if s_line_rep = 1 then
-						o_green <= s_pixel & s_pixel & s_pixel;
+						s_trs80_green <= s_pixel & s_pixel & s_pixel;
 					else
-						o_green <= s_pixel & "0" & s_pixel;
+						s_trs80_green <= s_pixel & "0" & s_pixel;
 					end if;
 				else
-					o_green <= s_pixel & s_pixel & s_pixel;
+					s_trs80_green <= s_pixel & s_pixel & s_pixel;
 				end if;
-				o_blue <= "00";
+				s_trs80_blue <= "00";
 			else
-				o_red <= "000";
+				s_trs80_red <= "000";
 				if s_option_no_scan_lines = '0' then
 					if s_line_rep = 1 then
-						o_red <= s_pixel & s_pixel & s_pixel;
-						o_green <= s_pixel & "00";
+						s_trs80_red <= s_pixel & s_pixel & s_pixel;
+						s_trs80_green <= s_pixel & "00";
 					else
-						o_red <= s_pixel & "0" & s_pixel;
-						o_green <= "0" & s_pixel & "0";
+						s_trs80_red <= s_pixel & "0" & s_pixel;
+						s_trs80_green <= "0" & s_pixel & "0";
 					end if;
 				else
-					o_red <= s_pixel & s_pixel & s_pixel;
-					o_green <= s_pixel & "00";
+					s_trs80_red <= s_pixel & s_pixel & s_pixel;
+					s_trs80_green <= s_pixel & "00";
 				end if;
-				o_blue <= "00";
+				s_trs80_blue <= "00";
 			end if;
 		end process;
 
@@ -843,10 +902,9 @@ begin
 		io_ps2_data <= '1';
 		s_key_dout_cpu <= (others => '0');
 		s_key_scancode <= (others => '0');
-		s_key_extended <= '0';
 		s_key_release <= '0';
 		s_key_available <= '1';
-		s_key_extended_press <= '0';
+		s_key_press <= '0';
 		s_media_key_play <= '0';
 		s_media_key_next <= '0';
 		s_media_key_prev <= '0';
@@ -866,7 +924,6 @@ begin
 			io_ps2_clock => io_ps2_clock,
 			io_ps2_data => io_ps2_data,
 			o_key_scancode => s_key_scancode,
-			o_key_extended => s_key_extended,
 			o_key_released => s_key_release,
 			o_key_available => s_key_available
 		);
@@ -878,19 +935,43 @@ begin
 			i_clock => i_clock_80mhz,
 			i_reset => s_reset,
 			i_key_scancode => s_key_scancode,
-			i_key_extended => s_key_extended,
 			i_key_released => s_key_release,
 			i_key_available => s_key_available,
 			i_typing_mode => s_option_typing_mode,
 			i_addr => s_cpu_addr(7 downto 0),
-			o_data => s_key_dout_cpu
+			o_data => s_key_dout_cpu,
+			o_is_other_key => s_is_other_key,
+			o_modifiers => s_key_modifiers,
+			i_suppress_all_keys => s_all_keys
 		);
 
 		-- Media key mapping
-		s_key_extended_press <= s_key_available and not s_key_release and s_key_extended;
-		s_media_key_play <= '1' when s_key_extended_press = '1' and s_key_scancode = "0110100" else '0';
-		s_media_key_next <= '1' when s_key_extended_press = '1' and s_key_scancode = "1001101" else '0';
-		s_media_key_prev <= '1' when s_key_extended_press = '1' and s_key_scancode = "0010101" else '0';
+		s_key_press <= s_key_available and not s_key_release;
+		s_media_key_play <= '1' when s_key_press = '1' and s_key_scancode = "10110100" else '0';
+		s_media_key_next <= '1' when s_key_press = '1' and s_key_scancode = "11001101" else '0';
+		s_media_key_prev <= '1' when s_key_press = '1' and s_key_scancode = "10010101" else '0';
+
+		s_is_syscon_keyboard_port <= s_hijacked when s_cpu_addr(7 downto 4) = x"7" else '0';
+		s_syscon_keyboard_port_rd_falling_edge <= s_is_syscon_keyboard_port and s_port_rd_falling_edge;
+
+		-- SysCon Keyboard Controller
+		e_SysConKeyboardController : entity work.SysConKeyboardController
+		port map
+		(
+			i_reset => s_reset,
+			i_clock => i_clock_80mhz,
+			i_cpu_port_number => s_cpu_addr(0),
+			i_cpu_port_rd_falling_edge => s_syscon_keyboard_port_rd_falling_edge,
+			o_cpu_din => s_syscon_keyboard_cpu_din,
+			o_irq => s_irqs(3),
+			i_key_scancode => s_key_scancode,
+			i_key_released => s_key_release,
+			i_key_available => s_key_available,
+			i_key_modifiers => s_key_modifiers,
+			i_is_syscon_key => s_is_other_key,
+			i_all_keys => s_all_keys
+		);
+
 
 	end generate;
 
@@ -1111,53 +1192,134 @@ begin
 
 
 
-	------------------------- Logic Capture -------------------------
+	------------------------- SysCon Video Controller -------------------------
 
-	capture_pc : process(i_clock_80mhz)
-	begin
-		if rising_edge(i_clock_80mhz) then
-			if s_reset = '1' then
-				s_pc <= (others => '0');
-			elsif s_clken_cpu = '1' then
-				if s_cpu_m1_n = '0' then
-					s_pc <= s_cpu_addr;
-				end if;
-			end if;
-		end if;
-	end process;
 
-	s_logic_capture_trigger <= s_reset_n; -- '1' when s_pc = x"031A" else '0';
+	s_syscon_vram_char_addr_cpu <= s_cpu_addr(8 downto 0);
+	s_syscon_vram_char_write_cpu <= s_mem_wr and s_is_syscon_vram_char_range;
+	s_syscon_vram_char_din_cpu <= s_cpu_dout;
 
-	s_logic_capture <= 
-		s_cpu_addr &
-		s_cpu_din &
-		s_cpu_dout &
-		s_mem_rd &
-		s_mem_wr &
-		s_port_rd &
-		s_port_wr &
-		s_cpu_wait_n &
-		s_cpu_nmi_n &
-		s_cpu_m1_n &
-		s_hijacked;
-
-	e_LogicCapture : entity work.LogicCapture
-	generic map
+	syscon_vram_char : entity work.RamDualPortInferred	
+	GENERIC MAP
 	(
-		p_clock_hz => 80_000_000,
-		p_baud => 115200,
-		p_bit_width => 40,
-		p_addr_width => 11
+		p_addr_width => 9
 	)
-	port map
+	PORT MAP
 	(
-		i_clock => i_clock_80mhz,
-		i_clken => s_clken_cpu,
-		i_reset => s_reset,
-		i_trigger => s_logic_capture_trigger,
-		i_signals => s_logic_capture,
-		o_uart_tx => o_uart_debug
+		-- Read/Write port for CPU
+		i_clock_a => i_clock_80mhz,
+		i_clken_a => s_clken_cpu,
+		i_write_a => s_syscon_vram_char_write_cpu,
+		i_addr_a => s_syscon_vram_char_addr_cpu,
+		i_din_a => s_syscon_vram_char_din_cpu,
+		o_dout_a => s_syscon_vram_char_dout_cpu,
+
+		-- Read only port for video controller
+		i_clock_b => i_clock_80mhz,
+		i_clken_b => s_clken_40mhz,
+		i_write_b => '0',
+		i_addr_b => s_syscon_vram_addr,
+		i_din_b => (others => '0'),
+		o_dout_b => s_syscon_vram_char
 	);
 
+	s_syscon_vram_color_addr_cpu <= s_cpu_addr(8 downto 0);
+	s_syscon_vram_color_write_cpu <= s_mem_wr and s_is_syscon_vram_color_range;
+	s_syscon_vram_color_din_cpu <= s_cpu_dout;
+
+	syscon_vram_color : entity work.RamDualPortInferred	
+	GENERIC MAP
+	(
+		p_addr_width => 9
+	)
+	PORT MAP
+	(
+		-- Read/Write port for CPU
+		i_clock_a => i_clock_80mhz,
+		i_clken_a => s_clken_cpu,
+		i_write_a => s_syscon_vram_color_write_cpu,
+		i_addr_a => s_syscon_vram_color_addr_cpu,
+		i_din_a => s_syscon_vram_color_din_cpu,
+		o_dout_a => s_syscon_vram_color_dout_cpu,
+
+		-- Read only port for video controller
+		i_clock_b => i_clock_80mhz,
+		i_clken_b => s_clken_40mhz,
+		i_write_b => '0',
+		i_addr_b => s_syscon_vram_addr,
+		i_din_b => (others => '0'),
+		o_dout_b => s_syscon_vram_color
+	);
+
+
+	e_SysConVideoController : entity work.SysConVideoController
+	port map
+	(
+		i_reset => s_reset,
+		i_clock => i_clock_80mhz,
+		i_clken => s_clken_40mhz,
+		i_horz_pos => s_horz_pos,
+		i_vert_pos => s_vert_pos,
+		o_red => s_syscon_red,
+		o_green => s_syscon_green,
+		o_blue => s_syscon_blue,
+		o_transparent => s_syscon_transparent,
+		o_vram_addr => s_syscon_vram_addr,
+		i_vram_char => s_syscon_vram_char,
+		i_vram_color => s_syscon_vram_color
+	);
+
+
+
+
+--	------------------------- Logic Capture -------------------------
+--
+--	capture_pc : process(i_clock_80mhz)
+--	begin
+--		if rising_edge(i_clock_80mhz) then
+--			if s_reset = '1' then
+--				s_pc <= (others => '0');
+--			elsif s_clken_cpu = '1' then
+--				if s_cpu_m1_n = '0' then
+--					s_pc <= s_cpu_addr;
+--				end if;
+--			end if;
+--		end if;
+--	end process;
+--
+--	s_logic_capture_trigger <= s_reset_n; -- '1' when s_pc = x"031A" else '0';
+--
+--	s_logic_capture <= 
+--		s_cpu_addr &
+--		s_cpu_din &
+--		s_cpu_dout &
+--		s_mem_rd &
+--		s_mem_wr &
+--		s_port_rd &
+--		s_port_wr &
+--		s_cpu_wait_n &
+--		s_cpu_nmi_n &
+--		s_cpu_m1_n &
+--		s_hijacked;
+--
+--	e_LogicCapture : entity work.LogicCapture
+--	generic map
+--	(
+--		p_clock_hz => 80_000_000,
+--		p_baud => 115200,
+--		p_bit_width => 40,
+--		p_addr_width => 11
+--	)
+--	port map
+--	(
+--		i_clock => i_clock_80mhz,
+--		i_clken => s_clken_cpu,
+--		i_reset => s_reset,
+--		i_trigger => s_logic_capture_trigger,
+--		i_signals => s_logic_capture,
+--		o_uart_tx => o_uart_debug
+--	);
+
+	o_uart_debug <= '1';
 
 end;

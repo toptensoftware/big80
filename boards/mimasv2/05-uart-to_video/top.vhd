@@ -94,8 +94,8 @@ begin
 		i_horz_pos => s_hpos,
 		i_vert_pos => s_vpos,
 		i_wide_mode => '0',
-		o_video_ram_addr => s_video_ram_addr,
-		i_video_ram_data => s_video_ram_data,
+		o_vram_addr => s_video_ram_addr,
+		i_vram_data => s_video_ram_data,
 		o_char_rom_addr => s_char_rom_addr,
 		i_char_rom_data => s_char_rom_data,
 		o_pixel => s_pixel,
@@ -123,16 +123,16 @@ begin
 		i_clken_a => '1',
 		i_write_a => s_video_ram_write_uart,
 		i_addr_a => s_video_ram_addr_uart,
-		i_data_a => s_video_ram_data_uart,
-		o_data_a => open,
+		i_din_a => s_video_ram_data_uart,
+		o_dout_a => open,
 
 		-- Read only port for video controller
 		i_clock_b => s_clock_80mhz,
 		i_clken_b => s_clken_40mhz,
 		i_write_b => '0',
 		i_addr_b => s_video_ram_addr,
-		i_data_b => (others => '0'),
-		o_data_b => s_video_ram_data
+		i_din_b => (others => '0'),
+		o_dout_b => s_video_ram_data
 	);
 
 	

@@ -65,17 +65,17 @@ architecture Behavioral of top is
 	signal s_blank : std_logic;
 	signal s_hpos : integer range -2048 to 2047;
 	signal s_vpos : integer range -2048 to 2047;
-	signal s_video_ram_addr : std_logic_vector(9 downto 0);
-	signal s_video_ram_data : std_logic_vector(7 downto 0);
+	signal s_vram_addr : std_logic_vector(9 downto 0);
+	signal s_vram_data : std_logic_vector(7 downto 0);
 	signal s_char_rom_addr : std_logic_vector(10 downto 0);
 	signal s_char_rom_data : std_logic_vector(5 downto 0);
 	signal s_pixel : std_logic;
 	signal s_line_rep : integer range 0 to 2;
 
-	signal s_video_ram_write_cpu : std_logic;
-	signal s_video_ram_addr_cpu : std_logic_vector(9 downto 0);
-	signal s_video_ram_din_cpu : std_logic_vector(7 downto 0);
-	signal s_video_ram_dout_cpu : std_logic_vector(7 downto 0);
+	signal s_vram_write_cpu : std_logic;
+	signal s_vram_addr_cpu : std_logic_vector(9 downto 0);
+	signal s_vram_din_cpu : std_logic_vector(7 downto 0);
+	signal s_vram_dout_cpu : std_logic_vector(7 downto 0);
 
 	-- RAM
 	signal s_ram_write_cpu : std_logic;
@@ -110,8 +110,7 @@ architecture Behavioral of top is
 	signal s_is_trisstick_port : std_logic;
 
 	-- Keyboard
-	signal s_key_scancode : std_logic_vector(6 downto 0);
-	signal s_key_extended : std_logic;
+	signal s_key_scancode : std_logic_vector(7 downto 0);
 	signal s_key_release : std_logic;
 	signal s_key_available : std_logic;
 	signal s_key_switches : std_logic_vector(63 downto 0);
@@ -127,7 +126,7 @@ architecture Behavioral of top is
 	signal s_button_record : std_logic;
 
 	-- Media Keys
-	signal s_key_extended_press : std_logic;
+	signal s_key_press : std_logic;
 	signal s_media_key_play : std_logic;
 	signal s_media_key_next : std_logic;
 	signal s_media_key_prev : std_logic;
@@ -173,7 +172,7 @@ begin
 	soft_reset : process(s_clock_80mhz)
 	begin		
 		if rising_edge(s_clock_80mhz) then
-			if s_key_extended_press = '1' and s_key_scancode = "0110111" then
+			if s_key_press ='1' and s_key_scancode = "10110111" then
 				s_soft_reset <= 15;
 			end if;
 			if s_soft_reset /= 0 then
@@ -254,8 +253,8 @@ begin
 		i_horz_pos => s_hpos,
 		i_vert_pos => s_vpos,
 		i_wide_mode => s_wide_video_mode,
-		o_video_ram_addr => s_video_ram_addr,
-		i_video_ram_data => s_video_ram_data,
+		o_vram_addr => s_vram_addr,
+		i_vram_data => s_vram_data,
 		o_char_rom_addr => s_char_rom_addr,
 		i_char_rom_data => s_char_rom_data,
 		o_pixel => s_pixel,
@@ -316,18 +315,18 @@ begin
 		-- Read/Write port for CPU
 		i_clock_a => s_clock_80mhz,
 		i_clken_a => s_clken_cpu,
-		i_write_a => s_video_ram_write_cpu,
-		i_addr_a => s_video_ram_addr_cpu,
-		i_data_a => s_video_ram_din_cpu,
-		o_data_a => s_video_ram_dout_cpu,
+		i_write_a => s_vram_write_cpu,
+		i_addr_a => s_vram_addr_cpu,
+		i_din_a => s_vram_din_cpu,
+		o_dout_a => s_vram_dout_cpu,
 
 		-- Read only port for video controller
 		i_clock_b => s_clock_80mhz,
 		i_clken_b => s_clken_40mhz,
 		i_write_b => '0',
-		i_addr_b => s_video_ram_addr,
-		i_data_b => (others => '0'),
-		o_data_b => s_video_ram_data
+		i_addr_b => s_vram_addr,
+		i_din_b => (others => '0'),
+		o_dout_b => s_vram_data
 	);
 
 	-- Main RAM (48K)
@@ -370,7 +369,6 @@ begin
 		io_ps2_clock => io_ps2_clock,
 		io_ps2_data => io_ps2_data,
 		o_key_scancode => s_key_scancode,
-		o_key_extended => s_key_extended,
 		o_key_released => s_key_release,
 		o_key_available => s_key_available
 	);
@@ -382,12 +380,12 @@ begin
 		i_clock => s_clock_80mhz,
 		i_reset => s_reset,
 		i_key_scancode => s_key_scancode,
-		i_key_extended => s_key_extended,
 		i_key_released => s_key_release,
 		i_key_available => s_key_available,
 		i_typing_mode => i_switch_typing_mode,
 		i_addr => s_cpu_addr(7 downto 0),
-		o_data => s_key_dout_cpu
+		o_data => s_key_dout_cpu,
+		i_suppress_all_keys => '0'
 	);
 
 	-- CPU
@@ -453,9 +451,9 @@ begin
 	end process;
 
 	-- Generate addresses and write flags
-	s_video_ram_addr_cpu <= s_cpu_addr(9 downto 0);
-	s_video_ram_write_cpu <= s_mem_wr and s_is_vram_range;
-	s_video_ram_din_cpu <= s_cpu_dout;
+	s_vram_addr_cpu <= s_cpu_addr(9 downto 0);
+	s_vram_write_cpu <= s_mem_wr and s_is_vram_range;
+	s_vram_din_cpu <= s_cpu_dout;
 
 	s_ram_addr_cpu <= s_cpu_addr(14 downto 0);
 	s_ram_write_cpu <= s_mem_wr and s_is_ram_range;
@@ -467,7 +465,7 @@ begin
 	cpu_data_in : process(s_mem_rd, 
 							s_is_rom_range, s_rom_dout_cpu, 
 							s_is_ram_range, s_ram_dout_cpu, 
-							s_is_vram_range, s_video_ram_dout_cpu,
+							s_is_vram_range, s_vram_dout_cpu,
 							s_is_keyboard_Range, s_key_dout_cpu,
 							s_port_rd,
 							s_is_cas_port, s_cas_audio_in, s_cas_audio_in_edge,
@@ -485,7 +483,7 @@ begin
 			elsif s_is_keyboard_range = '1' then
 				s_cpu_din <= s_key_dout_cpu;
 			elsif s_is_vram_range = '1' then
-				s_cpu_din <= s_video_ram_dout_cpu;
+				s_cpu_din <= s_vram_dout_cpu;
 			end if;
 		elsif s_port_rd = '1' then
 			if s_is_cas_port = '1' then
@@ -562,8 +560,8 @@ begin
 		-- DMA access
 		o_data_start => open,
 		o_data_cycle => s_sd_dcycle,
-		i_data => s_sd_din,
-		o_data => s_sd_dout
+		i_din => s_sd_din,
+		o_dout => s_sd_dout
 	);
 
 	debounce : entity work.DebounceFilterSet
@@ -591,10 +589,10 @@ begin
 	s_button_record <= not i_button_left or s_cas_auto_record;
 
 	-- Also map, media keys
-	s_key_extended_press <= s_key_available and not s_key_release and s_key_extended;
-	s_media_key_play <= '1' when s_key_extended_press = '1' and s_key_scancode = "0110100" else '0';
-	s_media_key_next <= '1' when s_key_extended_press = '1' and s_key_scancode = "1001101" else '0';
-	s_media_key_prev <= '1' when s_key_extended_press = '1' and s_key_scancode = "0010101" else '0';
+	s_key_press <= s_key_available and not s_key_release;
+	s_media_key_play <= '1' when s_key_press = '1' and s_key_scancode = "10110100" else '0';
+	s_media_key_next <= '1' when s_key_press = '1' and s_key_scancode = "11001101" else '0';
+	s_media_key_prev <= '1' when s_key_press = '1' and s_key_scancode = "10010101" else '0';
 	s_media_keys <= s_media_key_prev & s_media_key_next & s_media_key_play;
 
 

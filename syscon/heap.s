@@ -37,7 +37,7 @@
         .area   _HEAP
 ___sdcc_heap::
         ;; How much heap space? 
-        .ds     0x1000
+        .ds     0x2000
 
         .area   _HEAP_END
 ___sdcc_heap_end::
