@@ -21,8 +21,9 @@ upload: ~/sf_downloads/big80.sys
 ~/sf_downloads/big80.sys: $(OUTDIR)/$(BINFILE)
 	@echo Uploading...
 	@cp $< $@
+	@cp $(INTDIR)/syscon.map ~/sf_downloads/
 	@mcopy -o -i ~/sf_downloads/test.img@@1M $< ::
 	@mdir -i ~/sf_downloads/test.img@@1M
-	@bet push --port:/dev/ttyACM1 bin/big80.sys
-	@bet reset --port:/dev/ttyACM1 
+	@#bet push --port:/dev/ttyACM1 bin/big80.sys
+	@#bet reset --port:/dev/ttyACM1 
 	@echo "Done!"

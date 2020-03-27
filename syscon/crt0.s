@@ -64,7 +64,7 @@
 init:
 
 	;; Set stack pointer
-	ld	sp,#0xFC00
+	ld	sp,#0xF800
 
 	;; Initialise global variables
 	call	gsinit
