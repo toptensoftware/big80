@@ -53,7 +53,7 @@ int ff_cre_syncobj (	/* 1:Function succeeded, 0:Could not create the sync object
 )
 {
     init_mutex(&g_mutexSync);
-    sobj = (FF_SYNC_t*)&g_mutexSync;
+    *sobj = (FF_SYNC_t*)&g_mutexSync;
     return 1;
 }
 
@@ -70,7 +70,7 @@ int ff_req_grant(FF_SYNC_t sobj)
     if (get_current_fiber() == NULL)
         return 1;
 
-//    enter_mutex((MUTEX*)sobj);
+    enter_mutex((MUTEX*)sobj);
     return 1;
 }
 
@@ -80,6 +80,6 @@ void ff_rel_grant (FF_SYNC_t sobj)
     if (get_current_fiber() == NULL)
         return;
 
-    //leave_mutex((MUTEX*)sobj);
+    leave_mutex((MUTEX*)sobj);
 }
 
