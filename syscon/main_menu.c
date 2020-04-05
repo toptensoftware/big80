@@ -12,12 +12,24 @@ static char* items[] = {
 	NULL
 };
 
+const char* pszSelectedFile = NULL;
+
 static void invoke_command(LISTBOX* pListBox)
 {
 	switch (pListBox->selectedItem)
 	{
 		case COMMAND_CHOOSETAPE:
+		{
+			const char* pszFile = choose_file("*.cas", pszSelectedFile, "(eject)");
+			if (pszFile)
+			{
+				if (pszSelectedFile)
+					free(pszSelectedFile);
+				pszSelectedFile = pszFile;
+				message_box("Selected File", pszFile, okButtons, 0);
+			}
 			break;
+		}
 
 		case COMMAND_OPTIONS:
 			options_menu();
