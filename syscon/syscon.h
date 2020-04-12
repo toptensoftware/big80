@@ -4,7 +4,7 @@
 #include <libSysCon.h>
 #include <ff.h>
 
-extern char g_szTemp[];
+extern char g_szTemp[128];
 
 // uart_fiber.c
 void uart_interrupts();
@@ -19,3 +19,9 @@ void options_menu();
 // config.c
 void config_load();
 void config_save();
+
+// cassette_fiber.c
+extern const char* g_pszCasFile;
+extern const char* g_pszCasSaveFile;
+void cassette_init();
+void cassette_isr();

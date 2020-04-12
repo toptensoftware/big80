@@ -69,6 +69,7 @@ void main(void)
     uart_init();
     sd_init_isr();
     msg_init();
+    cassette_init();
 
     // Create the main UI Fiber
     create_fiber(ui_fiber_proc, 1024);
@@ -82,11 +83,15 @@ void main(void)
         // Yield
         yield_from_nmi();
 
+//        sprintf(g_szTemp, "[%2x]", (int)InterruptControllerPort);
+//        uart_write_sz(g_szTemp);
+
         // Process all interrupts
         uart_read_isr();
         uart_write_isr();
         sd_isr();
         msg_isr();
+        cassette_isr();
     }
 
 }
@@ -116,6 +121,8 @@ size_t window_proc_hook(WINDOW* pWindow, MSG* pMsg, bool* pbHandled)
 void ui_fiber_proc()
 {
     uart_write_sz("ui_fiber_proc\n");
+
+    video_clear();
 
     // Hook the default window proces to capture
     // F12 key presses to enter/exit syscon menus from

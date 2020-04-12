@@ -35,6 +35,7 @@ port
 
 	-- Status indicators
 	o_status : out std_logic_vector(7 downto 0);
+	o_debug : out std_logic_vector(31 downto 0);
 
 	-- External RAM (128K required)
 	o_ram_cs : out std_logic;
@@ -166,7 +167,7 @@ architecture behavior of Trs80Model1Core is
 	-- Interrupt Controller
 	signal s_is_syscon_ic_port : std_logic;
 	signal s_syscon_ic_cpu_din : std_logic_vector(7 downto 0);
-	signal s_irqs : std_logic_vector(3 downto 0);
+	signal s_irqs : std_logic_vector(4 downto 0);
 
 	-- Video RAM
 	signal s_is_vram_range : std_logic;
@@ -213,31 +214,40 @@ architecture behavior of Trs80Model1Core is
 
 	-- Media Keys
 	signal s_key_press : std_logic;
-	signal s_media_key_play : std_logic;
-	signal s_media_key_next : std_logic;
-	signal s_media_key_prev : std_logic;
-	signal s_media_keys : std_logic_vector(2 downto 0);
 
 	-- Cassette Player
+	signal s_is_syscon_cas_port : std_logic;			-- x"C?"
+	signal s_is_syscon_cas_cmdstat_port : std_logic;	-- x"C0"
+	signal s_is_syscon_cas_data_port : std_logic;		-- x"C1"
 	signal s_clken_cassette : std_logic;
 	signal s_is_cas_port : std_logic;
-	signal s_recording : std_logic;
-	signal s_playing_or_recording : std_logic;
 	signal s_cas_prev_audio_in : std_logic_vector(1 downto 0);
 	signal s_cas_audio_in : std_logic_vector(1 downto 0);
 	signal s_cas_audio_out : std_logic_vector(1 downto 0);
 	signal s_cas_audio_in_edge : std_logic;
 	signal s_cas_motor : std_logic;
 	signal s_wide_video_mode : std_logic;
-	signal s_button_start : std_logic;
-	signal s_button_stop : std_logic;
-	signal s_button_record : std_logic;
+
+	signal s_cas_command_play : std_logic;
+	signal s_cas_command_record : std_logic;
+	signal s_cas_command_stop : std_logic;
+	signal s_cas_status_playing : std_logic;
+	signal s_cas_status_recording : std_logic;
+	signal s_cas_status_need_block_number : std_logic;
+	signal s_cas_block_number : std_logic_vector(31 downto 0);
+	signal s_cas_block_number_load : std_logic;
+
+	-- Syscon cas port
+	signal s_syscon_cas_play : std_logic;
+	signal s_syscon_cas_record : std_logic;
+	signal s_syscon_cas_stop : std_logic;
+	signal s_syscon_cas_block_number_load : std_logic;
 
 	-- Auto cassette control
 	signal s_cas_motor_monitored : std_logic;
-	signal s_cas_auto_start : std_logic;
-	signal s_cas_auto_record : std_logic;
-	signal s_cas_auto_stop : std_logic;
+	signal s_autocas_start : std_logic;
+	signal s_autocas_record : std_logic;
+	signal s_autocas_stop : std_logic;
 
 	-- TrisStick
 	signal s_is_trisstick_port : std_logic;
@@ -334,6 +344,7 @@ begin
 		i_reset => s_reset,
 		o_clken => s_clken_cpu_normal
 	);
+
 
 	s_clken_cpu <= 
 		'0' when i_switch_run = '0' else 
@@ -464,7 +475,11 @@ begin
 							s_apm_bootmode,
 							s_all_keys,
 							s_is_syscon_keyboard_port,
-							s_syscon_keyboard_cpu_din
+							s_syscon_keyboard_cpu_din,
+							s_is_syscon_cas_cmdstat_port,
+							s_cas_status_playing,
+							s_cas_status_recording,
+							s_cas_status_need_block_number
 							)
 	begin
 
@@ -516,6 +531,8 @@ begin
 				s_cpu_din <= "000" & s_all_keys & s_syscon_show_video & s_apm_pagebank_enabled & s_apm_bootmode & s_apm_videobank_enabled;
 			elsif s_is_syscon_keyboard_port = '1' then
 				s_cpu_din <= s_syscon_keyboard_cpu_din;
+			elsif s_is_syscon_cas_cmdstat_port = '1' then
+				s_cpu_din <= "00000" & s_cas_status_need_block_number & s_cas_status_recording & s_cas_status_playing;
 			end if;
 
 		end if;
@@ -617,7 +634,7 @@ begin
 	interrupt_controller : entity work.SysConInterruptController
 	generic map
 	(
-		p_irq_count => 4
+		p_irq_count => 5
 	)
 	port map
 	(
@@ -720,6 +737,8 @@ begin
 
 	------------------------- LED status indicators -------------------------
 
+	o_debug <= s_cas_block_number;
+
 	o_status <=
 		s_sd_status(4)				-- SD Init
 		 & s_sd_status(7)			-- SDHC
@@ -727,8 +746,8 @@ begin
 		 & s_sd_status(1)			-- SD Read
 		 & (s_cas_audio_out(0) or  s_cas_audio_out(1))
 		 & (s_cas_audio_in(0) or s_cas_audio_in(1))
-		 & s_recording
-		 & s_playing_or_recording;
+		 & s_cas_status_recording
+		 & s_cas_status_playing;
 
 
 
@@ -905,9 +924,6 @@ begin
 		s_key_release <= '0';
 		s_key_available <= '1';
 		s_key_press <= '0';
-		s_media_key_play <= '0';
-		s_media_key_next <= '0';
-		s_media_key_prev <= '0';
 	end generate;
 
 	with_keyboard : if p_enable_keyboard generate
@@ -947,9 +963,6 @@ begin
 
 		-- Media key mapping
 		s_key_press <= s_key_available and not s_key_release;
-		s_media_key_play <= '1' when s_key_press = '1' and s_key_scancode = "10110100" else '0';
-		s_media_key_next <= '1' when s_key_press = '1' and s_key_scancode = "11001101" else '0';
-		s_media_key_prev <= '1' when s_key_press = '1' and s_key_scancode = "10010101" else '0';
 
 		s_is_syscon_keyboard_port <= s_hijacked when s_cpu_addr(7 downto 4) = x"7" else '0';
 		s_syscon_keyboard_port_rd_falling_edge <= s_is_syscon_keyboard_port and s_port_rd_falling_edge;
@@ -990,40 +1003,83 @@ begin
 		s_sd_op_cmd_a <= (others => '0');
 		s_sd_op_block_number_a <= (others => '0');
 		s_sd_din_a <= (others => '0');
-		s_recording <= '0';
-		s_playing_or_recording <= '0';
+		s_cas_status_recording <= '0';
+		s_cas_status_playing <= '0';
 		s_cas_audio_in_edge <= '0';
 		s_clken_cassette <= '0';
 	end generate;
 
 	with_cassette_player : if p_enable_cassette_player generate
 
-		-- Crack media keys
-		s_button_start <= s_cas_auto_start or (s_media_key_play and not s_playing_or_recording);
-		s_button_stop <= s_cas_auto_stop or (s_media_key_play and s_playing_or_recording);
-		s_button_record <= s_cas_auto_record;
+		-- SysCon cassette port flags
+	    s_is_syscon_cas_port <= s_hijacked when s_cpu_addr(7 downto 4) = x"C" else '0';
+		s_is_syscon_cas_cmdstat_port <= s_is_syscon_cas_port and not s_cpu_addr(0);
+		s_is_syscon_cas_data_port <= s_is_syscon_cas_port and s_cpu_addr(0);
 
 		-- Disable cassette play/record when in hijacked mode
-		s_clken_cassette <= s_clken_cpu and not s_hijacked;
+		s_clken_cassette <= s_clken_cpu and not s_hijacked and s_cpu_wait_n;
+
+		-- Syscon cassette command port
+		syscon_cas_cmd_port : process(i_clock_80mhz)
+		begin
+			if rising_edge(i_clock_80mhz) then
+				if i_reset = '1' then 
+					s_syscon_cas_play <= '0';
+					s_syscon_cas_record <= '0';
+					s_syscon_cas_stop <= '0';
+					s_syscon_cas_block_number_load <= '0';
+				elsif s_clken_cpu = '1' then
+					s_syscon_cas_play <= '0';
+					s_syscon_cas_record <= '0';
+					s_syscon_cas_stop <= '0';
+					s_syscon_cas_block_number_load <= '0';
+					if s_is_syscon_cas_cmdstat_port = '1' and s_port_wr_rising_edge = '1' then
+						s_syscon_cas_play <= s_cpu_dout(0);
+						s_syscon_cas_record <= s_cpu_dout(1);
+						s_syscon_cas_stop <= s_cpu_dout(2);
+						s_syscon_cas_block_number_load <= s_cpu_dout(3);
+					end if;
+				end if;
+			end if;
+		end process;
+
+		-- Syscon cassette data port (ie: load block number)
+		syscon_cas_data_port : process(i_clock_80mhz)
+		begin
+			if rising_edge(i_clock_80mhz) then
+				if i_reset = '1' then 
+					s_cas_block_number <= (others => '0');
+				elsif s_clken_cpu = '1' then
+					if s_is_syscon_cas_data_port = '1' and s_port_wr_rising_edge = '1' then
+						-- LSB first
+						s_cas_block_number <= s_cpu_dout & s_cas_block_number(31 downto 8);
+					end if;
+				end if;
+			end if;
+		end process;
 
 		-- Cassette Player
-		player : entity work.Trs80CassettePlayer
+		player : entity work.Trs80CassetteController
 		generic map
 		(
 			p_clken_hz => 1_774_000
 		)
 		port map
 		(
+			debug => open,
 			i_clock => i_clock_80mhz,
-			i_clken => s_clken_cassette,
-			i_reset => s_Reset,
-			i_button_start => s_button_start,
-			i_button_record => s_button_record,
-			i_button_stop => s_button_stop,
-			i_button_next => s_media_key_next,
-			i_button_prev => s_media_key_prev,
-			o_playing_or_recording => s_playing_or_recording,
-			o_recording => s_recording,
+			i_clken_cpu => s_clken_cpu,
+			i_clken_audio => s_clken_cassette,
+			i_reset => s_reset,
+			i_command_play => s_cas_command_play,
+			i_command_record => s_cas_command_record,
+			i_command_stop => s_cas_command_stop,
+			o_status_playing => s_cas_status_playing,
+			o_status_recording => s_cas_status_recording,
+			o_status_need_block_number => s_cas_status_need_block_number,
+			o_irq => s_irqs(4),
+			i_block_number => s_cas_block_number,
+			i_block_number_load => s_cas_block_number_load,
 			o_sd_op_wr => s_sd_op_write_a,
 			o_sd_op_cmd => s_sd_op_cmd_a,
 			o_sd_op_block_number => s_sd_op_block_number_a,
@@ -1031,7 +1087,6 @@ begin
 			i_sd_dcycle => s_sd_data_cycle_a,
 			i_sd_data => s_sd_dout_a,
 			o_sd_data => s_sd_din_a,
-			o_display => open,
 			o_audio => s_cas_audio_in,
 			i_audio => s_cas_audio_out(0)
 		);
@@ -1078,13 +1133,19 @@ begin
 			i_reset => s_reset,
 			i_motor => s_cas_motor_monitored,
 			i_audio => s_cas_audio_out(0),
-			o_start => s_cas_auto_start,
-			o_record => s_cas_auto_record,
-			o_stop => s_cas_auto_stop
+			o_start => s_autocas_start,
+			o_record => s_autocas_record,
+			o_stop => s_autocas_stop
 		);
 
 		-- When auto cassette mode turned off, hide the motor signal from the detector
 		s_cas_motor_monitored <= s_cas_motor and s_option_auto_cas;
+
+		-- Generate cassette control commands
+		s_cas_command_play <= (s_autocas_start and not s_autocas_record) or s_syscon_cas_play;
+		s_cas_command_record <= (s_autocas_start and s_autocas_record) or s_syscon_cas_record;
+		s_cas_command_stop <= s_autocas_stop or s_syscon_cas_stop;
+		s_cas_block_number_load <= s_syscon_cas_block_number_load;
 		
 	end generate;
 

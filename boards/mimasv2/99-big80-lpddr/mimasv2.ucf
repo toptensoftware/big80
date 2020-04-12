@@ -103,3 +103,17 @@ CONFIG VCCAUX = "3.3" ;
     NET  "mcb_xtr[16]"                 LOC = P2 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_udqs
     NET  "mcb_xtr[17]"                 LOC = L4 | IOSTANDARD = MOBILE_DDR;       # mcb3_dram_dqs
     NET  "mcb_xtr[18]"                 LOC = N4 | IOSTANDARD = MOBILE_DDR;       # mcb3_rzq"    
+
+
+    NET "o_seven_segment[7]"            LOC = A3      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #a
+    NET "o_seven_segment[6]"            LOC = B4      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #b
+    NET "o_seven_segment[5]"            LOC = A4      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #c
+    NET "o_seven_segment[4]"            LOC = C4      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #d
+    NET "o_seven_segment[3]"            LOC = C5      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #e
+    NET "o_seven_segment[2]"            LOC = D6      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #f
+    NET "o_seven_segment[1]"            LOC = C6      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #g
+    NET "o_seven_segment[0]"            LOC = A5      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #dot
+    
+    NET "o_seven_segment_en[2]"      LOC = B3      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   #Enables for Seven Segment
+    NET "o_seven_segment_en[1]"      LOC = A2      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;   
+    NET "o_seven_segment_en[0]"      LOC = B2      | IOSTANDARD = LVCMOS33 | DRIVE = 8 | SLEW = FAST ;

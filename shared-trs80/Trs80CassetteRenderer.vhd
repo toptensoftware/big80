@@ -64,7 +64,7 @@ begin
 	begin
 		if rising_edge(i_clock) then
 			if i_reset = '1' then
-				s_current_byte <= x"00";
+				s_current_byte <= i_data;
 				s_bit_counter <= 0;
 			elsif i_clken = '1' then
 				if s_baudrate_divider = c_baudrate_ticks - 1 then

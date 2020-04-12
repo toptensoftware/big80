@@ -1,6 +1,7 @@
 #include <libSysCon.h>
 #include <ff.h>
 #include <diskio.h>
+#include <stdio.h>
 
 DSTATUS disk_initialize (BYTE pdrv)
 {
@@ -16,8 +17,13 @@ DSTATUS disk_status (BYTE pdrv)
     return (SdStatusPort & SD_STATUS_INIT) ? 0 : STA_NODISK;
 }
 
+extern char g_szTemp[];
+
 DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
+//    sprintf(g_szTemp, "disk_read(%i)\n", (int)sector);
+//    uart_write_sz(g_szTemp);
+
     while (count)
     {
         sd_read(sector++, buff);
@@ -30,6 +36,9 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
+//    sprintf(g_szTemp, "disk_write(%i)\n", (int)sector);
+//    uart_write_sz(g_szTemp);
+
     while (count)
     {
         sd_write(sector++, buff);

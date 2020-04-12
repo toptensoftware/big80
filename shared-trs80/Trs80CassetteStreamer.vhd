@@ -47,7 +47,7 @@ port
 	o_block_available : out std_logic;				-- Asserts for one main clock cycle when next 512 bytes are available
 
 	-- Buffering
-	i_data_cycle : in std_logic;						-- Play: assert for one main clock cycle when 
+	i_data_cycle : in std_logic;					-- Play: assert for one main clock cycle when 
 													--       input data on o_data is valid
 													-- Record: assert for one main clock cycle when
 													--       next output byte on o_data needed. Will
@@ -55,7 +55,7 @@ port
 	i_data : in std_logic_vector(7 downto 0);		-- Play: Input data
 	o_data : out std_logic_vector(7 downto 0);		-- Record: Output data
 
-	i_stop_recording : in std_logic;					-- Assert for 1 cycle to stop the recorder and flush buffers
+	i_stop_recording : in std_logic;				-- Assert for 1 cycle to stop the recorder and flush buffers
 	o_recording_finished : out std_logic			-- Asserts for 1 cycle when recording buffers have been flushed
 );
 end Trs80CassetteStreamer;

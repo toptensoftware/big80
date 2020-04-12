@@ -16,6 +16,10 @@ port
 	-- LEDs
 	o_leds : out std_logic_vector(7 downto 0);
 
+	-- Seven segment
+	o_seven_segment : out std_logic_vector(7 downto 0);
+	o_seven_segment_en : out std_logic_vector(2 downto 0);
+
 	-- Audio
 	o_audio : out std_logic_vector(1 downto 0);
 
@@ -80,9 +84,28 @@ architecture Behavioral of top is
 	-- Audio
 	signal s_audio : std_logic;
 
+	signal s_seven_seg_value : std_logic_vector(11 downto 0);
+	signal s_debug : std_logic_vector(31 downto 0);
+
 begin
 
 
+	seven_seg : entity work.SevenSegmentHexDisplayWithClockDivider
+	generic map
+	(
+		p_clock_hz => 80_000_000
+	)
+	port map
+	( 
+		i_clock => s_clock_80mhz,
+		i_reset => s_Reset,
+		i_data => s_seven_seg_value,
+		o_segments => o_seven_segment(7 downto 1),
+		o_segments_en => o_seven_segment_en
+	);
+	o_seven_segment(0) <= '1';
+
+	s_seven_seg_value <= s_debug(11 downto 0);
 
 	------------------------- Clocking -------------------------
 
@@ -163,6 +186,7 @@ begin
 	)
 	port map
 	(
+		o_debug => s_debug,
 		o_uart_debug => o_uart_debug,
 		i_clock_80mhz => s_clock_80mhz,
 		i_reset => s_reset,
