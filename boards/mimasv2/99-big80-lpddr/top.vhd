@@ -12,6 +12,8 @@ port
 	i_button_b : in std_logic;
 
 	o_uart_debug : out std_logic;
+	
+	i_switch_run : in std_logic;
 
 	-- LEDs
 	o_leds : out std_logic_vector(7 downto 0);
@@ -191,7 +193,7 @@ begin
 		i_clock_80mhz => s_clock_80mhz,
 		i_reset => s_reset,
 		o_clken_cpu => s_clken_cpu,
-		i_switch_run => '1',
+		i_switch_run => i_switch_run,
 		o_status => o_leds,
 		o_ram_cs => s_ram_cs,
 		o_ram_addr => s_ram_addr,
