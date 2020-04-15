@@ -10,26 +10,30 @@ OUTDIR		:= ./build
 BINFILE     := big80.sys
 HEX2BINFLAGS := -s 8000
 CLEAN		:= ./bin
+SYSFILES	:= \
+	../libSysCon/Kernel/bin/kernel.sys \
+	../libSysCon/Kernel.FatFS/bin/kernel.fatfs.sys \
+	./build/big80.sys 
+
 
 # Default
-all: makedeps binfile ./bin/$(BINFILE) upload done
+all: makedeps binfile upload
 
 include ../libSysCon/sdcc.mk
 
-# Combine kernel.base.sys and kernel.fatfs.sys
-./bin/$(BINFILE): $(OUTDIR)/$(BINFILE)
-	@echo Combining overlays...
+./bin/big80.sys: $(SYSFILES)
+	@echo "Packing..."
 	@mkdir -p ./bin
-	@cat ../libSysCon/Kernel/bin/kernel.sys $(OUTDIR)/$(BINFILE) > ./bin/$(BINFILE)
+	@node ../libSysCon/packsys $@ $^
 
 upload: ~/sf_downloads/big80.sys
 
 ~/sf_downloads/big80.sys: ./bin/$(BINFILE)
-	@echo Uploading...
+	@echo -n Uploading... 
 	@cp $< $@
 	@cp $(INTDIR)/syscon.map ~/sf_downloads/
 	@mcopy -o -i ~/sf_downloads/test.img@@1M $< ::
-	@mdir -i ~/sf_downloads/test.img@@1M
+	@#mdir -i ~/sf_downloads/test.img@@1M
 	@#bet push --port:/dev/ttyACM1 bin/big80.sys
 	@#bet reset --port:/dev/ttyACM1 
-	@echo "Done!"
+	@echo " ok."

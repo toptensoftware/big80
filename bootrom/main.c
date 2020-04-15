@@ -8,6 +8,12 @@ FATFS g_fs;
 
 void thunkStart();
 
+typedef struct tagHEADER
+{
+    uint8_t bank;
+    uint8_t size;
+} HEADER;
+
 // Main Entry Point
 void main(void) 
 {
@@ -44,17 +50,28 @@ void main(void)
     while (1)
     {
         UINT bytes_read = 0;
-        FRESULT err = f_read(&f, (BYTE*)banked_page, sizeof(banked_page), &bytes_read);
-        totalBytes += bytes_read;
-        ApmPageBank1k++;
-        if (bytes_read != sizeof(banked_page))
+        HEADER header;
+        f_read(&f, &header, sizeof(HEADER), &bytes_read);
+
+        if (bytes_read != sizeof(HEADER))
             break;
+
+        sprintf(g_szTemp, "Bank at 0x%x size 0x%x... ", (int)header.bank, (int)header.size);
+        uart_write_sz(g_szTemp);
+
+        ApmPageBank1k = header.bank;
+
+        for (uint8_t i=0; i<header.size; i++)
+        {
+            f_read(&f, (BYTE*)banked_page, sizeof(banked_page), &bytes_read);
+            ApmPageBank1k++;
+        }
+
+        uart_write_sz("ok\n");
     }
     ApmEnable = APM_ENABLE_BOOTROM;
     f_close(&f);
 
-    sprintf(g_szTemp, "big-80.sys loaded (%lu bytes).\n", totalBytes);
-    uart_write_sz(g_szTemp);
 
     // Jump to big80.sys
     uart_write_sz("Jumping to big80.sys...\n");
