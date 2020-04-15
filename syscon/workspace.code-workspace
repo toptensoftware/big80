@@ -4,7 +4,13 @@
 			"path": "."
 		},
 		{
-			"path": "/home/brad/Projects/big80/libSysCon"
+			"path": "../libSysCon/libSysCon"
+		},
+		{
+			"path": "../libSysCon/Kernel"
+		},
+		{
+			"path": "../libSysCon/Kernel.FatFS"
 		}
 	],
 	"settings": {}

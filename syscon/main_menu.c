@@ -76,7 +76,7 @@ static void invoke_command(LISTBOX* pListBox)
 			if (psz)
 			{
 				bool success = copy_file("/RECORD.CAS", psz);
-				message_box("Save", success ? "Saved" : "Failed!", okButtons, success ? 0 : MB_ERROR);
+				message_box("Save", success ? "Saved" : "Failed!", MBB_OK, success ? 0 : MBF_ERROR);
 
 				if (success)
 				{

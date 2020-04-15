@@ -81,7 +81,7 @@ architecture Behavioral of top is
 	signal s_ram_din : std_logic_vector(7 downto 0);
 	signal s_ram_dout : std_logic_vector(7 downto 0);
 	signal s_ram_wait : std_logic;
-	signal s_ram_addr : std_logic_vector(16 downto 0);
+	signal s_ram_addr : std_logic_vector(17 downto 0);
 
 	-- Audio
 	signal s_audio : std_logic;
@@ -176,7 +176,7 @@ begin
 	);
 
 
-	s_sri_addr <= "0000000000000" & s_ram_addr;
+	s_sri_addr <= "000000000000" & s_ram_addr;
 
 	trs80 : entity work.Trs80Model1Core
 	generic map

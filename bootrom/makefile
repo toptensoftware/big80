@@ -10,9 +10,16 @@ OUTDIR		:= ./bin
 YAZDFLAGS 	:= --entry:0 --entry:0x66
 
 # Default
-all: libSysCon makedeps binfile yazd
+all: libSysCon makedeps binfile upload done
 
 include ../libSysCon/sdcc.mk
+
+upload: ~/sf_downloads/bootrom.bin
+
+~/sf_downloads/bootrom.bin: $(OUTDIR)/$(BINFILE)
+	@echo Uploading...
+	@cp $< $@
+	@cp $(INTDIR)/bootrom.map ~/sf_downloads/
 
 
 

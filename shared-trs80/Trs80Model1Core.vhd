@@ -39,7 +39,7 @@ port
 
 	-- External RAM (128K required)
 	o_ram_cs : out std_logic;
-	o_ram_addr : out std_logic_vector(16 downto 0);
+	o_ram_addr : out std_logic_vector(17 downto 0);
 	o_ram_din : out std_logic_vector(7 downto 0);
 	i_ram_dout : in std_logic_vector(7 downto 0);
 	o_ram_rd : out std_logic;
@@ -150,12 +150,14 @@ architecture behavior of Trs80Model1Core is
 	signal s_port_rd_falling_edge : std_logic;
 
 	-- Address mapping
-	signal s_is_apm_pagebank_port : std_logic;
+	signal s_is_apm_pagebank_1k_port : std_logic;
+	signal s_is_apm_pagebank_32k_port : std_logic;
 	signal s_is_apm_enable_port : std_logic;
-	signal s_apm_pagebank_enabled : std_logic;
+	signal s_apm_pagebank_1k_enabled : std_logic;
 	signal s_apm_videobank_enabled : std_logic;
 	signal s_apm_bootmode : std_logic := '1';
-	signal s_apm_pagebank : std_logic_vector(7 downto 0);
+	signal s_apm_pagebank_1k : std_logic_vector(7 downto 0);
+	signal s_apm_pagebank_32k : std_logic_vector(2 downto 0);
 
 	-- Boot ROM.  (Actually it's a writeable RAM but hey... )
 	signal s_is_bootrom_range : std_logic;
@@ -401,8 +403,9 @@ begin
 			s_cpu_addr, 
 			s_hijacked,
 			s_apm_bootmode,
-			s_apm_pagebank,
-			s_apm_pagebank_enabled,
+			s_apm_pagebank_1k,
+			s_apm_pagebank_32k,
+			s_apm_pagebank_1k_enabled,
 			s_apm_videobank_enabled
 			)
 	begin
@@ -426,14 +429,16 @@ begin
 				s_is_ram_range <= '1';
 			end if;
 
-			if s_cpu_addr(15 downto 10) = "111111" and s_apm_pagebank_enabled='1' then
-				o_ram_addr <= s_apm_pagebank(6 downto 0) & s_cpu_addr(9 downto 0);
+			if s_cpu_addr(15 downto 10) = "111111" and s_apm_pagebank_1k_enabled='1' then
+				o_ram_addr <= s_apm_pagebank_1k(7 downto 0) & s_cpu_addr(9 downto 0);
+			elsif s_cpu_addr(15) = '1' then
+				o_ram_addr <= s_apm_pagebank_32k & s_cpu_addr(14 downto 0);
 			else
-				o_ram_addr <= '1' & s_cpu_addr;
+				o_ram_addr <= "01" & s_cpu_addr;
 			end if;
 		else
 
-			o_ram_addr <= '0' & s_cpu_addr;
+			o_ram_addr <= "00" & s_cpu_addr;
 
 			if s_cpu_addr(15 downto 14) /= "00" then
 				-- RAM 0x4000 -> 0x7FFF
@@ -470,8 +475,13 @@ begin
 							s_is_syscon_options_port, s_options,
 							s_is_syscon_ic_port , s_syscon_ic_cpu_din,
 							s_is_apm_enable_port,
-							s_is_apm_pagebank_port, 
-							s_syscon_show_video, s_apm_pagebank, s_apm_pagebank_enabled, s_apm_videobank_enabled,
+							s_is_apm_pagebank_1k_port, 
+							s_is_apm_pagebank_32k_port, 
+							s_syscon_show_video, 
+							s_apm_pagebank_1k, 
+							s_apm_pagebank_32k, 
+							s_apm_pagebank_1k_enabled, 
+							s_apm_videobank_enabled,
 							s_apm_bootmode,
 							s_all_keys,
 							s_is_syscon_keyboard_port,
@@ -525,10 +535,12 @@ begin
 				s_cpu_din <= s_syscon_serial_cpu_din;
 			elsif s_is_syscon_options_port = '1' then
 				s_cpu_din <= "00" & s_options;
-			elsif s_is_apm_pagebank_port = '1' then
-				s_cpu_din <= s_apm_pagebank;
+			elsif s_is_apm_pagebank_1k_port = '1' then
+				s_cpu_din <= s_apm_pagebank_1k;
+			elsif s_is_apm_pagebank_32k_port = '1' then
+				s_cpu_din <= "00000" & s_apm_pagebank_32k;
 			elsif s_is_apm_enable_port = '1' then
-				s_cpu_din <= "000" & s_all_keys & s_syscon_show_video & s_apm_pagebank_enabled & s_apm_bootmode & s_apm_videobank_enabled;
+				s_cpu_din <= "000" & s_all_keys & s_syscon_show_video & s_apm_pagebank_1k_enabled & s_apm_bootmode & s_apm_videobank_enabled;
 			elsif s_is_syscon_keyboard_port = '1' then
 				s_cpu_din <= s_syscon_keyboard_cpu_din;
 			elsif s_is_syscon_cas_cmdstat_port = '1' then
@@ -592,15 +604,17 @@ begin
 	
 	------------------------- Address Mapping -------------------------
 
-	s_is_apm_pagebank_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A1" else '0';
+	s_is_apm_pagebank_1k_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A1" else '0';
 	s_is_apm_enable_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A2" else '0';
+	s_is_apm_pagebank_32k_port <= s_hijacked when s_cpu_addr(7 downto 0) = x"A3" else '0';
 
 	addr_map : process(i_clock_80mhz)
 	begin
 		if rising_edge(i_clock_80mhz) then
 			if s_reset = '1' then
-				s_apm_pagebank <= (others => '0');
-				s_apm_pagebank_enabled <= '0';
+				s_apm_pagebank_1k <= (others => '0');
+				s_apm_pagebank_1k_enabled <= '0';
+				s_apm_pagebank_32k <= "011";
 				s_apm_bootmode <= '1';
 				s_soft_reset_request <= '0';
 				s_syscon_show_video <= '0';
@@ -609,14 +623,18 @@ begin
 
 				if s_port_wr = '1' then
 
-					if s_is_apm_pagebank_port = '1' then
-						s_apm_pagebank <= s_cpu_dout;
+					if s_is_apm_pagebank_1k_port = '1' then
+						s_apm_pagebank_1k <= s_cpu_dout;
+					end if;
+
+					if s_is_apm_pagebank_32k_port = '1' then
+						s_apm_pagebank_32k <= s_cpu_dout(2 downto 0);
 					end if;
 
 					if s_is_apm_enable_port = '1' then
 						s_apm_videobank_enabled <= s_cpu_dout(0);
 						s_apm_bootmode <= s_cpu_dout(1);
-						s_apm_pagebank_enabled <= s_cpu_dout(2);
+						s_apm_pagebank_1k_enabled <= s_cpu_dout(2);
 						s_syscon_show_video <= s_cpu_dout(3);
 						s_all_keys <= s_cpu_dout(4);
 						s_soft_reset_request <= s_cpu_dout(7);

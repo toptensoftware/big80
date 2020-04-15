@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <libSysCon.h>
-#include <ff.h>
 
-extern char g_szTemp[128];
+#include <kernel.h>
+
+// ui_fiber.c
+void ui_fiber_init();
 
 // uart_fiber.c
-void uart_interrupts();
-void uart_init();
+void uart_fiber_init();
 
 // main_menu.c
 void main_menu();
@@ -23,5 +23,5 @@ void config_save();
 // cassette_fiber.c
 extern const char* g_pszCasFile;
 extern const char* g_pszCasSaveFile;
-void cassette_init();
+void cassette_fiber_init();
 void cassette_isr();

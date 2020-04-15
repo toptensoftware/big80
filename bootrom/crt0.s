@@ -70,7 +70,7 @@ init:
 	djnz	1$
 
 	;; Set stack pointer
-	ld	sp,#0xFC00
+	ld	sp,#0x8000
 
 	;; Initialise global variables
 	call	gsinit

@@ -168,7 +168,7 @@ void cassette_fiber_proc()
 }
 
 
-void cassette_init()
+void cassette_fiber_init()
 {
     init_signal(&g_sig_cassette);
     create_fiber(cassette_fiber_proc, 1024);

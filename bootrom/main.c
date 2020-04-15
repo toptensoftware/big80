@@ -38,15 +38,15 @@ void main(void)
     uart_write_sz(" OK\n");
 
     // Map page bank to the syscon memory (starting at bank 64 after trs80 64k address space)
-    ApmEnable = APM_ENABLE_BOOTROM | APM_ENABLE_PAGEBANK;
-    ApmPageBank = 64;
+    ApmEnable = APM_ENABLE_BOOTROM | APM_ENABLE_PAGEBANK_1K;
+    ApmPageBank1k = 64;
     uint32_t totalBytes = 0;
     while (1)
     {
         UINT bytes_read = 0;
         FRESULT err = f_read(&f, (BYTE*)banked_page, sizeof(banked_page), &bytes_read);
         totalBytes += bytes_read;
-        ApmPageBank++;
+        ApmPageBank1k++;
         if (bytes_read != sizeof(banked_page))
             break;
     }

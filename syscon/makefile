@@ -1,24 +1,30 @@
-LINKFLAGS=$(COMMONFLAGS) --code-loc 0x110 --data-loc 0xC000 --no-std-crt0
+LINKFLAGS=$(COMMONFLAGS) --code-loc 0x8100 --data-loc 0xE000 --no-std-crt0
 
 # Project config
-INCLUDES 	:= $(wildcard *.h) ../libSysCon/libSysCon/libSysCon.h
-INCLUDEPATH := ../libSysCon/libSysCon/ ../libSysCon/libFatFS/
-LIBS	 	:= ../libSysCon/lib/libSysCon.lib ../libSysCon/lib/libFatFS.lib
-ASMSOURCES  := ./crt0.s ./heap.s
-MAKEDEPS 	:= ../libSysCon/libSysCon
-OUTDIR		:= ./bin
-YAZDFLAGS 	:= --entry:0 --entry:0x66 --entry:0x3b6
+INCLUDES 	:= $(wildcard *.h) ../libSysCon/libSysCon/libSysCon.h ../libSysCon/Kernel/kernel.h
+INCLUDEPATH := ../libSysCon/Kernel/
+LIBS	 	:= ../libSysCon/Kernel/bin/kernel.sys.lib
+ASMSOURCES  := ./crt0.s 
+MAKEDEPS 	:= ../libSysCon/Kernel
+OUTDIR		:= ./build
 BINFILE     := big80.sys
+HEX2BINFLAGS := -s 8000
+CLEAN		:= ./bin
 
 # Default
-all: makedeps binfile upload
+all: makedeps binfile ./bin/$(BINFILE) upload done
 
 include ../libSysCon/sdcc.mk
 
+# Combine kernel.base.sys and kernel.fatfs.sys
+./bin/$(BINFILE): $(OUTDIR)/$(BINFILE)
+	@echo Combining overlays...
+	@mkdir -p ./bin
+	@cat ../libSysCon/Kernel/bin/kernel.sys $(OUTDIR)/$(BINFILE) > ./bin/$(BINFILE)
 
 upload: ~/sf_downloads/big80.sys
 
-~/sf_downloads/big80.sys: $(OUTDIR)/$(BINFILE)
+~/sf_downloads/big80.sys: ./bin/$(BINFILE)
 	@echo Uploading...
 	@cp $< $@
 	@cp $(INTDIR)/syscon.map ~/sf_downloads/

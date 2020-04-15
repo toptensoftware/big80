@@ -130,12 +130,8 @@ void uart_fiber_proc()
 }
 
 // Initialize uart fiber and signals
-void uart_init()
+void uart_fiber_init()
 {
-    // Initialize interrupt service routines
-    uart_read_init_isr();
-    uart_write_init_isr();
-
     // Start fiber
     create_fiber(uart_fiber_proc, 1024);
 }

@@ -39,3 +39,27 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 	return RES_PARERR;
 }
 
+int ff_cre_syncobj (	/* 1:Function succeeded, 0:Could not create the sync object */
+	BYTE vol,			/* Corresponding volume (logical drive number) */
+	FF_SYNC_t* sobj		/* Pointer to return the created sync object */
+)
+{
+    return 1;
+}
+
+
+int ff_del_syncobj(FF_SYNC_t sobj)
+{
+    // nop
+    return 1;
+}
+
+int ff_req_grant(FF_SYNC_t sobj)
+{
+    return 1;
+}
+
+void ff_rel_grant (FF_SYNC_t sobj)
+{
+}
+
