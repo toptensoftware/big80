@@ -100,10 +100,7 @@ begin
 
   -- Input buffering
   --------------------------------------
-  clkin1_buf : IBUFG
-  port map
-   (O => clkin1,
-    I => CLK_IN_100MHz);
+  clkin1 <= CLK_IN_100MHz;
 
 
   -- Clocking primitive
