@@ -1222,7 +1222,13 @@ begin
 		s_syscon_serial_port_wr_rising_edge <= s_is_syscon_serial_port and s_port_wr_rising_edge;
 		s_syscon_serial_port_rd_falling_edge <= s_is_syscon_serial_port and s_port_rd_falling_edge;
 
-		serial : entity work.SysConSerialPort
+		serial : entity work.GenericSerialPort
+		generic map
+		(
+			p_clock_hz => 80_000_000,
+			p_irq_delay_ms => 11,
+			p_baud => 115200
+		)
 		port map
 		(
 			i_reset => s_reset,
@@ -1248,7 +1254,7 @@ begin
 	s_syscon_disk_port_wr_rising_edge <= s_is_syscon_disk_port and s_port_wr_rising_edge;
 	s_syscon_disk_port_rd_falling_edge <= s_is_syscon_disk_port and s_port_rd_falling_edge;
 
-	syscon_disk : entity work.SysConDiskController
+	syscon_disk : entity work.GenericDiskController
 	port map
 	(
 		i_reset => s_reset,
