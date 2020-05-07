@@ -71,7 +71,9 @@ architecture Behavioral of top is
 	signal s_ram_dout : std_logic_vector(7 downto 0);
 
 	-- ROM
-	signal s_rom_addr : std_logic_vector(13 downto 0);
+	signal s_rom_write : std_logic;
+	signal s_rom_addr : std_logic_vector(14 downto 0);
+	signal s_rom_din : std_logic_vector(7 downto 0);
 	signal s_rom_dout : std_logic_vector(7 downto 0);
 
 	-- SD Card Controller
@@ -291,8 +293,6 @@ begin
 	-- Interrupt Controller
 
 	s_is_interrupt_controller_port <= '1' when s_cpu_addr(7 downto 0) = x"1c" else '0';
-	s_serial_port_wr_rising_edge <= s_is_interrupt_controller_port and s_port_wr_rising_edge;
-	s_serial_port_rd_falling_edge <= s_is_interrupt_controller_port and s_port_rd_falling_edge;
 	s_irq_ack <= s_is_interrupt_controller_port and s_port_rd_rising_edge;
 
 	interrupt_controller : entity work.GenericInterruptController
@@ -314,13 +314,17 @@ begin
 
 	-- ROM
 
-	s_rom_addr <= s_cpu_addr(13 downto 0);
+	s_rom_addr <= s_cpu_addr(14 downto 0);
+	s_rom_write <= s_mem_wr and s_is_ram_range;
+	s_rom_din <= s_cpu_dout;
 
 	rom : entity work.TestRom
 	PORT MAP
 	(
 		i_clock => s_clock_80mhz,
+		i_write => s_rom_write,
 		i_addr => s_rom_addr,
+		i_din => s_rom_din,
 		o_dout => s_rom_dout
 	);
 

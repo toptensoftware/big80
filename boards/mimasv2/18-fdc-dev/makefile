@@ -9,7 +9,7 @@ upload: upload-bit
 include ../../../fpgakit/fpgakit.mk
 
 
-#TestRom.vhd: TestRom.asm
-#	yaza TestRom.asm
-#	node ../../../fpgakit/tools/bin2vhdlrom/bin2vhdlrom --addrWidth:16 --writeable TestRom.bin TestRom.vhd
+TestRom.vhd: TestRom.asm
+	yaza TestRom.asm
+	node ../../../fpgakit/tools/bin2vhdlrom/bin2vhdlrom --addrWidth:15 --writeable TestRom.bin TestRom.vhd
 

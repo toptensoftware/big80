@@ -7,6 +7,7 @@ end TestBench;
 
 architecture behavior of TestBench is
     signal s_clock : std_logic := '1';
+    signal s_clken : std_logic;
     signal s_reset : std_logic := '0';
     signal s_horz_pos : integer range -2048 to 2047;
     signal s_vert_pos : integer range -2048 to 2047;
@@ -32,23 +33,36 @@ begin
     end process;
 
 
+	e_clken_divider : entity work.ClockDivider
+	generic map
+	(
+		p_period => 2
+	)
+	port map
+	(
+		i_clock => s_clock,
+		i_clken => '1',
+		i_reset => s_reset,
+		o_clken => s_clken
+	);
+
     vgaTiming : entity work.VGATiming
     generic map
     (
-        p_horz_res => 6 * 2 * 4,            -- 4 characters wide
-        p_vert_res => 12 * 3 * 2,           -- 2 lines high
+        p_horz_res => 6 * 2 * 64,
+        p_vert_res => 12 * 3 * 16,
         p_pixel_latency => 0,
-        p_horz_front_porch => 5,
-        p_horz_sync_width => 5,
-        p_horz_back_porch => 5,
-        p_vert_front_porch => 5,
-        p_vert_sync_width => 5,
-        p_vert_back_porch => 5
+        p_horz_front_porch => 2,
+        p_horz_sync_width => 2,
+        p_horz_back_porch => 2,
+        p_vert_front_porch => 2,
+        p_vert_sync_width => 2,
+        p_vert_back_porch => 2
     )
 	port map
 	(
         i_clock => s_Clock,
-        i_clken => '1',
+        i_clken => s_clken,
         i_reset => s_Reset,
         o_horz_sync => open,
         o_vert_sync => open,
@@ -57,35 +71,24 @@ begin
         o_blank => open
     );
     
-    -- Fake Video RAM
-    video_ram_proc : process(s_clock)
-    begin
-        if rising_edge(s_clock) then
-            if s_reset = '1' then
-                s_video_ram_data <= x"FF";
-            else
-                s_video_ram_data <= "000000" & s_video_ram_addr(1 downto 0);
-            end if;
-        end if;
-    end process;
+	vram : entity work.VRam
+	port map
+	(
+		i_clock => s_clock,
+        i_clken => s_clken,
+		i_addr => s_video_ram_addr,
+		o_dout => s_video_ram_data
+	);
 
-    -- Fake Character ROM
-    char_rom_proc : process(s_clock)
-    begin
-        if rising_edge(s_clock) then
-            if s_reset = '1' then
-                s_char_rom_data <= "111111";
-            else
-                case s_char_rom_addr(5 downto 4) is
-                    when "00" => s_char_rom_data <= "101010";
-                    when "01" => s_char_rom_data <= "000000";
-                    when "10" => s_char_rom_data <= "010101";
-                    when "11" => s_char_rom_data <= "000000";
-                    when others => s_char_rom_data <= "111111";
-                end case;
-            end if;
-        end if;
-    end process;
+
+	charrom : entity work.Trs80CharRom
+	port map
+	(
+		i_clock => s_clock,
+		i_addr => s_char_rom_addr,
+		o_dout => s_char_rom_data
+	);
+
 
     -- Video Controller (UUT)
     videoController : entity work.Trs80VideoController
@@ -97,7 +100,7 @@ begin
     port map
     (
         i_clock => s_Clock,
-        i_clken => '1',
+        i_clken => s_clken,
         i_reset => s_Reset,
         i_horz_pos => s_horz_pos,
         i_vert_pos => s_vert_pos,

@@ -51,7 +51,7 @@ port
 	o_vert_sync : out std_logic;
 	o_red : out std_logic_vector(2 downto 0);
 	o_green : out std_logic_vector(2 downto 0);
-	o_blue : out std_logic_vector(2 downto 1);
+	o_blue : out std_logic_vector(2 downto 0);
 
 	-- PS2 Keyboard
 	io_ps2_clock : inout std_logic;
@@ -196,7 +196,7 @@ architecture behavior of Trs80Model1Core is
 	signal s_line_rep : integer range 0 to 2;
 	signal s_trs80_red : std_logic_vector(2 downto 0);
 	signal s_trs80_green : std_logic_vector(2 downto 0);
-	signal s_trs80_blue : std_logic_vector(2 downto 1);
+	signal s_trs80_blue : std_logic_vector(2 downto 0);
 
 	-- Keyboard Controller
 	signal s_is_keyboard_range : std_logic;
@@ -834,9 +834,9 @@ begin
 
 	-- Combine trs80 and sys-con video
 	s_syscon_show_pixel <= s_syscon_show_video and not s_syscon_transparent;
-	o_red <= s_trs80_red when s_syscon_show_pixel = '0' else s_syscon_red & '0';
-	o_green <= s_trs80_green when s_syscon_show_pixel = '0' else s_syscon_green & '0';
-	o_blue <= s_trs80_blue when s_syscon_show_pixel = '0' else s_syscon_blue;
+	o_red <= s_trs80_red when s_syscon_show_pixel = '0' else s_syscon_red & s_syscon_red(0);
+	o_green <= s_trs80_green when s_syscon_show_pixel = '0' else s_syscon_green & s_syscon_green(0);
+	o_blue <= s_trs80_blue when s_syscon_show_pixel = '0' else s_syscon_blue & s_syscon_blue(0);
 
 	without_video : if not p_enable_video_controller generate
 		o_vert_sync <= '0';
@@ -900,7 +900,7 @@ begin
 				else
 					s_trs80_green <= s_pixel & s_pixel & s_pixel;
 				end if;
-				s_trs80_blue <= "00";
+				s_trs80_blue <= "000";
 			else
 				s_trs80_red <= "000";
 				if s_option_no_scan_lines = '0' then
@@ -915,7 +915,7 @@ begin
 					s_trs80_red <= s_pixel & s_pixel & s_pixel;
 					s_trs80_green <= s_pixel & "00";
 				end if;
-				s_trs80_blue <= "00";
+				s_trs80_blue <= "000";
 			end if;
 		end process;
 
