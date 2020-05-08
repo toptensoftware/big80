@@ -26,7 +26,7 @@ There's a series of blog posts about this project [available here](https://www.t
 
 ## Download and Setup (Mimas V2)
 
-1. Download the [FPGA binary file](https://github.com/toptensoftware/big80/V3/bitfiles/mimasv2.bin)
+1. Download the [FPGA binary file](https://github.com/toptensoftware/big80/raw/V3/bitfiles/mimasv2.bin)
 
 2. Upload it to the FPGA board.  You can use either the tools provided by Numato or use [this updated firmware](https://github.com/toptensoftware/MimasV2-Loader) in which case you can upload to the board from Linux like so:
 
@@ -41,7 +41,7 @@ There's a series of blog posts about this project [available here](https://www.t
 
 ## Download and Setup (Papilio Duo)
 
-1. Download the [FPGA bit file](https://github.com/toptensoftware/big80/V3/bitfiles/papduo.bit)
+1. Download the [FPGA bit file](https://github.com/toptensoftware/big80/raw/V3/bitfiles/papduo.bit)
 
 2. Upload it to the FPGA board using the Papilio uploaded tool
 
