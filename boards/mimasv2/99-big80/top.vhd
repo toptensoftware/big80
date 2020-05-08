@@ -89,6 +89,10 @@ architecture Behavioral of top is
 	signal s_seven_seg_value : std_logic_vector(11 downto 0);
 	signal s_debug : std_logic_vector(31 downto 0);
 
+	signal s_red : std_logic_vector(2 downto 0);
+	signal s_green : std_logic_vector(2 downto 0);
+	signal s_blue : std_logic_vector(2 downto 0);
+
 begin
 
 
@@ -204,9 +208,9 @@ begin
 		i_ram_wait => s_ram_wait,
 		o_horz_sync => o_horz_sync,
 		o_vert_sync => o_vert_sync,
-		o_red => o_red,
-		o_green => o_green,
-		o_blue => o_blue,
+		o_red => s_red,
+		o_green => s_green,
+		o_blue => s_blue,
 		io_ps2_clock => io_ps2_clock,
 		io_ps2_data => io_ps2_data,
 		o_audio => s_audio,
@@ -222,6 +226,10 @@ begin
 		i_psx_hico => i_psx_hico,
 		i_psx_ack => i_psx_ack
 	);
+
+	o_red <= s_red;
+	o_green <= s_green;
+	o_blue <= s_blue(2 downto 1);
 	
 end Behavioral;
 

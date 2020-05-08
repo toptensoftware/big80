@@ -18,6 +18,7 @@ It currently supports:
 Supported boards:
 
 * [Numato Lab Mimas V2](https://numato.com/product/mimas-v2-spartan-6-fpga-development-board-with-ddr-sdram)
+* [Papilio-Duo](http://papilio.cc/index.php?n=Papilio.PapilioDUOHardwareGuide) with [Classic Computing Shield](http://papilio.cc/index.php?n=Papilio.ClassicComputingShield)
 
 ## Blog Posts
 
@@ -25,27 +26,45 @@ There's a series of blog posts about this project [available here](https://www.t
 
 ## Download and Setup (Mimas V2)
 
-1. Download the [FPGA binary file]((https://github.com/toptensoftware/big80/raw/V2/boards/mimasv2/99-big80-lpddr/bin/99-big80-lpddr.bin)
+1. Download the [FPGA binary file](https://github.com/toptensoftware/big80/V3/bitfiles/mimasv2.bin)
 
 2. Upload it to the FPGA board.  You can use either the tools provided by Numato or use [this updated firmware](https://github.com/toptensoftware/MimasV2-Loader) in which case you can upload to the board from Linux like so:
 
         $ mimasv2-prog --filename 99-big80-lpddr.bin
 
-3. Download the Big-80 system firmware - [big80.sys](https://github.com/toptensoftware/big80/raw/V2/syscon/bin/big80.sys) and place it in the root directory of a FAT formatted SD card.
+3. Connect a [PS2 Pmod](https://store.digilentinc.com/pmod-ps2-keyboard-mouse-connector/) to the lower 6 pins of the left most GPIO connector (P6) and connect a keyboard to the PS2 PMod.
 
-4. Place a copy of the TRS-80 Model 1 ROM image in the root directory of the SD card.  This file must be named "level2-a.rom".  (you'll have to locate this file yourself).
+4. Connect a speaker to the audio output (optional)
 
-4. Insert the SD card in the FPGA board
+5. Continue with "common" instructions below
 
-5. Make sure all the DIP switches are in the down position
 
-6. Connect a VGA monitor
+## Download and Setup (Papilio Duo)
 
-7. Connect a speaker to the audio output (optional)
+1. Download the [FPGA bit file](https://github.com/toptensoftware/big80/V3/bitfiles/papduo.bit)
 
-8. Connect a [PS2 Pmod](https://store.digilentinc.com/pmod-ps2-keyboard-mouse-connector/) to the lower 6 pins of the left most GPIO connector (P6) and connect a keyboard to the PS2 PMod.
+2. Upload it to the FPGA board using the Papilio uploaded tool
 
-9. Power on the FPGA board, and you should be presented with the TRS-80 BASIC prompt.
+3. Make sure all the DIP switches are in the down position
+
+4. Connect a PS2 Keyboard to a the "PS/2 A" socket on the Classic Computing Shield
+
+5. Connect a speaker to the "Audio 1" socket on the Classic Computing Shield (optional)
+
+6. Continue with "common" instructions below
+
+
+## Download and Setup (Common)
+
+1. Download the Big-80 system firmware - [big80.sys](https://github.com/toptensoftware/big80/raw/V3/syscon/bin/big80.sys) and place it in the root directory of a FAT formatted SD card.
+
+2. Place a copy of the TRS-80 Model 1 ROM image in the root directory of the SD card.  This file must be named "level2-a.rom".  (you'll have to locate this file yourself).
+
+3. Insert the SD card in the FPGA board
+
+4. Connect a VGA monitor
+
+5. Power on the FPGA board, and you should be presented with the TRS-80 BASIC prompt.
 
 
 
@@ -92,11 +111,11 @@ The selected options are saved to the SD card in a file name "BIG80.CFG".
 
 
 
-## DIP Switch Settings
+## DIP Switch Settings (Mimas V2)
 
 The left most DIP switch is is a Run/Stop switch.  When in the down position the machine runs normally.  In the up position the CPU stops execution and display freezes (including the on-scren menus).
 
-## LED Indicators
+## LED Indicators (Mimas V2)
 
 From left-to-right, the LED indicators show the followin:
 

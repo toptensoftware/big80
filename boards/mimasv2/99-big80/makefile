@@ -2,10 +2,14 @@
 TARGETBOARD = mimasv2
 DEPPATH = ../../../shared-trs80 ../../../libSysCon/shared-syscon
 OTHERSOURCEFILES = BootRom.vhd
+RELEASEDIR = ../../../bitfiles
 
-build: build-bit
+build: build-bit $(RELEASEDIR)/mimasv2.bin
 
 upload: upload-bit
+
+$(RELEASEDIR)/mimasv2.bin: $(BINFILE)
+	@cp $(BINFILE) $@ 
 
 # Make script
 include ../../../fpgakit/fpgakit.mk

@@ -2,10 +2,15 @@
 TARGETBOARD = papduo
 DEPPATH = ../../../shared-trs80 ../../../libSysCon/shared-syscon
 OTHERSOURCEFILES = BootRom.vhd
+RELEASEDIR = ../../../bitfiles
 
-build: build-bit
+build: build-bit $(RELEASEDIR)/papduo.bit
 
 upload: upload-bit
+
+# Copy to release directory
+$(RELEASEDIR)/papduo.bit: $(BITFILE)
+	@cp $(BITFILE) $@ 
 
 # Make script
 include ../../../fpgakit/fpgakit.mk
