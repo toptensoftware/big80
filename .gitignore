@@ -1,9 +1,9 @@
 # Build directories
 build/
+bin/
 *.lst
 
 # Xilinx crap in build directory
-*.bit
 *.bgn
 *.xwbt
 *.drc
